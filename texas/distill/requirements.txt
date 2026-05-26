@@ -1,0 +1,9 @@
+# Week 2 distillation POC dependencies.
+# Install: pip3 install -r distill/requirements.txt
+#
+# For CPU-only PyTorch (sufficient for Leduc POC):
+#   pip3 install torch --index-url https://download.pytorch.org/whl/cpu
+torch>=2.0
+onnx>=1.15
+onnxruntime>=1.16
+numpy>=1.24

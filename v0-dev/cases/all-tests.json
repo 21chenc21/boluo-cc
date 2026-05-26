@@ -1,0 +1,1697 @@
+[
+  {
+    "name": "1 [R1]: 鬼孤身在顶, KK锁底",
+    "round": 1,
+    "dealt": [
+      "X",
+      "Kc",
+      "Kd",
+      "3h",
+      "7s"
+    ],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "check": "cntJoker(top) >= 1 && cntRank(bottom, 'K') >= 2"
+  },
+  {
+    "name": "2 [R1]: 鬼孤身在顶等高牌",
+    "round": 1,
+    "dealt": [
+      "X",
+      "Qc",
+      "2d",
+      "5h",
+      "8s"
+    ],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "check": "cntJoker(top) >= 1"
+  },
+  {
+    "name": "3 [R1]: AA顶进范, 鬼放底/中保灵活性",
+    "round": 1,
+    "dealt": [
+      "X",
+      "Ac",
+      "Ad",
+      "3h",
+      "7s"
+    ],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "check": "cntRank(top, 'A') >= 2 && cntJoker(top) === 0"
+  },
+  {
+    "name": "4 [R1]: 1鬼放顶+另1鬼配3♣ 凑SF",
+    "round": 1,
+    "dealt": [
+      "X",
+      "Xj1",
+      "Tc",
+      "Jc",
+      "Qc"
+    ],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "check": "cntJoker(top) >= 1 && cntJoker([...middle, ...bottom]) >= 1"
+  },
+  {
+    "name": "5 [R3]: 鬼优先放顶/中, 不补底flush",
+    "round": 3,
+    "dealt": [
+      "X",
+      "Kh",
+      "7s"
+    ],
+    "state": {
+      "top": [],
+      "middle": [
+        "6d"
+      ],
+      "bottom": [
+        "Tc",
+        "2c",
+        "5c",
+        "9c"
+      ],
+      "usedCards": [
+        "6d",
+        "Tc",
+        "2c",
+        "5c",
+        "9c"
+      ]
+    },
+    "check": "cntJoker(top) >= 1 || cntJoker(middle) >= 1"
+  },
+  {
+    "name": "6 [R1]: 鬼+KK+AA 双对最优配置",
+    "round": 1,
+    "dealt": [
+      "X",
+      "Kc",
+      "Kd",
+      "Ah",
+      "As"
+    ],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "check": "cntRank(top, 'A') >= 2 && cntRank(bottom, 'K') >= 2 && cntJoker(top) === 0"
+  },
+  {
+    "name": "7 [R3]: 鬼上顶配9 等高牌进范",
+    "round": 3,
+    "dealt": [
+      "X",
+      "Qd",
+      "3c"
+    ],
+    "state": {
+      "top": [
+        "9h"
+      ],
+      "middle": [
+        "2c",
+        "2h",
+        "7d"
+      ],
+      "bottom": [
+        "Ks",
+        "Kc",
+        "4h",
+        "5s"
+      ],
+      "usedCards": [
+        "9h",
+        "2c",
+        "2h",
+        "7d",
+        "Ks",
+        "Kc",
+        "4h",
+        "5s"
+      ]
+    },
+    "check": "cntJoker(top) >= 1"
+  },
+  {
+    "name": "8 [R1]: 双鬼分顶底 等大牌",
+    "round": 1,
+    "dealt": [
+      "X",
+      "Xj1",
+      "2c",
+      "3d",
+      "4h"
+    ],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "check": "cntJoker(top) >= 1 && (cntJoker(middle) >= 1 || cntJoker(bottom) >= 1)"
+  },
+  {
+    "name": "9 [R2]: 不弃鬼 + 鬼优先放顶",
+    "round": 2,
+    "dealt": [
+      "X",
+      "7h",
+      "2c"
+    ],
+    "state": {
+      "top": [
+        "3h"
+      ],
+      "middle": [
+        "2s",
+        "7d"
+      ],
+      "bottom": [
+        "4c",
+        "6h"
+      ],
+      "usedCards": [
+        "3h",
+        "2s",
+        "7d",
+        "4c",
+        "6h"
+      ]
+    },
+    "check": "!(discarded && (discarded.rank === 'X' || discarded.joker)) && cntJoker(top) >= 1"
+  },
+  {
+    "name": "10 [R1]: 鬼配A上顶, TJ♦底保同花",
+    "round": 1,
+    "dealt": [
+      "X",
+      "Td",
+      "Jd",
+      "As",
+      "7c"
+    ],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "check": "cntJoker(top) >= 1 && cntRank(top, 'A') >= 1 && ((hasCard(top, 'T', 'd') && hasCard(top, 'J', 'd')) || (hasCard(middle, 'T', 'd') && hasCard(middle, 'J', 'd')) || (hasCard(bottom, 'T', 'd') && hasCard(bottom, 'J', 'd')))"
+  },
+  {
+    "name": "11 [R1]: A+joker 应一起上顶 (4d 5h Ah As X)",
+    "round": 1,
+    "dealt": [
+      "4d",
+      "5h",
+      "Ah",
+      "As",
+      "X"
+    ],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "check": "cntRank(top, 'A') >= 1 && (cntRank(top, 'A') >= 2 || cntJoker(top) >= 1)"
+  },
+  {
+    "name": "12 [R1]: A+joker 应一起上顶 (As 4c 8h X 5h)",
+    "round": 1,
+    "dealt": [
+      "As",
+      "4c",
+      "8h",
+      "X",
+      "5h"
+    ],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "check": "cntRank(top, 'A') >= 1 && cntJoker(top) >= 1"
+  },
+  {
+    "name": "13 [R1]: A+joker 应一起上顶 (9s 2c X 5h Ac)",
+    "round": 1,
+    "dealt": [
+      "9s",
+      "2c",
+      "X",
+      "5h",
+      "Ac"
+    ],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "check": "cntRank(top, 'A') >= 1 && cntJoker(top) >= 1"
+  },
+  {
+    "name": "14 [R1]: JsQs 同色高散应底道 (9c As Qs Js 7h)",
+    "round": 1,
+    "dealt": [
+      "9c",
+      "As",
+      "Qs",
+      "Js",
+      "7h"
+    ],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "check": "hasCard(bottom, 'J', 's') && hasCard(bottom, 'Q', 's')"
+  },
+  {
+    "name": "15 [R1]: TsKh 至少一张应底道 (4h Ts Kh 3c Qh)",
+    "round": 1,
+    "dealt": [
+      "4h",
+      "Ts",
+      "Kh",
+      "3c",
+      "Qh"
+    ],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "check": "hasCard(bottom, 'T', 's') || hasCard(bottom, 'K', 'h')"
+  },
+  {
+    "name": "16 [R1]: 9cQh 至少一张应底道 (8c 2d Qh 9c Kc)",
+    "round": 1,
+    "dealt": [
+      "8c",
+      "2d",
+      "Qh",
+      "9c",
+      "Kc"
+    ],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "check": "hasCard(bottom, '9', 'c') || hasCard(bottom, 'Q', 'h')"
+  },
+  {
+    "name": "17 [R1]: TT 应保留底道 (Td Th 3h 9s Ks)",
+    "round": 1,
+    "dealt": [
+      "Td",
+      "Th",
+      "3h",
+      "9s",
+      "Ks"
+    ],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "check": "cntRank(bottom, 'T') >= 2 && cntRank(bottom, '3') === 0"
+  },
+  {
+    "name": "18 [R1]: Qd+TT 应同底 (Qd Tc 4s Td 6d)",
+    "round": 1,
+    "dealt": [
+      "Qd",
+      "Tc",
+      "4s",
+      "Td",
+      "6d"
+    ],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "check": "cntRank(bottom, 'T') >= 2 && hasCard(bottom, 'Q', 'd')"
+  },
+  {
+    "name": "19 [R1]: 4 张 ♠ 应全底 + A 顶 (2s 5s 3s Js Ac)",
+    "round": 1,
+    "dealt": [
+      "2s",
+      "5s",
+      "3s",
+      "Js",
+      "Ac"
+    ],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "check": "cntSuit(bottom, 's') >= 4 && hasCard(top, 'A', 'c')"
+  },
+  {
+    "name": "20 [R1]: 7h Ts 8s 顺面应集中底 (3c Td 8s 7h 4d)",
+    "round": 1,
+    "dealt": [
+      "3c",
+      "Td",
+      "8s",
+      "7h",
+      "4d"
+    ],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "check": "hasCard(bottom, '7', 'h') && hasCard(bottom, '8', 's') && hasCard(bottom, 'T', 'd')"
+  },
+  {
+    "name": "21 [R1]: 9h 应底道 (4d 6c 9h Ac 7d)",
+    "round": 1,
+    "dealt": [
+      "4d",
+      "6c",
+      "9h",
+      "Ac",
+      "7d"
+    ],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "check": "hasCard(bottom, '9', 'h')"
+  },
+  {
+    "name": "22 [R1]: TT 应底, 3 不上底 (Td Th 3h 9s Ks)",
+    "round": 1,
+    "dealt": [
+      "Td",
+      "Th",
+      "3h",
+      "9s",
+      "Ks"
+    ],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "check": "cntRank(bottom, 'T') >= 2 && cntRank(bottom, '3') === 0"
+  },
+  {
+    "name": "23 [R2]: R1 33+T 中→R2 拿 Q 不应替换 33",
+    "round": 2,
+    "dealt": [
+      "4d",
+      "Qc",
+      "6s"
+    ],
+    "state": {
+      "top": [],
+      "middle": [
+        "3d",
+        "Td",
+        "3h"
+      ],
+      "bottom": [
+        "Js",
+        "8s"
+      ],
+      "usedCards": [
+        "3d",
+        "Td",
+        "3h",
+        "Js",
+        "8s"
+      ]
+    },
+    "check": "cntRank(middle, '3') >= 2"
+  },
+  {
+    "name": "24 [R1]: A鬼顶 + 23 中 + K 底 (X 3h Ks As 2d, 固定)",
+    "round": 1,
+    "dealt": [
+      "X",
+      "3h",
+      "Ks",
+      "As",
+      "2d"
+    ],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "check": "cntJoker(top) >= 1 && hasCard(top, 'A', 's')\n            && hasCard(middle, '2', 'd') && hasCard(middle, '3', 'h')\n            && hasCard(bottom, 'K', 's')"
+  },
+  {
+    "name": "25 [R1]: 33 在中保对, 顶无 3 (3d Js 8s Td 3h)",
+    "round": 1,
+    "dealt": [
+      "3d",
+      "Js",
+      "8s",
+      "Td",
+      "3h"
+    ],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "check": "cntRank(middle, '3') >= 2 && cntRank(top, '3') === 0"
+  },
+  {
+    "name": "26 [R1]: 233 应分中底, 不全堆中 (2c Th 3c 5c 3h)",
+    "round": 1,
+    "dealt": [
+      "2c",
+      "Th",
+      "3c",
+      "5c",
+      "3h"
+    ],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "check": "cntRank(middle, '3') >= 2 && hasCard(bottom, 'T', 'h')"
+  },
+  {
+    "name": "27 [R1]: AcJh + 2/3/4 低散 (2s 4d Jh 3c Ac)",
+    "round": 1,
+    "dealt": [
+      "2s",
+      "4d",
+      "Jh",
+      "3c",
+      "Ac"
+    ],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "check": "hasCard(top, 'A', 'c') && hasCard(bottom, 'J', 'h') && cntRank(middle, '2') + cntRank(middle, '3') + cntRank(middle, '4') >= 2"
+  },
+  {
+    "name": "28 [R2]: 加 9♥ 凑底 4 同色",
+    "round": 2,
+    "dealt": [
+      "9h",
+      "Kc",
+      "6d"
+    ],
+    "state": {
+      "top": [],
+      "middle": [
+        "3c",
+        "4c"
+      ],
+      "bottom": [
+        "Th",
+        "5h",
+        "7h"
+      ],
+      "usedCards": [
+        "3c",
+        "4c",
+        "Th",
+        "5h",
+        "7h"
+      ]
+    },
+    "check": "cntSuit(bottom, 'h') >= 4"
+  },
+  {
+    "name": "29 [R2]: 不破中 33 (拿 A 别压中)",
+    "round": 2,
+    "dealt": [
+      "2s",
+      "Ac",
+      "7d"
+    ],
+    "state": {
+      "top": [
+        "Kh"
+      ],
+      "middle": [
+        "3d",
+        "3h"
+      ],
+      "bottom": [
+        "8c",
+        "5d"
+      ],
+      "usedCards": [
+        "Kh",
+        "3d",
+        "3h",
+        "8c",
+        "5d"
+      ]
+    },
+    "check": "cntRank(middle, '3') >= 2  // 33 仍在中"
+  },
+  {
+    "name": "30 [R3]: 不弃 joker",
+    "round": 3,
+    "dealt": [
+      "X",
+      "8h",
+      "Ah"
+    ],
+    "state": {
+      "top": [
+        "Qc"
+      ],
+      "middle": [
+        "3d",
+        "4d",
+        "5d"
+      ],
+      "bottom": [
+        "2c",
+        "7s",
+        "9s"
+      ],
+      "usedCards": [
+        "Qc",
+        "3d",
+        "4d",
+        "5d",
+        "2c",
+        "7s",
+        "9s"
+      ]
+    },
+    "check": "!(discarded && (discarded.rank === 'X' || discarded.joker))"
+  },
+  {
+    "name": "31 [R2]: 9♣ 上底凑 open-ended straight (高 EV)",
+    "round": 2,
+    "dealt": [
+      "9c",
+      "Kh",
+      "2s"
+    ],
+    "state": {
+      "top": [],
+      "middle": [
+        "2c",
+        "3c"
+      ],
+      "bottom": [
+        "6h",
+        "7s",
+        "8d"
+      ],
+      "usedCards": [
+        "2c",
+        "3c",
+        "6h",
+        "7s",
+        "8d"
+      ]
+    },
+    "check": "hasCard(bottom, '9', 'c')  // 9c 必上底"
+  },
+  {
+    "name": "32 [R2]: 双鬼 ≥1 上顶",
+    "round": 2,
+    "dealt": [
+      "X",
+      "Xj1",
+      "8h"
+    ],
+    "state": {
+      "top": [
+        "Kc"
+      ],
+      "middle": [
+        "5d",
+        "6d"
+      ],
+      "bottom": [
+        "2s",
+        "7c"
+      ],
+      "usedCards": [
+        "Kc",
+        "5d",
+        "6d",
+        "2s",
+        "7c"
+      ]
+    },
+    "check": "cntJoker(top) >= 1"
+  },
+  {
+    "name": "33 [R2]: KK 上底 (anchor)",
+    "round": 2,
+    "dealt": [
+      "Kh",
+      "Ks",
+      "4d"
+    ],
+    "state": {
+      "top": [
+        "Qd"
+      ],
+      "middle": [
+        "5c",
+        "6c"
+      ],
+      "bottom": [
+        "3h",
+        "9s"
+      ],
+      "usedCards": [
+        "Qd",
+        "5c",
+        "6c",
+        "3h",
+        "9s"
+      ]
+    },
+    "check": "cntRank(bottom, 'K') >= 2"
+  },
+  {
+    "name": "34 [R2]: 2 ♥ 集中底凑 flush",
+    "round": 2,
+    "dealt": [
+      "7h",
+      "8h",
+      "Kc"
+    ],
+    "state": {
+      "top": [
+        "Ac"
+      ],
+      "middle": [
+        "3d",
+        "4s"
+      ],
+      "bottom": [
+        "5h",
+        "6h"
+      ],
+      "usedCards": [
+        "Ac",
+        "3d",
+        "4s",
+        "5h",
+        "6h"
+      ]
+    },
+    "check": "cntSuit(bottom, 'h') >= 4"
+  },
+  {
+    "name": "35 [R2]: 5 不上中 (mid trips foul)",
+    "round": 2,
+    "dealt": [
+      "5d",
+      "9c",
+      "3h"
+    ],
+    "state": {
+      "top": [
+        "Ad"
+      ],
+      "middle": [
+        "5c",
+        "5h"
+      ],
+      "bottom": [
+        "2s",
+        "7c"
+      ],
+      "usedCards": [
+        "Ad",
+        "5c",
+        "5h",
+        "2s",
+        "7c"
+      ]
+    },
+    "check": "cntRank(middle, '5') < 3"
+  },
+  {
+    "name": "36 [R2]: A 配顶 joker 锁 AA",
+    "round": 2,
+    "dealt": [
+      "As",
+      "8h",
+      "4d"
+    ],
+    "state": {
+      "top": [
+        "X"
+      ],
+      "middle": [
+        "2c",
+        "3c"
+      ],
+      "bottom": [
+        "7d",
+        "9s"
+      ],
+      "usedCards": [
+        "X",
+        "2c",
+        "3c",
+        "7d",
+        "9s"
+      ]
+    },
+    "check": "cntJoker(top) >= 1 && cntRank(top, 'A') >= 1"
+  },
+  {
+    "name": "37 [R3]: 弃 9♦ 不凑 mid straight",
+    "round": 3,
+    "dealt": [
+      "9d",
+      "Kc",
+      "2h"
+    ],
+    "state": {
+      "top": [
+        "Ah"
+      ],
+      "middle": [
+        "5c",
+        "6h",
+        "7d",
+        "8s"
+      ],
+      "bottom": [
+        "2c",
+        "Jh",
+        "3d"
+      ],
+      "usedCards": [
+        "Ah",
+        "5c",
+        "6h",
+        "7d",
+        "8s",
+        "2c",
+        "Jh",
+        "3d"
+      ]
+    },
+    "check": "discarded && discarded.rank === '9'"
+  },
+  {
+    "name": "38 [R3]: 9 不上中 (mid trips foul)",
+    "round": 3,
+    "dealt": [
+      "9c",
+      "4d",
+      "7s"
+    ],
+    "state": {
+      "top": [
+        "Kc"
+      ],
+      "middle": [
+        "9d",
+        "9h",
+        "3s"
+      ],
+      "bottom": [
+        "2c",
+        "5h",
+        "Js"
+      ],
+      "usedCards": [
+        "Kc",
+        "9d",
+        "9h",
+        "3s",
+        "2c",
+        "5h",
+        "Js"
+      ]
+    },
+    "check": "cntRank(middle, '9') < 3"
+  },
+  {
+    "name": "39 [R3]: 6 不上中 (低牌取小)",
+    "round": 3,
+    "dealt": [
+      "4s",
+      "5d",
+      "6c"
+    ],
+    "state": {
+      "top": [
+        "Ah",
+        "Qh"
+      ],
+      "middle": [
+        "2c",
+        "3d"
+      ],
+      "bottom": [
+        "8h",
+        "Js",
+        "9c"
+      ],
+      "usedCards": [
+        "Ah",
+        "Qh",
+        "2c",
+        "3d",
+        "8h",
+        "Js",
+        "9c"
+      ]
+    },
+    "check": "cntRank(middle, '6') === 0"
+  },
+  {
+    "name": "40 [R3]: 弃 8♦ 不凑 mid flush",
+    "round": 3,
+    "dealt": [
+      "8d",
+      "Kc",
+      "2h"
+    ],
+    "state": {
+      "top": [
+        "Ac"
+      ],
+      "middle": [
+        "3d",
+        "4d",
+        "5d",
+        "6d"
+      ],
+      "bottom": [
+        "2c",
+        "7s",
+        "9h"
+      ],
+      "usedCards": [
+        "Ac",
+        "3d",
+        "4d",
+        "5d",
+        "6d",
+        "2c",
+        "7s",
+        "9h"
+      ]
+    },
+    "check": "discarded && discarded.rank === '8' && discarded.suit === 'd'"
+  },
+  {
+    "name": "41 [R3]: 2c 必上底 (K/Q 顶或底 都可)",
+    "round": 3,
+    "dealt": [
+      "Kh",
+      "Qh",
+      "2c"
+    ],
+    "state": {
+      "top": [
+        "X",
+        "Xj1"
+      ],
+      "middle": [
+        "3c",
+        "4c",
+        "5c"
+      ],
+      "bottom": [
+        "2s",
+        "7d"
+      ],
+      "usedCards": [
+        "X",
+        "Xj1",
+        "3c",
+        "4c",
+        "5c",
+        "2s",
+        "7d"
+      ]
+    },
+    "check": "hasCard(bottom, '2', 'c')"
+  },
+  {
+    "name": "42 [R3]: 弃 Q, 4 上中",
+    "round": 3,
+    "dealt": [
+      "Ah",
+      "Qd",
+      "4s"
+    ],
+    "state": {
+      "top": [
+        "Kc"
+      ],
+      "middle": [
+        "3d",
+        "3h",
+        "7s"
+      ],
+      "bottom": [
+        "2c",
+        "8s",
+        "9c"
+      ],
+      "usedCards": [
+        "Kc",
+        "3d",
+        "3h",
+        "7s",
+        "2c",
+        "8s",
+        "9c"
+      ]
+    },
+    "check": "discarded && discarded.rank === 'Q' && hasCard(middle, '4', 's')"
+  },
+  {
+    "name": "43 [R3]: K 不浪费在顶 (joker+A 已锁)",
+    "round": 3,
+    "dealt": [
+      "Kh",
+      "2d",
+      "9s"
+    ],
+    "state": {
+      "top": [
+        "X",
+        "As"
+      ],
+      "middle": [
+        "3c",
+        "4c"
+      ],
+      "bottom": [
+        "5h",
+        "6h",
+        "7h"
+      ],
+      "usedCards": [
+        "X",
+        "As",
+        "3c",
+        "4c",
+        "5h",
+        "6h",
+        "7h"
+      ]
+    },
+    "check": "cntRank(top, 'K') === 0  // K 不上顶"
+  },
+  {
+    "name": "44 [R4]: 9♥ 完成底 straight",
+    "round": 4,
+    "dealt": [
+      "9h",
+      "2s",
+      "2d"
+    ],
+    "state": {
+      "top": [
+        "Ah",
+        "Kc"
+      ],
+      "middle": [
+        "3c",
+        "4c",
+        "9c",
+        "Tc"
+      ],
+      "bottom": [
+        "5h",
+        "6s",
+        "7d",
+        "8c"
+      ],
+      "usedCards": [
+        "Ah",
+        "Kc",
+        "3c",
+        "4c",
+        "9c",
+        "Tc",
+        "5h",
+        "6s",
+        "7d",
+        "8c"
+      ]
+    },
+    "check": "hasCard(bottom, '9', 'h')"
+  },
+  {
+    "name": "45 [R4]: 2c 上顶 (K 顶/底 都可)",
+    "round": 4,
+    "dealt": [
+      "Kh",
+      "9d",
+      "2c"
+    ],
+    "state": {
+      "top": [
+        "Qh"
+      ],
+      "middle": [
+        "3c",
+        "4c",
+        "5c",
+        "6c"
+      ],
+      "bottom": [
+        "Th",
+        "Jh",
+        "Ks",
+        "Ac"
+      ],
+      "usedCards": [
+        "Qh",
+        "3c",
+        "4c",
+        "5c",
+        "6c",
+        "Th",
+        "Jh",
+        "Ks",
+        "Ac"
+      ]
+    },
+    "check": "hasCard(top, '2', 'c')"
+  },
+  {
+    "name": "46 [R4]: A 不弃",
+    "round": 4,
+    "dealt": [
+      "As",
+      "2d",
+      "3d"
+    ],
+    "state": {
+      "top": [
+        "Kh",
+        "Qh"
+      ],
+      "middle": [
+        "3c",
+        "4c",
+        "5c",
+        "6c"
+      ],
+      "bottom": [
+        "2s",
+        "7d",
+        "8s",
+        "9d"
+      ],
+      "usedCards": [
+        "Kh",
+        "Qh",
+        "3c",
+        "4c",
+        "5c",
+        "6c",
+        "2s",
+        "7d",
+        "8s",
+        "9d"
+      ]
+    },
+    "check": "!(discarded && discarded.rank === 'A')"
+  },
+  {
+    "name": "47 [R4]: 不破底 KK",
+    "round": 4,
+    "dealt": [
+      "5h",
+      "2h",
+      "9h"
+    ],
+    "state": {
+      "top": [
+        "Ah",
+        "Qh"
+      ],
+      "middle": [
+        "3c",
+        "4c",
+        "5c",
+        "6c"
+      ],
+      "bottom": [
+        "Kc",
+        "Kd",
+        "7s",
+        "8d"
+      ],
+      "usedCards": [
+        "Ah",
+        "Qh",
+        "3c",
+        "4c",
+        "5c",
+        "6c",
+        "Kc",
+        "Kd",
+        "7s",
+        "8d"
+      ]
+    },
+    "check": "cntRank(bottom, 'K') >= 2"
+  },
+  {
+    "name": "48 [R5]: Q♥ 完成底 flush",
+    "round": 5,
+    "dealt": [
+      "Qh",
+      "4s",
+      "2s"
+    ],
+    "state": {
+      "top": [
+        "Ac",
+        "Kc"
+      ],
+      "middle": [
+        "2d",
+        "3d",
+        "5d",
+        "6s",
+        "4c"
+      ],
+      "bottom": [
+        "7h",
+        "8h",
+        "9h",
+        "Jh"
+      ],
+      "usedCards": [
+        "Ac",
+        "Kc",
+        "2d",
+        "3d",
+        "5d",
+        "6s",
+        "4c",
+        "7h",
+        "8h",
+        "9h",
+        "Jh"
+      ]
+    },
+    "check": "cntSuit(bottom, 'h') >= 5"
+  },
+  {
+    "name": "49 [R5]: 8♥ 上顶 (joker 降为 8, 不 foul)",
+    "round": 5,
+    "dealt": [
+      "Kc",
+      "8h",
+      "2c"
+    ],
+    "state": {
+      "top": [
+        "X",
+        "Kh"
+      ],
+      "middle": [
+        "Qc",
+        "Qh",
+        "Jh",
+        "9d"
+      ],
+      "bottom": [
+        "3s",
+        "4h",
+        "5s",
+        "6h",
+        "7d"
+      ],
+      "usedCards": [
+        "X",
+        "Kh",
+        "Qc",
+        "Qh",
+        "Jh",
+        "9d",
+        "3s",
+        "4h",
+        "5s",
+        "6h",
+        "7d"
+      ]
+    },
+    "check": "hasCard(top, '8', 'h')"
+  },
+  {
+    "name": "50 [R5]: 7♥ 顶, 8♠ 底凑 straight",
+    "round": 5,
+    "dealt": [
+      "As",
+      "7h",
+      "8s"
+    ],
+    "state": {
+      "top": [
+        "X",
+        "2c"
+      ],
+      "middle": [
+        "Kh",
+        "Kd",
+        "3h",
+        "4s",
+        "5h"
+      ],
+      "bottom": [
+        "9d",
+        "Th",
+        "Jc",
+        "Qd"
+      ],
+      "usedCards": [
+        "X",
+        "2c",
+        "Kh",
+        "Kd",
+        "3h",
+        "4s",
+        "5h",
+        "9d",
+        "Th",
+        "Jc",
+        "Qd"
+      ]
+    },
+    "check": "hasCard(top, '7', 'h') && hasCard(bottom, '8', 's')"
+  },
+  {
+    "name": "51 [R1]: UR3 hand, 0 A used → AA 锁顶 (常规)",
+    "round": 1,
+    "dealt": [
+      "9s",
+      "2c",
+      "X",
+      "5h",
+      "Ac"
+    ],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "check": "cntJoker(top) >= 1 && cntRank(top, 'A') >= 1"
+  },
+  {
+    "name": "52 [R1]: UR3 hand, 2 A used → 仍 AA 锁顶 (无 AAA 升级)",
+    "round": 1,
+    "dealt": [
+      "9s",
+      "2c",
+      "X",
+      "5h",
+      "Ac"
+    ],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": [
+        "Ad",
+        "Ah"
+      ]
+    },
+    "check": "cntJoker(top) >= 1 && cntRank(top, 'A') >= 1"
+  },
+  {
+    "name": "53 [R1]: UR3 hand, 3 A used → 仍 AA 锁顶 (Ac 是最后 1 A)",
+    "round": 1,
+    "dealt": [
+      "9s",
+      "2c",
+      "X",
+      "5h",
+      "Ac"
+    ],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": [
+        "Ad",
+        "Ah",
+        "As"
+      ]
+    },
+    "check": "cntJoker(top) >= 1 && cntRank(top, 'A') >= 1"
+  },
+  {
+    "name": "54 [R1]: 4 A used + dealt 无 A → joker 顶等 K/Q 进范",
+    "round": 1,
+    "dealt": [
+      "9s",
+      "2c",
+      "X",
+      "5h",
+      "8c"
+    ],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": [
+        "Ad",
+        "Ah",
+        "As",
+        "Ac"
+      ]
+    },
+    "check": "cntJoker(top) >= 1"
+  },
+  {
+    "name": "55 [R1]: 4A+3K used, dealt K → joker 必上顶 (KK 锁 Fantasy)",
+    "round": 1,
+    "dealt": [
+      "9s",
+      "2c",
+      "X",
+      "5h",
+      "Kh"
+    ],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": [
+        "Ad",
+        "Ah",
+        "As",
+        "Ac",
+        "Kc",
+        "Kd",
+        "Ks"
+      ]
+    },
+    "check": "cntJoker(top) >= 1"
+  },
+  {
+    "name": "56 [R1]: 0 A used, dealt K + joker → joker 顶, K 必上底",
+    "round": 1,
+    "dealt": [
+      "9s",
+      "2c",
+      "X",
+      "5h",
+      "Kh"
+    ],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "check": "cntJoker(top) >= 1 && hasCard(bottom, 'K', 'h')"
+  },
+  {
+    "name": "57 [R3]: R3 3 A used + dealt A → 必上顶配 joker",
+    "round": 3,
+    "dealt": [
+      "Ah",
+      "8h",
+      "2h"
+    ],
+    "state": {
+      "top": [
+        "X"
+      ],
+      "middle": [
+        "3c",
+        "4c",
+        "5c"
+      ],
+      "bottom": [
+        "2s",
+        "7d",
+        "9d"
+      ],
+      "usedCards": [
+        "X",
+        "3c",
+        "4c",
+        "5c",
+        "2s",
+        "7d",
+        "9d",
+        "Ad",
+        "As",
+        "Ac"
+      ]
+    },
+    "check": "cntJoker(top) >= 1 && cntRank(top, 'A') >= 1"
+  },
+  {
+    "name": "58 [R3]: R3 0 A used + dealt A → 上顶配 joker",
+    "round": 3,
+    "dealt": [
+      "Ah",
+      "8h",
+      "2h"
+    ],
+    "state": {
+      "top": [
+        "X"
+      ],
+      "middle": [
+        "3c",
+        "4c",
+        "5c"
+      ],
+      "bottom": [
+        "2s",
+        "7d",
+        "9d"
+      ],
+      "usedCards": [
+        "X",
+        "3c",
+        "4c",
+        "5c",
+        "2s",
+        "7d",
+        "9d"
+      ]
+    },
+    "check": "cntJoker(top) >= 1 && cntRank(top, 'A') >= 1"
+  },
+  {
+    "name": "59 [R2]: R2 KK + 0 A used → KK 必上底 等 A/鬼",
+    "round": 2,
+    "dealt": [
+      "Kh",
+      "Ks",
+      "4d"
+    ],
+    "state": {
+      "top": [
+        "Qd"
+      ],
+      "middle": [
+        "5c",
+        "6c"
+      ],
+      "bottom": [
+        "3h",
+        "9s"
+      ],
+      "usedCards": [
+        "Qd",
+        "5c",
+        "6c",
+        "3h",
+        "9s"
+      ]
+    },
+    "check": "cntRank(bottom, 'K') >= 2  // KK 必上底"
+  },
+  {
+    "name": "60 [R2]: R2 KK + 1 A used → KK 必上底 等 A/鬼",
+    "round": 2,
+    "dealt": [
+      "Kh",
+      "Ks",
+      "4d"
+    ],
+    "state": {
+      "top": [
+        "Qd"
+      ],
+      "middle": [
+        "5c",
+        "6c"
+      ],
+      "bottom": [
+        "3h",
+        "9s"
+      ],
+      "usedCards": [
+        "Qd",
+        "5c",
+        "6c",
+        "3h",
+        "9s",
+        "Ad"
+      ]
+    },
+    "check": "cntRank(bottom, 'K') >= 2"
+  },
+  {
+    "name": "61 [R2]: R2 KK + 2 A used → KK 必上底 等 A/鬼",
+    "round": 2,
+    "dealt": [
+      "Kh",
+      "Ks",
+      "4d"
+    ],
+    "state": {
+      "top": [
+        "Qd"
+      ],
+      "middle": [
+        "5c",
+        "6c"
+      ],
+      "bottom": [
+        "3h",
+        "9s"
+      ],
+      "usedCards": [
+        "Qd",
+        "5c",
+        "6c",
+        "3h",
+        "9s",
+        "Ad",
+        "Ah"
+      ]
+    },
+    "check": "cntRank(bottom, 'K') >= 2"
+  },
+  {
+    "name": "62 [R2]: R2 KK + 3 A used → KK 顶或底 (不可中)",
+    "round": 2,
+    "dealt": [
+      "Kh",
+      "Ks",
+      "4d"
+    ],
+    "state": {
+      "top": [
+        "Qd"
+      ],
+      "middle": [
+        "5c",
+        "6c"
+      ],
+      "bottom": [
+        "3h",
+        "9s"
+      ],
+      "usedCards": [
+        "Qd",
+        "5c",
+        "6c",
+        "3h",
+        "9s",
+        "Ad",
+        "Ah",
+        "As"
+      ]
+    },
+    "check": "cntRank(middle, 'K') < 2"
+  },
+  {
+    "name": "63 [R2]: R2 KK + 4 A used → KK 必上顶 锁 Fantasy",
+    "round": 2,
+    "dealt": [
+      "Kh",
+      "Ks",
+      "4d"
+    ],
+    "state": {
+      "top": [
+        "Qd"
+      ],
+      "middle": [
+        "5c",
+        "6c"
+      ],
+      "bottom": [
+        "3h",
+        "9s"
+      ],
+      "usedCards": [
+        "Qd",
+        "5c",
+        "6c",
+        "3h",
+        "9s",
+        "Ad",
+        "Ah",
+        "As",
+        "Ac"
+      ]
+    },
+    "check": "cntRank(top, 'K') >= 2"
+  }
+]

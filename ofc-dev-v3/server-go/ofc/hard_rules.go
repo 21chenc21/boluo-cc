@@ -1,0 +1,2163 @@
+package ofc
+
+// hard_rules.go — 打地鼠用 candidate filter (R1 + R2-R5).
+// 在 candidate 枚举之后, rollout-Q 排序之前应用. 不修 rollout 内部.
+// 任何 rule 把候选清空则跳过该 rule (保留前一步结果) — 即"宽容"应用.
+
+// HardRuleVerbose — 可选 log (用于 debug 看哪个 rule 触发)
+var HardRuleVerbose = false
+
+// HardRulesDisabled — 若 true, 跳过所有 candidate filter (env DISABLE_HARD_RULES=1)
+var HardRulesDisabled = false
+
+// PolicyBoost — 把 head 3 (policy logit) 加权到 prerank score 中.
+// 0 = 不用 policy (默认), 30 = 强 bias. 通过 env POLICY_BOOST 设置.
+var PolicyBoost float32 = 0
+
+// MctsDisabled — 若 true, ExpertPlace5/3 跳过 MCTS rollout, 直接取 prerank top-1.
+// 用 env DISABLE_MCTS=1 设. 用于纯 MLP value-head 推理 (排除 rollout 干扰).
+var MctsDisabled = false
+
+// MctsSimsMult — MCTS 各 stage sims 全局倍率 (额外乘到 R1Mult 之上).
+// 默认 1.0; env MCTS_SIMS_MULT=10 → 各 stage sims × 10 (更精, 更慢).
+var MctsSimsMult float32 = 1.0
+
+// MctsPrerankW — Stage 1 ranking 中 prerank (value head) 跟 rollout_mean 的权重.
+// stage1_score = MctsPrerankW * prerank + (1 - MctsPrerankW) * rollout_mean
+//   0 = 纯 rollout (默认, 老行为)
+//   1 = 纯 prerank (跳过 stage 1 rollout, 直接 value-head 排 → 喂 stage 2)
+//   0.5 = blend
+// env MCTS_PRERANK_W 设. 用于诊断 rollout policy bias vs value head signal.
+var MctsPrerankW float32 = 0
+
+// MctsStage{1,2,3}Min — 2026-05-23 加, 控制 stage candidate 下限.
+// default 0 = 用 expert_place.go 内 hardcoded 默认 (5/3/2)
+// 测 top-N MCTS 效果: 设 s1=N s2=N s3=N
+var MctsStage1Min int = 0
+var MctsStage2Min int = 0
+var MctsStage3Min int = 0
+
+// MctsTopKSample — 2026-05-23 加. MctsDisabled/PureMLP 路径下 R1 从 NN prerank top-K 随机选 1.
+// 0=top-1 deterministic, 2=top-2 随机, 5=top-5 随机.
+var MctsTopKSample int = 0
+
+// MctsTopKSampleRN — R2-R5 top-K sample. 默认 0 = top-1 deterministic (保 endgame quality).
+// 测全 round sample 效果用: 设跟 MctsTopKSample 一样.
+var MctsTopKSampleRN int = 0
+
+// MctsDebugTrace — 若 true, ExpertPlace5/3 打印每 stage 的 top 候选 (prerank / stage1 / stage2 / stage3)
+// 仅供单 case 调试用 (case-mcts-trace tool 启用). 输出到 stdout.
+var MctsDebugTrace = false
+
+// === Student NN 蒸馏部署 ===
+// 训完 student ckpt 后部署用:
+//   DISABLE_MCTS=1 POLICY_BOOST=30 SEED=42 ./ofc-go ...
+// 效果: ExpertPlace5/3 跳过 rollout (DISABLE_MCTS), 用 value+policy 排序 (POLICY_BOOST 让 policy 主导).
+// 没新加 flag, 复用现有 2 个 env.
+
+// detectDealtPairs — 返回 rank → count (含 ≥2 的 ranks). joker 不算.
+func detectDealtPairs(cards []Card) map[uint8]int {
+	out := make(map[uint8]int)
+	cnt := make(map[uint8]int)
+	for _, c := range cards {
+		if c.IsJoker() {
+			continue
+		}
+		cnt[c.Rank()]++
+	}
+	for r, v := range cnt {
+		if v >= 2 {
+			out[r] = v
+		}
+	}
+	return out
+}
+
+func dealtHasJoker(cards []Card) bool {
+	for _, c := range cards {
+		if c.IsJoker() {
+			return true
+		}
+	}
+	return false
+}
+
+func dealtHasA(cards []Card) bool {
+	for _, c := range cards {
+		if !c.IsJoker() && c.Rank() == RankA {
+			return true
+		}
+	}
+	return false
+}
+
+// detectFlushGroup — 返回 dealt 中 ≥3 张同 suit 的 indices (joker + A 排除).
+// A 单独可上顶, 不强制跟 flush 在底.
+func detectFlushGroup(cards []Card) []int {
+	bySuit := make(map[uint8][]int)
+	for i, c := range cards {
+		if c.IsJoker() || c.Rank() == RankA {
+			continue
+		}
+		bySuit[c.Suit()] = append(bySuit[c.Suit()], i)
+	}
+	out := []int{}
+	for _, idxs := range bySuit {
+		if len(idxs) >= 3 {
+			out = append(out, idxs...)
+		}
+	}
+	return out
+}
+
+func dealtJokerCount(cards []Card) int {
+	n := 0
+	for _, c := range cards {
+		if c.IsJoker() {
+			n++
+		}
+	}
+	return n
+}
+
+// noAvailableAces — state.UsedCards 已含全部 4 个 A
+func noAvailableAces(state *GameState) bool {
+	for r := uint8(0); r < 4; r++ {
+		c := MakeCard(RankA, r)
+		if !state.UsedCards[c.ID()] {
+			return false
+		}
+	}
+	return true
+}
+
+// ============ R1 rules (Placement) ============
+
+// r1RuleNoSplitDealtPair — dealt 同 rank ≥2 张必须同行
+func r1RuleNoSplitDealtPair(p Placement, cards []Card) bool {
+	pairs := detectDealtPairs(cards)
+	if len(pairs) == 0 {
+		return true
+	}
+	for rank := range pairs {
+		var firstRow Row
+		first := true
+		for i, c := range cards {
+			if c.IsJoker() || c.Rank() != rank {
+				continue
+			}
+			if first {
+				firstRow = p[i]
+				first = false
+			} else if p[i] != firstRow {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+// r1RuleJokerWithA_OnTop — dealt 有 X + 单 A (无 AA pair) → X+A 必须都在 top
+// 若 dealt 已有 AA pair, 此规则不应用 (AA 自身已锁 fantasy, 不需 X 配)
+func r1RuleJokerWithA_OnTop(p Placement, cards []Card) bool {
+	if !dealtHasJoker(cards) || !dealtHasA(cards) {
+		return true
+	}
+	// AA pair 已经在 dealt, 不需 joker 配 A
+	pairs := detectDealtPairs(cards)
+	if cnt, ok := pairs[RankA]; ok && cnt >= 2 {
+		return true
+	}
+	jokerOnTop := false
+	aOnTop := false
+	for i, c := range cards {
+		if p[i] != RowTop {
+			continue
+		}
+		if c.IsJoker() {
+			jokerOnTop = true
+		} else if c.Rank() == RankA {
+			aOnTop = true
+		}
+	}
+	return jokerOnTop && aOnTop
+}
+
+// r1RuleFlushGroup_OnBot — dealt 有 ≥3 同 suit → 全部上底
+// 例外 (2026-05-13): dealt 还含 TT+ 大对子 → 跳过 (case 18 fix:
+//   TT 已锁 royalty, ♦ 不必强压底, 让 6d 中保 mid draw)
+func r1RuleFlushGroup_OnBot(p Placement, cards []Card) bool {
+	grp := detectFlushGroup(cards)
+	if len(grp) == 0 {
+		return true
+	}
+	pairs := detectDealtPairs(cards)
+	for rank := range pairs {
+		if rank >= RankT { // TT+ pair → 已锁 royalty, flush 不强制全底
+			return true
+		}
+	}
+	for _, i := range grp {
+		if p[i] != RowBottom {
+			return false
+		}
+	}
+	return true
+}
+
+// r1RuleDealtBigPair_Top — dealt 有 AA pair → 必须 上顶 (锁 fantasy)
+// 不处理 KK (要看 deck 还有没 A, 较复杂)
+func r1RuleDealtBigPair_Top(p Placement, cards []Card) bool {
+	pairs := detectDealtPairs(cards)
+	if cnt, ok := pairs[RankA]; ok && cnt >= 2 {
+		// 所有 A 必须在 top
+		for i, c := range cards {
+			if c.IsJoker() || c.Rank() != RankA {
+				continue
+			}
+			if p[i] != RowTop {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+// r1RuleJokerNotOnTopWithAA — dealt 有 AA pair (real) → joker 不能上顶 (AA 已锁 fantasy, 不需 X 加 AAA wild)
+func r1RuleJokerNotOnTopWithAA(p Placement, cards []Card) bool {
+	pairs := detectDealtPairs(cards)
+	cnt, ok := pairs[RankA]
+	if !(ok && cnt >= 2) {
+		return true
+	}
+	for i, c := range cards {
+		if c.IsJoker() && p[i] == RowTop {
+			return false
+		}
+	}
+	return true
+}
+
+// r1RuleKK_OnBot_WithAA — R1 dealt 含 AA pair + KK pair → KK 必上底 (AA 顶, KK 底, 防 KK 中堵 foul)
+// Pattern 修复: case 6 (X+KK+AA → AA top + KK bot + X mid/bot)
+func r1RuleKK_OnBot_WithAA(p Placement, cards []Card) bool {
+	pairs := detectDealtPairs(cards)
+	cntA, okA := pairs[RankA]
+	cntK, okK := pairs[RankK]
+	if !(okA && cntA >= 2 && okK && cntK >= 2) {
+		return true
+	}
+	for i, c := range cards {
+		if !c.IsJoker() && c.Rank() == RankK && p[i] != RowBottom {
+			return false
+		}
+	}
+	return true
+}
+
+// r1RuleJokerOnBot_WithAA — R1 dealt 含 X + AA pair → joker 必上底 (AA 已锁 fantasy, joker 撑底)
+// 例外: dealt 还含 KK/QQ trips/4-suit 等更强底候选 → 仍可 (此版本简化, 不区分)
+// Pattern 修复: case 11 (X+AA+low → AA top + X bot)
+func r1RuleJokerOnBot_WithAA(p Placement, cards []Card) bool {
+	pairs := detectDealtPairs(cards)
+	cnt, ok := pairs[RankA]
+	if !(ok && cnt >= 2) {
+		return true
+	}
+	for i, c := range cards {
+		if c.IsJoker() && p[i] != RowBottom {
+			return false
+		}
+	}
+	return true
+}
+
+// r1RuleJokerOnTop_General — R1 dealt 含 joker, 无 AA pair → 至少 1 joker 上顶 (fantasy anchor)
+// 例外: dealt 含 AA pair → r1RuleJokerNotOnTopWithAA 反向处理
+// Pattern 修复: case 2 (X+Q+low) / case 56 (X+K+low) / case 11 (X+AA - 已被 AA 例外排除)
+// 注: case 8 (2 jokers) — 任一 joker 上顶即满足
+func r1RuleJokerOnTop_General(p Placement, cards []Card) bool {
+	if !dealtHasJoker(cards) {
+		return true
+	}
+	pairs := detectDealtPairs(cards)
+	if cnt, ok := pairs[RankA]; ok && cnt >= 2 {
+		return true // AA pair: 不强制 joker 上顶
+	}
+	// 至少 1 joker 在 top
+	for i, c := range cards {
+		if c.IsJoker() && p[i] == RowTop {
+			return true
+		}
+	}
+	return false
+}
+
+// ============ Fantasy Feasibility (deck-aware) ============
+
+// HandTypeEnum — OFC hand 类型枚举 (低到高)
+type HandTypeEnum int
+
+const (
+	HtHigh HandTypeEnum = iota
+	HtPair
+	HtTwoPair
+	HtThreeKind
+	HtStraight
+	HtFlush
+	HtFullHouse
+	HtFourKind
+	HtStraightFlush
+)
+
+// computeDeckRemaining — 给定 state, 算 deck 剩余各 rank/suit/joker 数
+// 2026-05-22 fix: jokerRem 从 state.NumJokers 起算 (本局总鬼数), 不再写死 2.
+// 之前写死 2 跟 NumJokers 脱钩 → 0/4 鬼局 feature 大错估. usedCards + state 现摆牌都扣.
+func computeDeckRemaining(state *GameState) (rankRem [13]int, suitRem [4]int, jokerRem int) {
+	jokerRem = state.NumJokers
+	for r := 0; r < 13; r++ {
+		rankRem[r] = 4
+	}
+	for s := 0; s < 4; s++ {
+		suitRem[s] = 13
+	}
+	seen := make(map[string]bool)
+	for cid := range state.UsedCards {
+		seen[cid] = true
+	}
+	for _, c := range state.Top {
+		seen[c.ID()] = true
+	}
+	for _, c := range state.Middle {
+		seen[c.ID()] = true
+	}
+	for _, c := range state.Bottom {
+		seen[c.ID()] = true
+	}
+	for cid := range seen {
+		c, ok := ParseCard(cid)
+		if !ok {
+			continue
+		}
+		if c.IsJoker() {
+			jokerRem--
+		} else {
+			rankRem[c.Rank()]--
+			suitRem[c.Suit()]--
+		}
+	}
+	if jokerRem < 0 {
+		jokerRem = 0
+	}
+	return
+}
+
+// maxAchievableHandType — 估行能达到的最高 hand type, 给 deck 剩余 + slots
+// 简化: 检查高到低, 返回首个可达
+func maxAchievableHandType(rowCards []Card, slots int, rankRem [13]int, suitRem [4]int, jokerRem int) HandTypeEnum {
+	var rowRankCnt [13]int
+	var rowSuitCnt [4]int
+	rowJokers := 0
+	for _, c := range rowCards {
+		if c.IsJoker() {
+			rowJokers++
+		} else {
+			rowRankCnt[c.Rank()]++
+			rowSuitCnt[c.Suit()]++
+		}
+	}
+	rowSize := len(rowCards) + slots
+
+	// 4-kind: 任 rank 凑 4 (row + joker wild + deck draws)
+	for r := 0; r < 13; r++ {
+		have := rowRankCnt[r] + rowJokers
+		need := 4 - have
+		if need <= 0 {
+			return HtFourKind
+		}
+		if need <= slots && (rankRem[r]+jokerRem) >= need {
+			return HtFourKind
+		}
+	}
+
+	// Full house: trips of r3 + pair of r2 (r2 != r3)
+	for r3 := 0; r3 < 13; r3++ {
+		for r2 := 0; r2 < 13; r2++ {
+			if r2 == r3 {
+				continue
+			}
+			have3 := rowRankCnt[r3]
+			have2 := rowRankCnt[r2]
+			need3 := 3 - have3
+			need2 := 2 - have2
+			if need3 < 0 {
+				need3 = 0
+			}
+			if need2 < 0 {
+				need2 = 0
+			}
+			totalNeed := need3 + need2
+			// 可用 cards (rank r3/r2 + jokers)
+			totalAvail := rankRem[r3] + rankRem[r2] + rowJokers + jokerRem
+			if totalNeed <= slots+rowJokers && totalAvail >= totalNeed {
+				return HtFullHouse
+			}
+		}
+	}
+
+	// Flush: 5 同色 (joker wild)
+	if rowSize >= 5 {
+		for s := 0; s < 4; s++ {
+			have := rowSuitCnt[s] + rowJokers
+			need := 5 - have
+			if need <= 0 {
+				return HtFlush
+			}
+			if need <= slots && (suitRem[s]+jokerRem) >= need {
+				return HtFlush
+			}
+		}
+	}
+
+	// Straight: 5-rank window, 缺口 ≤ slots + jokers (deck 有缺口卡)
+	if rowSize >= 5 {
+		for start := 0; start <= 8; start++ {
+			ranksInWindow := 0
+			deckInWindow := 0
+			for r := start; r <= start+4; r++ {
+				if rowRankCnt[r] > 0 {
+					ranksInWindow++
+				} else {
+					deckInWindow += rankRem[r]
+				}
+			}
+			need := 5 - ranksInWindow
+			if need <= slots && (deckInWindow+rowJokers+jokerRem) >= need {
+				return HtStraight
+			}
+		}
+	}
+
+	// Trips: 任 rank 凑 3
+	for r := 0; r < 13; r++ {
+		have := rowRankCnt[r] + rowJokers
+		need := 3 - have
+		if need <= 0 {
+			return HtThreeKind
+		}
+		if need <= slots && (rankRem[r]+jokerRem) >= need {
+			return HtThreeKind
+		}
+	}
+
+	// 2-pair: 任 2 个 ranks 凑 pair
+	pairCount := 0
+	for r := 0; r < 13; r++ {
+		have := rowRankCnt[r] + rowJokers
+		need := 2 - have
+		if need <= 0 {
+			pairCount++
+		} else if need <= slots && (rankRem[r]+jokerRem) >= need {
+			pairCount++
+		}
+	}
+	if pairCount >= 2 {
+		return HtTwoPair
+	}
+	if pairCount >= 1 {
+		return HtPair
+	}
+	return HtHigh
+}
+
+// canTopReachPairQPlus — top 能凑 pair Q+ 或 trips (fantasy 触发)
+func canTopReachPairQPlus(state *GameState) bool {
+	rankRem, _, jokerRem := computeDeckRemaining(state)
+	var topRankCnt [13]int
+	topJokers := 0
+	for _, c := range state.Top {
+		if c.IsJoker() {
+			topJokers++
+		} else {
+			topRankCnt[c.Rank()]++
+		}
+	}
+	topSlots := 3 - len(state.Top)
+	// pair Q+
+	for r := int(RankQ); r <= int(RankA); r++ {
+		have := topRankCnt[r] + topJokers
+		need := 2 - have
+		if need <= 0 {
+			return true
+		}
+		if need <= topSlots && (rankRem[r]+jokerRem) >= need {
+			return true
+		}
+	}
+	// trips (any rank)
+	for r := 0; r < 13; r++ {
+		have := topRankCnt[r] + topJokers
+		need := 3 - have
+		if need <= 0 {
+			return true
+		}
+		if need <= topSlots && (rankRem[r]+jokerRem) >= need {
+			return true
+		}
+	}
+	return false
+}
+
+// FantasyLost — state 是否已经失去 fantasy 机会
+// 检查:
+//   - top 不能凑 pair Q+ / trips
+//   - mid_max ≤ 2-pair (无法 > 2-pair → 用户要求)
+//   - bot_max < mid_max (foul 必然)
+func FantasyLost(state *GameState) bool {
+	if !canTopReachPairQPlus(state) {
+		return true
+	}
+	rankRem, suitRem, jokerRem := computeDeckRemaining(state)
+	midSlots := 5 - len(state.Middle)
+	botSlots := 5 - len(state.Bottom)
+	midMax := maxAchievableHandType(state.Middle, midSlots, rankRem, suitRem, jokerRem)
+	if midMax <= HtTwoPair {
+		return true
+	}
+	botMax := maxAchievableHandType(state.Bottom, botSlots, rankRem, suitRem, jokerRem)
+	if botMax < midMax {
+		return true
+	}
+	return false
+}
+
+// rnRuleFantasyPossible — RN 应用候选后, 若 fantasy lost AND 当前 state 还没 lost → reject
+func rnRuleFantasyPossible(a *RoundNAction, cards []Card, state *GameState) bool {
+	// 只在 R2-R5 应用
+	if state.Round < 2 || state.Round > 5 {
+		return true
+	}
+	// 当前 state 已 lost, 不再过滤 (反正没救)
+	if FantasyLost(state) {
+		return true
+	}
+	// 模拟 post-state
+	post := state.Clone()
+	post.UsedCards[cards[a.DiscardIdx].ID()] = true
+	for k, c := range a.Kept {
+		post.PlaceCard(c, a.Placement[k])
+	}
+	// post 应仍 fantasy possible
+	return !FantasyLost(post)
+}
+
+// canFantasyTopFinal — top 3 张是否可能 fantasy (pair≥Q / trips / joker+高牌)
+func canFantasyTopFinal(topCards []Card) bool {
+	if len(topCards) < 3 {
+		return true // 未满, 未来可补
+	}
+	hasJoker := false
+	var rankCnt [13]int
+	hasHigh := false
+	for _, c := range topCards {
+		if c.IsJoker() {
+			hasJoker = true
+		} else {
+			rankCnt[c.Rank()]++
+			if int(c.Rank()) >= int(RankQ) {
+				hasHigh = true
+			}
+		}
+	}
+	// trips?
+	for _, n := range rankCnt {
+		if n >= 3 {
+			return true
+		}
+	}
+	// pair ≥Q?
+	for r := int(RankQ); r <= int(RankA); r++ {
+		if rankCnt[r] >= 2 {
+			return true
+		}
+	}
+	// joker + 高牌 → 立刻 pair ≥Q via wild
+	if hasJoker && hasHigh {
+		return true
+	}
+	return false
+}
+
+// r1RuleTopMustAllowFantasy — R1 摆完 top 3 张但不能 fantasy → reject
+func r1RuleTopMustAllowFantasy(p Placement, cards []Card) bool {
+	var topCards []Card
+	for i, c := range cards {
+		if p[i] == RowTop {
+			topCards = append(topCards, c)
+		}
+	}
+	return canFantasyTopFinal(topCards)
+}
+
+// rnRuleTopMustAllowFantasy — RN action 摆完 top 3 张但不能 fantasy → reject
+func rnRuleTopMustAllowFantasy(a *RoundNAction, cards []Card, state *GameState) bool {
+	// 2026-05-20 sp15: 只在 R2-R3 触发. R4-R5 已临近终局, 是否能进范基本确定,
+	// 强制保留 fantasy 路径会误杀"放弃 fantasy 走 mid flush draw 避 foul" 类合理策略 (case 44/50).
+	if state.Round >= 4 {
+		return true
+	}
+	topCards := append([]Card(nil), state.Top...)
+	for k, c := range a.Kept {
+		if a.Placement[k] == RowTop {
+			topCards = append(topCards, c)
+		}
+	}
+	return canFantasyTopFinal(topCards)
+}
+
+// R1Split2SuitPenalty — Pattern 2: dealt 有 2+ 同色卡, 但摆到不同行 (排除 top) → -5/对
+// 例: dealt 有 Td + Jd (♦♦), AI 摆 中[Jd] 底[Td] → 拆 ♦ flush 苗 → penalty
+// 例外: top 不算 (top 顶多 3 张, 不凑 flush)
+// 例外: dealt 含 ≥3 同色由 r1RuleFlushGroup_OnBot 处理 (强制全上底)
+func R1Split2SuitPenalty(p Placement, cards []Card) float32 {
+	// 统计每 suit 出现位置
+	suitRows := make(map[uint8][]Row)
+	for i, c := range cards {
+		if c.IsJoker() {
+			continue
+		}
+		suitRows[c.Suit()] = append(suitRows[c.Suit()], p[i])
+	}
+	var penalty float32
+	for _, rows := range suitRows {
+		if len(rows) < 2 {
+			continue
+		}
+		// 在 mid+bot 行中数它们的分布
+		midCount, botCount := 0, 0
+		for _, r := range rows {
+			if r == RowMiddle {
+				midCount++
+			} else if r == RowBottom {
+				botCount++
+			}
+		}
+		if midCount >= 1 && botCount >= 1 {
+			// 同色拆 mid + bot
+			pairs := minInt(midCount, botCount)
+			penalty += float32(pairs) * 5
+		}
+	}
+	return penalty
+}
+
+// R1TopPairKickerEVPenalty — Pattern 6: top 已有 ≥1 张 K+ rank, dealt 有 A,
+// 但 candidate 把 Q/K 上顶而不是 A → -8 (AA fan_bonus 80 vs QQ 20 vs KK 40)
+// 仅 R1, R2-R5 由 rnRule 系列处理 top 完整性
+func R1TopPairKickerEVPenalty(p Placement, cards []Card) float32 {
+	// 检查 dealt 是否有 A
+	hasA := false
+	hasA_pos := -1
+	for i, c := range cards {
+		if !c.IsJoker() && c.Rank() == RankA {
+			hasA = true
+			hasA_pos = i
+		}
+	}
+	if !hasA {
+		return 0
+	}
+	// A 上顶 → 0 penalty
+	if p[hasA_pos] == RowTop {
+		return 0
+	}
+	// A 不在顶, 检查 top 有没有 Q/K (有 → 浪费 AA 机会)
+	for i, c := range cards {
+		if p[i] != RowTop || c.IsJoker() {
+			continue
+		}
+		r := c.Rank()
+		if r == RankQ || r == RankK {
+			return 8 // top 已锁 Q/K, A 还没上 → 浪费 fan_bonus EV
+		}
+	}
+	return 0
+}
+
+// R4FoulImminentPenalty — Pattern 1: R4 候选 apply 后, 若 mid/bot 已满 + top 待 1 张,
+// 且 mid 是 high-card + top 已有比 mid 高的 rank → R5 给任何牌都 foul (top > mid 必然)
+// 返回 +20 penalty (足够大让候选基本不被选)
+// 注意: 此函数操作 POST-apply state (已经 apply 候选).
+func R4FoulImminentPenalty(state *GameState) float32 {
+	midSlots := 5 - len(state.Middle)
+	botSlots := 5 - len(state.Bottom)
+	topSlots := 3 - len(state.Top)
+	if midSlots > 0 || botSlots > 0 || topSlots != 1 {
+		return 0
+	}
+	if len(state.Middle) != 5 || len(state.Bottom) != 5 {
+		return 0
+	}
+	midEval := Evaluate5(state.Middle)
+	botEval := Evaluate5(state.Bottom)
+	if midEval.Type > botEval.Type {
+		return 20 // 已 foul
+	}
+	if midEval.Type != TypeHighCard {
+		return 0 // mid 已经至少 pair, 跟 top 比一般不会爆
+	}
+	// mid 是 high-card, 看 top 最大 rank
+	topMaxRank := -1
+	for _, c := range state.Top {
+		if c.IsJoker() {
+			topMaxRank = 12 // joker 当 A
+		} else if int(c.Rank()) > topMaxRank {
+			topMaxRank = int(c.Rank())
+		}
+	}
+	midMaxRank := -1
+	for _, c := range state.Middle {
+		if c.IsJoker() {
+			midMaxRank = 12
+		} else if int(c.Rank()) > midMaxRank {
+			midMaxRank = int(c.Rank())
+		}
+	}
+	if topMaxRank > midMaxRank {
+		// top 已有比 mid 最高 rank 大的卡, R5 给任何牌:
+		// - 若 R5 卡 < topMaxRank → top 仍 high-card with topMaxRank > mid high-card → foul
+		// - 若 R5 卡 == top 某 rank → top 成 pair > mid high-card → foul
+		// - 若 R5 卡 > topMaxRank → top high-card 升级, 还是 > mid → foul
+		// → 无论 R5 怎样必 foul
+		return 20
+	}
+	return 0
+}
+
+// R1TopKWhenJokerAFishPenalty — R1 dealt 含 joker, joker 上顶配 K → -10
+// 理由: joker+K 锁死 KK, 浪费 joker 钓 A 升 AA 进范的机会
+// 修正 2026-05-17: 只在 dealt 真有 joker 时 fire (不再用 deck-aware), 否则误伤普通 K-top 决策
+// (case 17/22 类: TT底 + K单独上顶, 不该 fire)
+func R1TopKWhenJokerAFishPenalty(p Placement, cards []Card, state *GameState) float32 {
+	// 必须 dealt 含 joker
+	dealtHasJoker := false
+	for _, c := range cards {
+		if c.IsJoker() {
+			dealtHasJoker = true
+			break
+		}
+	}
+	if !dealtHasJoker {
+		return 0
+	}
+	// 牌堆仍要有 A 可钓
+	rankRem, _, _ := computeDeckRemaining(state)
+	for _, c := range cards {
+		if !c.IsJoker() {
+			rankRem[c.Rank()]--
+		}
+	}
+	if rankRem[RankA] < 1 {
+		return 0
+	}
+	// joker 上顶 + 同 placement 还有 K 上顶 → 锁 KK
+	jokerOnTop := false
+	kOnTop := false
+	for i, c := range cards {
+		if p[i] != RowTop {
+			continue
+		}
+		if c.IsJoker() {
+			jokerOnTop = true
+		} else if c.Rank() == RankK {
+			kOnTop = true
+		}
+	}
+	if jokerOnTop && kOnTop {
+		return 10
+	}
+	return 0
+}
+
+// R1TopNonAKXPenalty — R1 top 含非 A/K/joker 卡 → 每张 -5 (2026-05-17 加重 2→5)
+// 例外: 该 rank 在 usedCards 已 ≥3 张 (deck-aware, 余 ≤1) — 此时凑 trips fantasy 可行
+// joker 不算 (wild)
+// Pattern 4 修复: case 14/17 类 "硬塞头道" — NN value 没把 9/3 上顶的代价学透, 加重 penalty 直接 prune
+func R1TopNonAKXPenalty(p Placement, cards []Card, state *GameState) float32 {
+	var usedByRank [13]int
+	for cid := range state.UsedCards {
+		c, ok := ParseCard(cid)
+		if !ok || c.IsJoker() {
+			continue
+		}
+		usedByRank[c.Rank()]++
+	}
+	var penalty float32
+	for i, c := range cards {
+		if p[i] != RowTop || c.IsJoker() {
+			continue
+		}
+		r := c.Rank()
+		if r == RankA || r == RankK {
+			continue
+		}
+		if usedByRank[r] >= 3 {
+			continue
+		}
+		penalty += 5
+	}
+	return penalty
+}
+
+// R1IncoherentRowPenalty — R1 mid/bot 行 ≥3 张, 但既无 pair/trips, 又非纯色, 也非 ≥4-straight 潜力 → -2
+// 即 "毫无成型潜力" 的杂烩行
+func R1IncoherentRowPenalty(p Placement, cards []Card) float32 {
+	rowCards := make(map[Row][]Card)
+	for i, c := range cards {
+		rowCards[p[i]] = append(rowCards[p[i]], c)
+	}
+	var penalty float32
+	for row, cs := range rowCards {
+		if row == RowTop || len(cs) < 3 {
+			continue
+		}
+		// 检查 pair / trips / pure-suit / 4-straight 任一
+		var rankCnt [13]int
+		var suitCnt [4]int
+		jokers := 0
+		var ranks []int
+		for _, c := range cs {
+			if c.IsJoker() {
+				jokers++
+				continue
+			}
+			rankCnt[c.Rank()]++
+			suitCnt[c.Suit()]++
+			ranks = append(ranks, int(c.Rank()))
+		}
+		// pair / trips?
+		hasPair := false
+		for _, n := range rankCnt {
+			if n+jokers >= 2 {
+				hasPair = true
+				break
+			}
+		}
+		if hasPair {
+			continue
+		}
+		// pure suit?
+		placedSuits := 0
+		for _, n := range suitCnt {
+			if n > 0 {
+				placedSuits++
+			}
+		}
+		if placedSuits <= 1 {
+			continue
+		}
+		// 3+ consecutive (joker wild fill, span ≤ 3) or ≥4 in 5-window?
+		// sort ranks
+		for i := 0; i < len(ranks); i++ {
+			for j := i + 1; j < len(ranks); j++ {
+				if ranks[i] > ranks[j] {
+					ranks[i], ranks[j] = ranks[j], ranks[i]
+				}
+			}
+		}
+		hasStraight := false
+		if len(ranks) > 0 {
+			span := ranks[len(ranks)-1] - ranks[0] + 1
+			missing := span - len(ranks)
+			// 3-consecutive: span ≤ 3 and gaps fillable by joker
+			if span <= 3 && missing <= jokers {
+				hasStraight = true
+			}
+			// ≥4-card 5-window straight
+			if !hasStraight && len(ranks)+jokers >= 4 && span <= 5 && missing <= jokers {
+				hasStraight = true
+			}
+		}
+		if hasStraight {
+			continue
+		}
+		// 3-flush (joker wild)
+		maxSuitCnt := 0
+		for _, n := range suitCnt {
+			if n > maxSuitCnt {
+				maxSuitCnt = n
+			}
+		}
+		if maxSuitCnt+jokers >= 3 {
+			continue
+		}
+		penalty += 5
+	}
+	return penalty
+}
+
+// ============ R1 soft bonus/penalty (替原硬 filter) ============
+// 2026-05-17: 用户要求把以下 R1 硬规则改成 score 调整, 让 prerank/MCTS 仍能 override
+//
+// R1JokerOnTopWithAAPenalty — dealt 含 AA pair + 任一 joker 上顶 → +20 penalty
+// (替 r1RuleJokerNotOnTopWithAA; 不再 prune, 但强烈不鼓励)
+func R1JokerOnTopWithAAPenalty(p Placement, cards []Card) float32 {
+	pairs := detectDealtPairs(cards)
+	if cnt, ok := pairs[RankA]; !ok || cnt < 2 {
+		return 0
+	}
+	for i, c := range cards {
+		if c.IsJoker() && p[i] == RowTop {
+			return 20
+		}
+	}
+	return 0
+}
+
+// R1JokerWithAOnTopBonus — dealt 含 X + 单 A (非 AA pair) AND 二者都在顶 → +10
+// (替 r1RuleJokerWithA_OnTop; 鼓励配 AA fantasy)
+func R1JokerWithAOnTopBonus(p Placement, cards []Card) float32 {
+	if !dealtHasJoker(cards) {
+		return 0
+	}
+	pairs := detectDealtPairs(cards)
+	if cnt, ok := pairs[RankA]; ok && cnt >= 2 {
+		return 0 // AA pair 走 DealtBigPair_Top
+	}
+	if !dealtHasA(cards) {
+		return 0
+	}
+	xOnTop := false
+	aOnTop := false
+	for i, c := range cards {
+		if p[i] != RowTop {
+			continue
+		}
+		if c.IsJoker() {
+			xOnTop = true
+		} else if c.Rank() == RankA {
+			aOnTop = true
+		}
+	}
+	if xOnTop && aOnTop {
+		return 10
+	}
+	return 0
+}
+
+// R1SingleAOnTopBonus — dealt 单 A 无 joker 无 AA pair, A 上顶 → +10
+// (替 r1RuleSingleA_OnTop)
+func R1SingleAOnTopBonus(p Placement, cards []Card) float32 {
+	if dealtHasJoker(cards) {
+		return 0
+	}
+	pairs := detectDealtPairs(cards)
+	if cnt, ok := pairs[RankA]; ok && cnt >= 2 {
+		return 0
+	}
+	if !dealtHasA(cards) {
+		return 0
+	}
+	for i, c := range cards {
+		if !c.IsJoker() && c.Rank() == RankA && p[i] == RowTop {
+			return 10
+		}
+	}
+	return 0
+}
+
+// R1FlushGroupOnBotBonus — dealt ≥3 同色 (不含 joker, 不含 A) 全部在底 → +5
+// (替 r1RuleFlushGroup_OnBot; 去 TT+ 例外, 无条件加分)
+func R1FlushGroupOnBotBonus(p Placement, cards []Card) float32 {
+	groupIdxs := detectFlushGroup(cards)
+	if len(groupIdxs) < 3 {
+		return 0
+	}
+	allBot := true
+	for _, i := range groupIdxs {
+		if p[i] != RowBottom {
+			allBot = false
+			break
+		}
+	}
+	if allBot {
+		return 5
+	}
+	return 0
+}
+
+// ============ RN soft penalty (替原硬 filter) ============
+
+// RnKKOnMidPenalty — RN action 含 dealt KK pair 任一上中 → +15 penalty
+// (替 rnRuleKK_NotOnMid; 留 context 给 prerank/MCTS, 而非 prune)
+func RnKKOnMidPenalty(a *RoundNAction, cards []Card, state *GameState) float32 {
+	pairs := detectDealtPairs(cards)
+	cnt, ok := pairs[RankK]
+	if !ok || cnt < 2 {
+		return 0
+	}
+	for i, c := range a.Kept {
+		if !c.IsJoker() && c.Rank() == RankK {
+			if a.Placement[i] == RowMiddle {
+				return 15
+			}
+		}
+	}
+	return 0
+}
+
+// RnJokerWithHighOnTopBonus — R2-R5 软 bonus (+10):
+// action 在 top 放置后, post-action top 同时含 joker + 高牌 (Q/K/A) → 形成 fantasy lock (joker wild → QQ+/KK/AA pair).
+// 类比 R1JokerWithAOnTopBonus, 覆盖 cases 32/36: state.Top=[K] R2 加 joker→KK fantasy; state.Top=[joker] R2 加 A→AA fantasy.
+// 2026-05-20 sp15 加入: NN 实测对 R2-R5 fantasy lock 低估 20-32 分 (cases 32/36), reward shaping 一次训练闭合不够, 加 +10 软推.
+// 要求 action 至少在 top 放 1 张牌 (避免对所有保留 top 状态的候选无差别加分).
+// 2026-05-22 perf: 收 postState (= caller 已 clone+apply 过的 item.gs), 跳内部 Clone.
+func RnJokerWithHighOnTopBonus(a *RoundNAction, postState *GameState, foulImminent float32) float32 {
+	placedOnTop := 0
+	for _, p := range a.Placement {
+		if p == RowTop {
+			placedOnTop++
+		}
+	}
+	if placedOnTop == 0 {
+		return 0
+	}
+	hasJoker := false
+	hasHigh := false
+	for _, c := range postState.Top {
+		if c.IsJoker() {
+			hasJoker = true
+		} else if c.Rank() >= RankQ {
+			hasHigh = true
+		}
+	}
+	if !(hasJoker && hasHigh) {
+		return 0
+	}
+	// 2026-05-20 sp15 fix: post-state foul-imminent → 不奖励
+	// case 50 R5: top AA fantasy 跟 mid KK 撞 foul, 原 bonus 错奖 +10 抵消 FoulImminent -20
+	if foulImminent > 0 {
+		return 0
+	}
+	// 2026-05-22 sp17 fix: cap-aware guard. 若 top cap 后是低 pair (< 66) 或 high card,
+	// 说明 joker 被 mid 高 pair cap 死, 没真 fantasy. 不奖励.
+	// case 50: top [X 2c As] mid full KK → cap pair-2 → 0 bonus (之前 +10 错奖)
+	if len(postState.Top) == 3 {
+		botEv := evalRowSafe(postState.Bottom, 5, nil)
+		midEv := evalRowSafe(postState.Middle, 5, &botEv)
+		topEv := Evaluate3JokerCap(postState.Top, &midEv)
+		if topEv.Type == TypePair {
+			pairRank := int((topEv.Value - 1000000) / 15)
+			if pairRank < int(Rank6) {
+				return 0 // cap 死, joker 浪费
+			}
+		} else if topEv.Type == TypeHighCard {
+			return 0 // joker 没凑成 pair, 没价值
+		}
+	}
+	return 10
+}
+
+// RnSingleAOnTopBonus — R2-R5 软 bonus (+10):
+// action 在 top 放置了 A (无 joker 在 top), 准备 AA fantasy (R3-R5 配 A 或 joker).
+// 类比 R1SingleAOnTopBonus. 覆盖 case 29: state.Top=[Kh] R2 加 A → top=[K, A] (高牌组合, 未来配对).
+// joker+A 上头走 RnJokerWithHighOnTopBonus, 不重复 fire.
+// 2026-05-22 perf: 收 postState + 已计算的 foulImminent, 跳内部 Clone.
+func RnSingleAOnTopBonus(a *RoundNAction, postState *GameState, foulImminent float32) float32 {
+	// action 必须放 A 上 top
+	placedAOnTop := false
+	for k, c := range a.Kept {
+		if a.Placement[k] == RowTop && !c.IsJoker() && c.Rank() == RankA {
+			placedAOnTop = true
+			break
+		}
+	}
+	if !placedAOnTop {
+		return 0
+	}
+	// post-top 不能有 joker (joker+A 走另一个 bonus). postState.Top = pre.Top ∪ action 上 top 部分
+	for _, c := range postState.Top {
+		if c.IsJoker() {
+			return 0
+		}
+	}
+	// 2026-05-20 sp15 fix: foul guard
+	if foulImminent > 0 {
+		return 0
+	}
+	return 10
+}
+
+// RnTopCapBlockedFantasyPenalty — R2-R5 软 penalty (+5):
+// post-action top 满 3 张, 含 joker, cap-aware 后 joker 只能凑低 pair (< 66) 或 high card → 浪费 joker.
+// 思路: joker 在 top 但被 mid cap 限制 → 无 royalty/fantasy 价值, 应避开.
+// case 50 R5 教训: AI 选 joker+2c+As, mid full KK cap → top 只能 pair-2 (0 royalty).
+//   实际 exp1 (joker+2c+7h cap pair-7 = +2 royalty) 强 2 分, 但 NN 学不到 (outlier).
+// 触发条件:
+//   1. action 至少在 top 放 1 张 (避免对所有保 top 状态加分)
+//   2. post-state top 满 3 张 (R5 终局 or 提前填满)
+//   3. top 含 joker
+//   4. cap-aware top eval: type=Pair 且 rank < Rank6, 或 type=HighCard (joker 浪费成 kicker)
+// 2026-05-22 sp17 加: 治 case 50/49 类 NN 学不到的 "joker top cap 死" outlier.
+// 2026-05-22 perf: 收 postState (= caller 已 clone+apply 过的 item.gs), 跳内部 Clone.
+func RnTopCapBlockedFantasyPenalty(a *RoundNAction, postState *GameState) float32 {
+	// 1. action 必须在 top 放 ≥1 张
+	placedOnTop := 0
+	for _, p := range a.Placement {
+		if p == RowTop {
+			placedOnTop++
+		}
+	}
+	if placedOnTop == 0 {
+		return 0
+	}
+	// 2. postState 已含 action, 检 top 满 3 张
+	if len(postState.Top) != 3 {
+		return 0
+	}
+	// 3. top 必含 joker
+	hasJoker := false
+	for _, c := range postState.Top {
+		if c.IsJoker() {
+			hasJoker = true
+			break
+		}
+	}
+	if !hasJoker {
+		return 0
+	}
+	// 4. cap-aware top eval. mid 可能未满, 用 evalRowSafe chain.
+	botEv := evalRowSafe(postState.Bottom, 5, nil)
+	midEv := evalRowSafe(postState.Middle, 5, &botEv)
+	topEv := Evaluate3JokerCap(postState.Top, &midEv)
+	// Type < 0 (over cap) — 已是 foul 由 FoulImminent 处理, 不重复罚
+	if topEv.Type < 0 {
+		return 0
+	}
+	// Pair rank < Rank6 (< 66) → 0 royalty waste
+	if topEv.Type == TypePair {
+		pairRank := int((topEv.Value - 1000000) / 15)
+		if pairRank < int(Rank6) {
+			return 5
+		}
+		return 0 // pair ≥ 66 给 royalty, 不算浪费
+	}
+	// HighCard 含 joker → joker 完全没用, 比 pair 还差
+	if topEv.Type == TypeHighCard {
+		return 5
+	}
+	// Trips: joker 凑 trips 罕见, 但若 cap 限制只到低 trips, 仍有 royalty (222+ = 10)
+	// 留给 NN 自己学, 不罚
+	return 0
+}
+
+// ============ FoulImminentPenalty (通用, R1-R5) ============
+// 2026-05-17: 老 R4FoulImminentPenalty 只覆 R4 mid+bot 满 + top 缺 1.
+// 通用化: 任何 partial state 下检测 foul 必然 → +20 penalty.
+//
+// 通用判定 (相对位置约束 bot ≥ mid ≥ top):
+//   1) Mid/bot 都满 (len 5): mid.Type > bot.Type → 100% foul
+//   2) Mid/bot 都满: mid 等 type 但 mid 值 > bot 值 → 100% foul
+//   3) Top 满 (3 张) + mid 满 (5 张): top.Type > mid.Type → 100% foul
+//   4) Top/mid 都满: top 等 type 但值 > mid → 100% foul
+//   5) Mid full (high-card) + top fill 1 张 (任何 R5 卡补满) →
+//       若 top 现 max rank > mid max rank → 必 foul (覆盖原 R4 case)
+//
+// 不要乱估 "未来可能 foul", 只检 100% 必然 case.
+func FoulImminentPenalty(state *GameState) float32 {
+	topFull := len(state.Top) == 3
+	midFull := len(state.Middle) == 5
+	botFull := len(state.Bottom) == 5
+
+	// case 1+2: mid 满 + bot 满 → mid > bot ?
+	if midFull && botFull {
+		mid := Evaluate5(state.Middle)
+		bot := Evaluate5(state.Bottom)
+		if mid.Value > bot.Value {
+			return 20
+		}
+	}
+	// case 3+4: top 满 + mid 满 → top > mid ?
+	// 2026-05-20 sp16: cap-aware. 用 Evaluate3JokerCap 传 mid 当 cap, 避免 joker+A 误判 foul (case 50).
+	if topFull && midFull {
+		mid := Evaluate5(state.Middle)
+		// 用 cap-aware 算 top — joker 会被限制到 ≤ mid
+		top := Evaluate3JokerCap(state.Top, &mid)
+		if top.Type < 0 {
+			// 全候选都 over cap (无 valid 配置) → 必 foul
+			return 20
+		}
+		if top.Type > mid.Type {
+			return 20 // 应该不会, cap 已限制. 防御.
+		}
+		if top.Type == mid.Type {
+			if top.Type == TypePair {
+				tRank := (top.Value - 1000000) / 15
+				mRank := (mid.Value - 1000000) / 50625
+				if tRank > mRank {
+					return 20
+				}
+			} else if top.Type == TypeThreeOfAKind {
+				tRank := (top.Value - 3000000) / 15
+				mRank := (mid.Value - 3000000) / 50625
+				if tRank > mRank {
+					return 20
+				}
+			}
+		}
+	}
+	// case 5: R4 兼容 — mid 满 high-card + top 2 张, top 最高 rank > mid 最高 rank → R5 必 foul
+	if midFull && botFull && len(state.Top) == 2 {
+		mid := Evaluate5(state.Middle)
+		if mid.Type == TypeHighCard {
+			topMaxRank := -1
+			for _, c := range state.Top {
+				r := int(c.Rank())
+				if c.IsJoker() {
+					r = 12
+				}
+				if r > topMaxRank {
+					topMaxRank = r
+				}
+			}
+			midMaxRank := -1
+			for _, c := range state.Middle {
+				r := int(c.Rank())
+				if c.IsJoker() {
+					r = 12
+				}
+				if r > midMaxRank {
+					midMaxRank = r
+				}
+			}
+			if topMaxRank > midMaxRank {
+				return 20
+			}
+		}
+	}
+	// case 6: mid 满 + bot 部分 (<5) + bot 不可能凑出 ≥ mid.Type → 必 foul
+	// 2026-05-20 sp15: case 45 R4 类 (mid clubs flush + bot 4 张无 flush 潜力 → 必 foul)
+	if midFull && !botFull {
+		mid := Evaluate5(state.Middle)
+		botSlots := 5 - len(state.Bottom)
+		if botSlots > 0 && mid.Type > TypeHighCard {
+			rankRem, suitRem, jokerRem := computeDeckRemaining(state)
+			botMax := maxAchievableHandType(state.Bottom, botSlots, rankRem, suitRem, jokerRem)
+			if int(botMax) < mid.Type {
+				return 20
+			}
+		}
+	}
+	return 0
+}
+
+// R1SameSuitInRowBonus — R1 行内 ≥2 张同色 (无 off-suit 稀释) → 加分
+// 中/底行越多同色越好 (flush 种子无破)
+// 例如: bot [Qs Js] 全 spade → +2; bot [Qs Js 9c] 不纯 → 0
+func R1SameSuitInRowBonus(p Placement, cards []Card) float32 {
+	rowCards := make(map[Row][]Card)
+	for i, c := range cards {
+		rowCards[p[i]] = append(rowCards[p[i]], c)
+	}
+	var bonus float32
+	for row, cs := range rowCards {
+		if row == RowTop || len(cs) < 2 {
+			continue
+		}
+		var suitCnt [4]int
+		hasJoker := false
+		for _, c := range cs {
+			if c.IsJoker() {
+				hasJoker = true
+				continue
+			}
+			suitCnt[c.Suit()]++
+		}
+		// 统计 placed suits
+		placedSuits, maxSuitCount := 0, 0
+		for _, n := range suitCnt {
+			if n > 0 {
+				placedSuits++
+			}
+			if n > maxSuitCount {
+				maxSuitCount = n
+			}
+		}
+		_ = hasJoker
+		// 必须全同色 (joker 不计): placedSuits ≤ 1
+		if placedSuits == 1 && maxSuitCount >= 2 {
+			bonus += float32(maxSuitCount)
+		}
+	}
+	return bonus
+}
+
+// RowPotentialScore — 启发式 行潜力分 (粗略概率 × royalty)
+//   pair / flush / straight 三类种子 weighted by row royalty
+// 思路: 同行 cards 越 coherent (同色/同 rank/连续 rank), 行潜力越大.
+// 用于 prerank 加分, 鼓励 placing 让 row 更可能成型.
+func RowPotentialScore(rowCards []Card, row Row) float32 {
+	var suitCnt [4]int
+	var rankCnt [13]int
+	jokers := 0
+	for _, c := range rowCards {
+		if c.IsJoker() {
+			jokers++
+		} else {
+			suitCnt[c.Suit()]++
+			rankCnt[c.Rank()]++
+		}
+	}
+
+	// pair seed (含 joker wild)
+	maxPair, pairRank := 0, 0
+	for r := 0; r < 13; r++ {
+		if rankCnt[r] > maxPair {
+			maxPair = rankCnt[r]
+			pairRank = r
+		}
+	}
+	pairWithJoker := maxPair + jokers
+
+	// flush seed: 仅当 row 不混色 (placedSuits ≤ 1)
+	maxSuit, placedSuits := 0, 0
+	for s := 0; s < 4; s++ {
+		if suitCnt[s] > maxSuit {
+			maxSuit = suitCnt[s]
+		}
+		if suitCnt[s] > 0 {
+			placedSuits++
+		}
+	}
+	flushSeed := maxSuit + jokers
+	if placedSuits >= 2 {
+		flushSeed = 0 // 混色 → 不可能 flush
+	}
+
+	// straight seed: 最长 5-rank 滑动窗口内 distinct ranks + jokers
+	maxRun := 0
+	for start := 0; start <= 8; start++ {
+		run := 0
+		for r := start; r <= start+4; r++ {
+			if rankCnt[r] > 0 {
+				run++
+			}
+		}
+		if run+jokers > maxRun {
+			maxRun = run + jokers
+		}
+	}
+	if maxRun > 5 {
+		maxRun = 5
+	}
+
+	var score float32
+	switch row {
+	case RowTop:
+		// top: QQ+ pair 锁 fantasy (适度奖励, 别太重)
+		if pairWithJoker >= 2 && pairRank >= int(RankQ) {
+			score += 3
+		}
+		if pairWithJoker >= 3 {
+			score += float32(10+pairRank) * 0.5
+		}
+		// 顶单 joker: 未来配 high pair 进范的潜力 (joker 灵活)
+		if jokers == 1 && len(rowCards) == 1 {
+			score += 3
+		}
+	case RowMiddle:
+		if pairWithJoker >= 2 && pairRank >= int(Rank6) {
+			score += 1
+		}
+		if pairWithJoker >= 3 {
+			score += 2
+		}
+		if pairWithJoker >= 4 {
+			score += 18
+		}
+		if flushSeed >= 2 {
+			score += 8 * float32(flushSeed) / 5.0
+		}
+		if maxRun >= 2 {
+			score += 4 * float32(maxRun) / 5.0
+		}
+	case RowBottom:
+		// bot pair: high pair (≥T) 是底 anchor 价值高, 低 pair 价值低
+		if pairWithJoker >= 2 {
+			if pairRank >= int(RankT) {
+				score += 3 + float32(pairRank-int(RankT))*0.5
+			} else {
+				score += 1
+			}
+		}
+		if pairWithJoker >= 3 {
+			score += 2
+		}
+		if pairWithJoker >= 4 {
+			score += 8
+		}
+		if flushSeed >= 2 {
+			score += 4 * float32(flushSeed) / 5.0
+		}
+		if maxRun >= 2 {
+			score += 2 * float32(maxRun) / 5.0
+		}
+	}
+	return score
+}
+
+// AllRowsPotentialScore — 各行 RowPotentialScore 求和
+func AllRowsPotentialScore(p Placement, cards []Card) float32 {
+	var top, mid, bot []Card
+	for i, c := range cards {
+		switch p[i] {
+		case RowTop:
+			top = append(top, c)
+		case RowMiddle:
+			mid = append(mid, c)
+		case RowBottom:
+			bot = append(bot, c)
+		}
+	}
+	return RowPotentialScore(top, RowTop) +
+		RowPotentialScore(mid, RowMiddle) +
+		RowPotentialScore(bot, RowBottom)
+}
+
+// R1FourInRowPenalty — R1 任意 row (mid/bot) 4 张或 5 张全堆, 强 draw / 同 rank 集中 除外 → 扣分
+// 例外 (4-row):
+//   - 4-flush (4 同色) 或 ≥4-straight (4 连张): 强 draw
+//   - ≥3 同 rank (trips 或 quads, 同 row 才合理, 不能拆)
+// 例外: top 4 张 不在此列 (top 最多 3 张).
+// 触发:
+//   - 4 张同行无 hand-type 苗 → -5
+//   - 5 张同行 (mid/bot 占满) → -15 (R1 极不平衡, 浪费 R2-5 灵活性; 例外: 同花/顺子 给小幅 penalty)
+func R1FourInRowPenalty(p Placement, cards []Card) float32 {
+	rowCards := make(map[Row][]Card)
+	for i, c := range cards {
+		rowCards[p[i]] = append(rowCards[p[i]], c)
+	}
+	var penalty float32
+	for row, cs := range rowCards {
+		if row == RowTop {
+			continue
+		}
+		// 5 张全一行: 几乎总是 anti-pattern. 例外: 强 hand-type (顺子/同花) 减轻
+		if len(cs) == 5 {
+			if isFlush5(cs) || isStraight5(cs) {
+				penalty += 5 // 还是 unbalanced, 但有 5-card hand 价值
+			} else {
+				penalty += 15 // 一般 5-card 无 hand-type → 重罚
+			}
+			continue
+		}
+		if len(cs) != 4 {
+			continue
+		}
+		if isFourSameSuit(cs) || isFourConsecutive(cs) || hasThreeSameRank(cs) {
+			continue
+		}
+		penalty += 5
+	}
+	return penalty
+}
+
+// isFlush5 — 5 张全同色 (joker wild 算入)
+func isFlush5(cs []Card) bool {
+	if len(cs) != 5 {
+		return false
+	}
+	suitCnt := map[uint8]int{}
+	jokers := 0
+	for _, c := range cs {
+		if c.IsJoker() {
+			jokers++
+			continue
+		}
+		suitCnt[c.Suit()]++
+	}
+	for _, n := range suitCnt {
+		if n+jokers >= 5 {
+			return true
+		}
+	}
+	return false
+}
+
+// isStraight5 — 5 张顺子 (含 joker wild fill)
+func isStraight5(cs []Card) bool {
+	if len(cs) != 5 {
+		return false
+	}
+	v := Evaluate5JokerCap(cs, nil)
+	return v.Type == TypeStraight || v.Type == TypeStraightFlush
+}
+
+func hasThreeSameRank(cs []Card) bool {
+	rankCnt := map[uint8]int{}
+	jokers := 0
+	for _, c := range cs {
+		if c.IsJoker() {
+			jokers++
+			continue
+		}
+		rankCnt[c.Rank()]++
+	}
+	for _, n := range rankCnt {
+		if n+jokers >= 3 {
+			return true
+		}
+	}
+	return false
+}
+
+func isFourSameSuit(cs []Card) bool {
+	if len(cs) != 4 {
+		return false
+	}
+	// joker 算 wild (任何 suit OK)
+	var suit uint8 = 255
+	for _, c := range cs {
+		if c.IsJoker() {
+			continue
+		}
+		s := c.Suit()
+		if suit == 255 {
+			suit = s
+		} else if s != suit {
+			return false
+		}
+	}
+	return true
+}
+
+func isFourConsecutive(cs []Card) bool {
+	if len(cs) != 4 {
+		return false
+	}
+	ranks := []int{}
+	jokers := 0
+	for _, c := range cs {
+		if c.IsJoker() {
+			jokers++
+		} else {
+			ranks = append(ranks, int(c.Rank()))
+		}
+	}
+	// 排序
+	for i := 0; i < len(ranks); i++ {
+		for j := i + 1; j < len(ranks); j++ {
+			if ranks[i] > ranks[j] {
+				ranks[i], ranks[j] = ranks[j], ranks[i]
+			}
+		}
+	}
+	// 计 gap. 4 张 + j jokers. 需要 (max - min + 1) ≤ 5 (最多 1 个空位让 future 补成 5-straight)
+	if len(ranks) == 0 {
+		return true // 全是 joker
+	}
+	span := ranks[len(ranks)-1] - ranks[0] + 1
+	// 加 joker 可填 1 位 → 检查 span - len(ranks) (内部 gap 总数) ≤ jokers + 1 (允许尾部留 1 个 future card)
+	missing := span - len(ranks)
+	return missing <= jokers+1 && span <= 5
+}
+
+// ConnectorSplitPenalty — straight 潜力 + 中底 hierarchy 扣分 (soft penalty)
+//   1. 跨行 split: 低 rank (lower < Rank6) 不罚 — 低连张无 straight 潜力
+//      rank diff ≤ 2 dealt 对被 split: d=1 → +5, d=2 → +2
+//   2. 每对 (mid_card, bot_card): mid > bot → +3 (违反 bot ≥ mid hierarchy)
+// 例外: KA 连张 (K-A): 不扣 (fantasy lock 常分行)
+// 2026-05-13 加 (跨行 gap=1 only)
+// 2026-05-15 扩到 gap≤4 + 加 mid>bot per-pair 罚
+// 2026-05-20 sp15: 跳过 lower rank<Rank6 + 罚值减 (8→5/3→2/5→3) — case 15 R1 误罚 3-4 split
+func ConnectorSplitPenalty(p Placement, cards []Card) float32 {
+	rankInfo := make(map[uint8][]Row)
+	midRanks := []int{}
+	botRanks := []int{}
+	for i, c := range cards {
+		if c.IsJoker() {
+			continue
+		}
+		rankInfo[c.Rank()] = append(rankInfo[c.Rank()], p[i])
+		r := int(c.Rank())
+		switch p[i] {
+		case RowMiddle:
+			midRanks = append(midRanks, r)
+		case RowBottom:
+			botRanks = append(botRanks, r)
+		}
+	}
+	var penalty float32
+	// 跨行 split
+	// 2026-05-20 sp15: d≥3 已删 (V3 L2 features 已传信号给 NN); 加 lower rank<Rank6 skip;
+	// 罚值减 (8→5 / 3→2) 给 NN 更多自由度.
+	for r := uint8(0); r < 13; r++ {
+		// 跳过低连张: 最低 rank < 6 (即 2-3, 3-4, 4-5, 5-6) — 实际无 straight 潜力, 拆不亏.
+		if r < Rank6 {
+			continue
+		}
+		for d := uint8(1); d <= 2; d++ {
+			r2 := r + d
+			if r2 >= 13 {
+				continue
+			}
+			if r == RankK && r2 == RankA {
+				continue
+			}
+			v1, ok1 := rankInfo[r]
+			v2, ok2 := rankInfo[r2]
+			if !ok1 || !ok2 {
+				continue
+			}
+			for _, a := range v1 {
+				for _, b := range v2 {
+					if a == b {
+						continue
+					}
+					if d == 1 {
+						penalty += 5 // adjacent (e.g. 8-9 split), 8→5
+					} else {
+						penalty += 2 // gap 1 (e.g. 8-T split), 3→2
+					}
+				}
+			}
+		}
+	}
+	// 每对 (mid, bot) mid > bot → +3 (违反 bot ≥ mid hierarchy, sp15: 5→3 减重)
+	for _, mr := range midRanks {
+		for _, br := range botRanks {
+			if mr > br {
+				penalty += 3
+			}
+		}
+	}
+	return penalty
+}
+
+// botHasDrawOrPair — bot 是否有 flush/straight/pair (含 joker wild)
+//   ≥3 同色 (potential flush) | ≥3 consecutive (potential straight) | 任意 pair
+func botHasDrawOrPair(p Placement, cards []Card) bool {
+	botCards := []Card{}
+	for i, c := range cards {
+		if p[i] == RowBottom {
+			botCards = append(botCards, c)
+		}
+	}
+	if len(botCards) < 2 {
+		return false
+	}
+	// 统计 suit/rank, joker 当 wild
+	suitCnt := map[uint8]int{}
+	rankCnt := map[uint8]int{}
+	jokerCnt := 0
+	ranks := []int{}
+	for _, c := range botCards {
+		if c.IsJoker() {
+			jokerCnt++
+			continue
+		}
+		suitCnt[c.Suit()]++
+		rankCnt[c.Rank()]++
+		ranks = append(ranks, int(c.Rank()))
+	}
+	// pair (joker 可凑 1)
+	for _, n := range rankCnt {
+		if n+jokerCnt >= 2 {
+			return true
+		}
+	}
+	// 3+ same suit (joker = wild flush)
+	for _, n := range suitCnt {
+		if n+jokerCnt >= 3 {
+			return true
+		}
+	}
+	// 3+ consecutive (joker 可填 gap)
+	if len(ranks) >= 1 {
+		for i := 0; i < len(ranks); i++ {
+			for j := i + 1; j < len(ranks); j++ {
+				if ranks[i] > ranks[j] {
+					ranks[i], ranks[j] = ranks[j], ranks[i]
+				}
+			}
+		}
+		// 用 jokers 填 gap, 看是否能达 3-window
+		span := ranks[len(ranks)-1] - ranks[0] + 1
+		missing := span - len(ranks)
+		// 至少 3 张组成 span ≤ 5 的窗口
+		if len(ranks)+jokerCnt >= 3 && span <= 5 && missing <= jokerCnt {
+			return true
+		}
+	}
+	return false
+}
+
+// r1RuleSplitDoubleJoker — dealt 有 2+ jokers → 不能都堆同一行 (留 wild 灵活性)
+func r1RuleSplitDoubleJoker(p Placement, cards []Card) bool {
+	if dealtJokerCount(cards) < 2 {
+		return true
+	}
+	rows := make(map[Row]int)
+	for i, c := range cards {
+		if c.IsJoker() {
+			rows[p[i]]++
+		}
+	}
+	// 任一行 >= 2 jokers → 违反
+	for _, n := range rows {
+		if n >= 2 {
+			return false
+		}
+	}
+	return true
+}
+
+// r1RuleLowPair_OnMid — DELETED 2026-05-22.
+// 原意: dealt 有 ≤9 小对 → 必上 mid (节省 bot slot 拼 flush/straight).
+// 漏洞: dealt 有 ≥2 个小对时 (例: J 5 5 9 9), 强迫所有小对都上 mid → 必然 mid 4 张两对, partial-foul,
+//      所有 sensible 摆法 (99 → bot) 被砍, AI 只剩死路候选 → 必爆.
+// 决策: 删硬规则. 若需要"小 pair 优 mid" 倾向, 改用软 penalty (NN 学不到再加).
+
+// r1RuleSingleA_OnTop — dealt 有 1 张 A (无 AA pair) AND 无 joker → A 必上顶
+// (joker + A 已由 JokerWithA_OnTop 处理)
+func r1RuleSingleA_OnTop(p Placement, cards []Card) bool {
+	if dealtHasJoker(cards) {
+		return true // 留给 JokerWithA_OnTop 处理
+	}
+	pairs := detectDealtPairs(cards)
+	if _, ok := pairs[RankA]; ok {
+		return true // AA pair 由 DealtBigPair_Top 处理
+	}
+	if !dealtHasA(cards) {
+		return true
+	}
+	// 单 A 必须 top
+	for i, c := range cards {
+		if !c.IsJoker() && c.Rank() == RankA {
+			if p[i] != RowTop {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+// r1RuleJokerWithK_OnTop_NoA — dealt 有 X + K AND no available A → X+K 必上顶 (锁 KK fantasy)
+// 需要 state 来检查 deck 中 A 是否全用
+func r1RuleJokerWithK_OnTop_NoA(p Placement, cards []Card, state *GameState) bool {
+	if !dealtHasJoker(cards) {
+		return true
+	}
+	// 有 A 在 dealt 或 deck 中 → 不强制 K 上顶 (用 r1RuleJokerWithA_OnTop)
+	if dealtHasA(cards) || !noAvailableAces(state) {
+		return true
+	}
+	// dealt 有 K?
+	hasK := false
+	for _, c := range cards {
+		if !c.IsJoker() && c.Rank() == RankK {
+			hasK = true
+			break
+		}
+	}
+	if !hasK {
+		return true
+	}
+	// 至少 1 joker + 1 K 在 top
+	jokerOnTop := false
+	kOnTop := false
+	for i, c := range cards {
+		if p[i] != RowTop {
+			continue
+		}
+		if c.IsJoker() {
+			jokerOnTop = true
+		} else if c.Rank() == RankK {
+			kOnTop = true
+		}
+	}
+	return jokerOnTop && kOnTop
+}
+
+// ApplyHardRulesR1 — 按 rule 顺序逐个 narrow 候选; rule 把候选清空则 skip 该 rule.
+type R1Cand struct {
+	Placement Placement
+	GS        *GameState
+}
+
+func ApplyHardRulesR1(candidates []R1Cand, cards []Card, state *GameState) []R1Cand {
+	// rules without state
+	plainRules := []struct {
+		name string
+		fn   func(Placement, []Card) bool
+	}{
+		{"NoSplitDealtPair", r1RuleNoSplitDealtPair},
+		{"DealtBigPair_Top", r1RuleDealtBigPair_Top},
+		// "LowPair_OnMid" DELETED 2026-05-22: 漏洞 — dealt 有 ≥2 小对时强迫两对都 mid → partial-foul 必爆
+		{"SplitDoubleJoker", r1RuleSplitDoubleJoker},
+		{"TopMustAllowFantasy", r1RuleTopMustAllowFantasy},
+	}
+	cur := candidates
+	for _, r := range plainRules {
+		next := make([]R1Cand, 0, len(cur))
+		for _, c := range cur {
+			if r.fn(c.Placement, cards) {
+				next = append(next, c)
+			}
+		}
+		if len(next) > 0 {
+			cur = next
+		}
+	}
+	// state-aware rule
+	next := make([]R1Cand, 0, len(cur))
+	for _, c := range cur {
+		if r1RuleJokerWithK_OnTop_NoA(c.Placement, cards, state) {
+			next = append(next, c)
+		}
+	}
+	if len(next) > 0 {
+		cur = next
+	}
+	return cur
+}
+
+// ============ R2-R5 rules (RoundNAction) ============
+
+// rnRuleNoDiscardJoker — 不弃 joker
+func rnRuleNoDiscardJoker(a *RoundNAction, cards []Card) bool {
+	return !cards[a.DiscardIdx].IsJoker()
+}
+
+// rnRuleNoDiscardAce — 不弃 A (仅 R2-R3; R4-R5 终局可弃 A 凑底)
+func rnRuleNoDiscardAce(a *RoundNAction, cards []Card, state *GameState) bool {
+	if state.Round >= 4 {
+		return true
+	}
+	d := cards[a.DiscardIdx]
+	return d.IsJoker() || d.Rank() != RankA
+}
+
+// rnRuleNoDiscardPairMember — 不弃 dealt 中成对的 rank (仅 ≥T 高对, 低对 22-99 可弃)
+func rnRuleNoDiscardPairMember(a *RoundNAction, cards []Card) bool {
+	pairs := detectDealtPairs(cards)
+	if len(pairs) == 0 {
+		return true
+	}
+	d := cards[a.DiscardIdx]
+	if d.IsJoker() {
+		return true
+	}
+	if cnt, ok := pairs[d.Rank()]; ok && cnt >= 2 && d.Rank() >= RankT {
+		return false
+	}
+	return true
+}
+
+// rnRuleNoSplitKeptPair — kept 中同 rank ≥2 必须同行
+func rnRuleNoSplitKeptPair(a *RoundNAction, cards []Card) bool {
+	rankRows := make(map[uint8][]Row)
+	for i, c := range a.Kept {
+		if c.IsJoker() {
+			continue
+		}
+		rankRows[c.Rank()] = append(rankRows[c.Rank()], a.Placement[i])
+	}
+	for _, rows := range rankRows {
+		if len(rows) >= 2 {
+			for _, r := range rows[1:] {
+				if r != rows[0] {
+					return false
+				}
+			}
+		}
+	}
+	return true
+}
+
+// rnRuleJokerOnTop_IfSpace — dealt 含 joker 且 state.top 还有空 → joker (或其中之一) 必须放 top
+func rnRuleJokerOnTop_IfSpace(a *RoundNAction, cards []Card, state *GameState) bool {
+	if !dealtHasJoker(cards) {
+		return true
+	}
+	if len(state.Top) >= 3 {
+		return true
+	}
+	// kept 中至少 1 个 joker 在 top
+	for i, c := range a.Kept {
+		if c.IsJoker() && a.Placement[i] == RowTop {
+			return true
+		}
+	}
+	return false
+}
+
+// rnRuleKK_OnTop_NoA — dealt 含 KK pair AND state 无可用 A → KK 必上顶 (锁 fantasy)
+func rnRuleKK_OnTop_NoA(a *RoundNAction, cards []Card, state *GameState) bool {
+	pairs := detectDealtPairs(cards)
+	cnt, ok := pairs[RankK]
+	if !ok || cnt < 2 {
+		return true
+	}
+	if !noAvailableAces(state) {
+		return true
+	}
+	// kept 中所有 K 必须 placement = top
+	for i, c := range a.Kept {
+		if !c.IsJoker() && c.Rank() == RankK {
+			if a.Placement[i] != RowTop {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+// rnRuleKK_OnBot_WithA — dealt 含 KK pair AND state 仍有 A 可摸 → KK 必上底 (等 A 配)
+func rnRuleKK_OnBot_WithA(a *RoundNAction, cards []Card, state *GameState) bool {
+	pairs := detectDealtPairs(cards)
+	cnt, ok := pairs[RankK]
+	if !ok || cnt < 2 {
+		return true
+	}
+	// state.top 已有 Q 高时, KK 顶/底都允许 (case 62: 3A used 也允许 KK 顶)
+	// 只在 deck 仍多 A (≥2) 时强制 KK 底
+	availA := 0
+	for r := uint8(0); r < 4; r++ {
+		c := MakeCard(RankA, r)
+		if !state.UsedCards[c.ID()] {
+			availA++
+		}
+	}
+	if availA < 2 {
+		return true // 1-0 A available, KK 顶或底
+	}
+	for i, c := range a.Kept {
+		if !c.IsJoker() && c.Rank() == RankK {
+			if a.Placement[i] != RowBottom {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+// rnRuleNoCompleteMidTrips — state.middle 已有同 rank pair AND kept 含第三张该 rank → 不能放 mid
+// 理由: mid trips royalty 仅 2 分, 但 mid trips ≥ bot 概率高, foul -20 (中小底大), 净 EV 巨亏
+// Pattern 5 fix: case 35/38 类 "mid 双 → 三" 陷阱 (5d 上 55 mid; 9c 上 99 mid)
+// 例外: state.bot 已有更高 hand type (e.g. set/straight/flush/+) → mid trips 安全
+func rnRuleNoCompleteMidTrips(a *RoundNAction, cards []Card, state *GameState) bool {
+	if len(state.Middle) < 2 {
+		return true
+	}
+	// detect mid pair rank
+	var midPairRank uint8 = 255
+	rankCnt := make(map[uint8]int)
+	for _, c := range state.Middle {
+		if c.IsJoker() {
+			continue
+		}
+		rankCnt[c.Rank()]++
+	}
+	for r, cnt := range rankCnt {
+		if cnt >= 2 {
+			midPairRank = r
+			break
+		}
+	}
+	if midPairRank == 255 {
+		return true
+	}
+	// 检查 kept 是否有第三张该 rank 放 mid
+	for i, c := range a.Kept {
+		if c.IsJoker() || c.Rank() != midPairRank {
+			continue
+		}
+		if a.Placement[i] == RowMiddle {
+			// 例外: bot 已是 set+ → 安全
+			if bothHandTypeAtLeastSet(state.Bottom) {
+				return true
+			}
+			return false
+		}
+	}
+	return true
+}
+
+// bothHandTypeAtLeastSet — bot 当前能确定 ≥ trips
+func bothHandTypeAtLeastSet(bot []Card) bool {
+	if len(bot) < 3 {
+		return false
+	}
+	rankCnt := make(map[uint8]int)
+	jokers := 0
+	for _, c := range bot {
+		if c.IsJoker() {
+			jokers++
+		} else {
+			rankCnt[c.Rank()]++
+		}
+	}
+	maxSame := 0
+	for _, cnt := range rankCnt {
+		if cnt > maxSame {
+			maxSame = cnt
+		}
+	}
+	return maxSame+jokers >= 3
+}
+
+// rnRuleNoCompleteMidFlush — state.middle 已有 ≥4 同色, kept 含第 5 张同色 → 不能放 mid
+// 理由: mid flush royalty 8 分但 mid flush ≥ bot 概率极高, foul -20 净亏
+// Pattern 5 fix: case 40 类 "mid 4 同色 → 5 同色 flush" 陷阱 (8d 上 3d4d5d6d mid)
+// 例外: state.bot 已是 flush+ 或 mid 凑 ≥ straight flush (rare)
+func rnRuleNoCompleteMidFlush(a *RoundNAction, cards []Card, state *GameState) bool {
+	if len(state.Middle) < 4 {
+		return true
+	}
+	// detect mid suit (4 same)
+	suitCnt := make(map[uint8]int)
+	jokers := 0
+	for _, c := range state.Middle {
+		if c.IsJoker() {
+			jokers++
+		} else {
+			suitCnt[c.Suit()]++
+		}
+	}
+	var midSuit uint8 = 255
+	for s, cnt := range suitCnt {
+		if cnt+jokers >= 4 {
+			midSuit = s
+			break
+		}
+	}
+	if midSuit == 255 {
+		return true
+	}
+	// 检查 kept 是否第 5 张同色放 mid
+	for i, c := range a.Kept {
+		if c.IsJoker() {
+			continue // joker 跳过, 永远完成 flush (强制不挡)
+		}
+		if c.Suit() != midSuit {
+			continue
+		}
+		if a.Placement[i] == RowMiddle {
+			// 例外: bot 已 flush+
+			if botIsFlushPlus(state.Bottom) {
+				return true
+			}
+			return false
+		}
+	}
+	return true
+}
+
+// botIsFlushPlus — bot 已成 flush 或更高 (粗略检测)
+func botIsFlushPlus(bot []Card) bool {
+	if len(bot) < 5 {
+		return false
+	}
+	suitCnt := make(map[uint8]int)
+	jokers := 0
+	for _, c := range bot {
+		if c.IsJoker() {
+			jokers++
+		} else {
+			suitCnt[c.Suit()]++
+		}
+	}
+	for _, cnt := range suitCnt {
+		if cnt+jokers >= 5 {
+			return true
+		}
+	}
+	return false
+}
+
+// rnRuleKK_NotOnMid — dealt 有 KK pair → 永不上中 (KK 中是天坑: 顶难压, 底难超)
+// 例外: state.top 已有 KK 同 rank (e.g. top 已 K+ joker = KK fantasy 锁), 此时 dealt 第三个 K 应去底
+// 通用约束: kept 里所有 K 不能放 mid
+// Pattern 3 fix: case 62 (R2 dealt KK + 4d, AI 放 KK 中导致 foul / 中小底大 violation)
+func rnRuleKK_NotOnMid(a *RoundNAction, cards []Card, state *GameState) bool {
+	pairs := detectDealtPairs(cards)
+	cnt, ok := pairs[RankK]
+	if !ok || cnt < 2 {
+		return true
+	}
+	for i, c := range a.Kept {
+		if !c.IsJoker() && c.Rank() == RankK {
+			if a.Placement[i] == RowMiddle {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+// rnRuleJokerWithA_OnTop — dealt 有 X + A → kept 中 joker + A 都必须放 top (或已在 state.top)
+func rnRuleJokerWithA_OnTop(a *RoundNAction, cards []Card, state *GameState) bool {
+	if !dealtHasJoker(cards) || !dealtHasA(cards) {
+		return true
+	}
+	// state.top 已有 joker?
+	stateTopHasJoker := false
+	stateTopHasA := false
+	for _, c := range state.Top {
+		if c.IsJoker() {
+			stateTopHasJoker = true
+		} else if c.Rank() == RankA {
+			stateTopHasA = true
+		}
+	}
+	// kept 中需补满
+	keptTopHasJoker := stateTopHasJoker
+	keptTopHasA := stateTopHasA
+	for i, c := range a.Kept {
+		if a.Placement[i] != RowTop {
+			continue
+		}
+		if c.IsJoker() {
+			keptTopHasJoker = true
+		} else if c.Rank() == RankA {
+			keptTopHasA = true
+		}
+	}
+	return keptTopHasJoker && keptTopHasA
+}
+
+// RNCand — wrapper for ApplyHardRulesRN
+type RNCand struct {
+	Action *RoundNAction
+	GS     *GameState
+}
+
+func ApplyHardRulesRN(candidates []RNCand, cards []Card, state *GameState) []RNCand {
+	rules := []struct {
+		name string
+		fn   func(*RoundNAction, []Card, *GameState) bool
+	}{
+		{"NoDiscardJoker", func(a *RoundNAction, c []Card, s *GameState) bool { return rnRuleNoDiscardJoker(a, c) }},
+		{"NoDiscardAce", func(a *RoundNAction, c []Card, s *GameState) bool { return rnRuleNoDiscardAce(a, c, s) }},
+		{"NoDiscardPairMember", func(a *RoundNAction, c []Card, s *GameState) bool { return rnRuleNoDiscardPairMember(a, c) }},
+		{"NoSplitKeptPair", func(a *RoundNAction, c []Card, s *GameState) bool { return rnRuleNoSplitKeptPair(a, c) }},
+		{"KK_OnTop_NoA", rnRuleKK_OnTop_NoA},
+		{"KK_OnBot_WithA", rnRuleKK_OnBot_WithA},
+		{"JokerWithA_OnTop", rnRuleJokerWithA_OnTop},
+		{"TopMustAllowFantasy", rnRuleTopMustAllowFantasy}, // 2026-05-20 sp15: 仅 R2-R3 触发, R4-R5 skip
+	}
+	cur := candidates
+	for _, r := range rules {
+		next := make([]RNCand, 0, len(cur))
+		for _, c := range cur {
+			if r.fn(c.Action, cards, state) {
+				next = append(next, c)
+			}
+		}
+		if len(next) > 0 {
+			cur = next
+		}
+	}
+	return cur
+}

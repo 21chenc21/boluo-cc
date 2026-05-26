@@ -1,0 +1,13 @@
+server-go/ofc-go
+server-go/ofc-train
+server-go/r1-debug
+server-go/games.db*
+server-go/checkpoints/
+server-go/samples/
+ckpt/
+mac-bundle/ofc-go-mac
+mac-bundle/ofc-train-mac
+mac-bundle/*.db
+test-reports/
+*.log
+*.bak

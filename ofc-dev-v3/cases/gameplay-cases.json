@@ -1,0 +1,160 @@
+[
+  {
+    "name": "实战 1 [R2]: 6s 6c mid trips lock, 8d 应进底留花",
+    "round": 2,
+    "dealt": [
+      "7h",
+      "6d",
+      "8d"
+    ],
+    "state": {
+      "top": [],
+      "middle": [
+        "5c",
+        "6s",
+        "6c"
+      ],
+      "bottom": [
+        "X",
+        "Jd"
+      ],
+      "usedCards": [
+        "X",
+        "5c",
+        "6s",
+        "6c",
+        "Jd"
+      ]
+    },
+    "expecteds": [
+      {
+        "top": [],
+        "middle": [
+          "6d"
+        ],
+        "bottom": [
+          "8d"
+        ]
+      },
+      {
+        "top": [],
+        "middle": [],
+        "bottom": [
+          "6d",
+          "8d"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "实战 2 [R3]: 鬼上头 + KQ 选高 → K 上头, Q 弃 (KK > QQ fantasy)",
+    "round": 3,
+    "dealt": [
+      "Qc",
+      "Kh",
+      "Jc"
+    ],
+    "state": {
+      "top": [
+        "X"
+      ],
+      "middle": [
+        "8c",
+        "Tc",
+        "2s"
+      ],
+      "bottom": [
+        "X",
+        "Jh",
+        "9c"
+      ],
+      "usedCards": [
+        "X",
+        "8c",
+        "Tc",
+        "2s",
+        "X",
+        "Jh",
+        "9c",
+        "3d"
+      ]
+    },
+    "expecteds": [
+      {
+        "top": [
+          "Kh"
+        ],
+        "middle": [],
+        "bottom": [
+          "Jc"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "实战 3 [R4]: 头[Qh] mid 4 clubs draw + bot 4 张 不能凑 flush, 2c→mid 必 foul",
+    "round": 4,
+    "dealt": [
+      "Kh",
+      "2c",
+      "9d"
+    ],
+    "state": {
+      "top": [
+        "Qh"
+      ],
+      "middle": [
+        "3c",
+        "4c",
+        "5c",
+        "6c"
+      ],
+      "bottom": [
+        "Th",
+        "Jh",
+        "Ks",
+        "Ac"
+      ],
+      "usedCards": [
+        "Qh",
+        "3c",
+        "4c",
+        "5c",
+        "6c",
+        "Th",
+        "Jh",
+        "Ks",
+        "Ac"
+      ]
+    },
+    "expecteds": [
+      {
+        "top": [
+          "2c"
+        ],
+        "middle": [],
+        "bottom": [
+          "Kh"
+        ]
+      },
+      {
+        "top": [
+          "2c",
+          "Kh"
+        ],
+        "middle": [],
+        "bottom": []
+      },
+      {
+        "top": [],
+        "middle": [
+          "Kh"
+        ],
+        "bottom": [
+          "9d"
+        ]
+      }
+    ]
+  }
+]
+

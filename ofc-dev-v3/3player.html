@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大菠萝 OFC - 3人对局</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 15px; }
+        h1 { text-align: center; color: #e94560; font-size: 24px; margin-bottom: 5px; }
+        .subtitle { text-align: center; color: #888; font-size: 13px; margin-bottom: 15px; }
+
+        .controls { text-align: center; margin-bottom: 15px; }
+        .controls button {
+            padding: 10px 25px; margin: 0 8px; border: none; border-radius: 6px;
+            font-size: 15px; cursor: pointer; font-weight: bold; transition: all 0.2s;
+        }
+        .btn-new { background: #e94560; color: white; }
+        .btn-new:hover { background: #c73a52; }
+        .btn-step { background: #0f3460; color: white; }
+        .btn-step:hover { background: #16213e; }
+        .btn-step:disabled { background: #333; color: #666; cursor: not-allowed; }
+        .btn-auto { background: #533483; color: white; }
+        .btn-auto:hover { background: #6a4c93; }
+
+        .round-info {
+            text-align: center; padding: 8px; margin-bottom: 10px;
+            background: #16213e; border-radius: 6px; font-size: 14px; color: #0ea5e9;
+        }
+
+        .players { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .player-board {
+            flex: 1; min-width: 380px; max-width: 450px;
+            background: #16213e; border-radius: 10px; padding: 12px; border: 2px solid #333;
+        }
+        .player-board.active { border-color: #e94560; }
+        .player-board.ai { border-color: #0ea5e9; }
+        .player-header {
+            text-align: center; font-size: 16px; font-weight: bold; margin-bottom: 8px;
+            padding: 6px; border-radius: 6px;
+        }
+        .player-header.p0 { background: #0f3460; color: #0ea5e9; }
+        .player-header.p1 { background: #2d1b4e; color: #a78bfa; }
+        .player-header.p2 { background: #1b3a2d; color: #6ee7b7; }
+
+        .row-label { font-size: 12px; color: #888; margin: 4px 0 2px; }
+        .card-row {
+            display: flex; gap: 4px; min-height: 52px; padding: 4px;
+            background: #0a0a1a; border-radius: 6px; margin-bottom: 4px;
+            align-items: center; justify-content: center;
+        }
+        .card {
+            width: 40px; height: 52px; border-radius: 5px; display: flex;
+            align-items: center; justify-content: center; font-size: 16px; font-weight: bold;
+            background: white; color: #333; border: 1px solid #999;
+        }
+        .card.red { color: #dc2626; }
+        .card.black { color: #1a1a1a; }
+        .card.empty { background: #222; border: 1px dashed #444; color: #444; font-size: 12px; }
+
+        .dealt-row {
+            display: flex; gap: 6px; justify-content: center; margin: 6px 0;
+            min-height: 55px; align-items: center;
+        }
+        .dealt-row .card { width: 44px; height: 56px; font-size: 18px; border: 2px solid #e94560; }
+        .card.discarded { opacity: 0.3; border-color: #666; text-decoration: line-through; }
+
+        .score-line {
+            text-align: center; font-size: 14px; margin-top: 6px; padding: 6px;
+            border-radius: 6px; font-weight: bold;
+        }
+        .score-line.foul { background: #4a0000; color: #f87171; }
+        .score-line.fantasy { background: #1a3a1a; color: #4ade80; }
+        .score-line.normal { background: #1a1a3a; color: #93c5fd; }
+
+        .visible-info {
+            margin-top: 12px; padding: 10px; background: #0a0a1a; border-radius: 8px;
+            font-size: 12px; color: #888;
+        }
+        .visible-info .title { color: #aaa; font-weight: bold; margin-bottom: 4px; }
+
+        .log-area { margin-top: 12px; display: flex; gap: 12px; }
+        .log-col {
+            flex: 1; min-width: 0; padding: 10px; background: #0a0a1a; border-radius: 8px;
+            max-height: 400px; overflow-y: auto; font-size: 12px; font-family: monospace; color: #aaa;
+        }
+        .log-col .col-header { font-weight: bold; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #333; }
+        .log-col.p0 .col-header { color: #0ea5e9; }
+        .log-col.p1 .col-header { color: #a78bfa; }
+        .log-col.p2 .col-header { color: #6ee7b7; }
+        .log-col .entry { margin-bottom: 3px; line-height: 1.4; }
+        .log-col .highlight { color: #e94560; }
+        .log-col .round-sep { color: #555; margin: 4px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>大菠萝 3人对局</h1>
+        <div class="subtitle">v5_joker | AI(P0) vs AI(P1) vs AI(P2) | 支持 0/2/4 鬼牌</div>
+
+        <div class="controls">
+            <label style="color:#eee; margin-right:10px;">鬼牌数:
+                <select id="numJokers" style="padding:4px 8px; font-size:14px; background:#333; color:#fff; border:1px solid #555;">
+                    <option value="0">0 (标准)</option>
+                    <option value="2">2 鬼</option>
+                    <option value="4">4 鬼</option>
+                </select>
+            </label>
+            <label style="color:#eee; margin-right:10px;">AI 类型:
+                <select id="aiLevel" style="padding:4px 8px; font-size:14px; background:#333; color:#fff; border:1px solid #555;">
+                    <option value="pure_mlp" selected>纯 MLP (R1~280ms, 生产推荐)</option>
+                    <option value="low">MCTS 低 (R1~7s, 不推荐)</option>
+                    <option value="medium">MCTS 中 (R1~17s, 不推荐)</option>
+                    <option value="high">MCTS 高 (R1~56s, 不推荐)</option>
+                </select>
+            </label>
+            <label style="color:#eee; margin-right:10px;">AI 难度:
+                <select id="aiTopK" style="padding:4px 8px; font-size:14px; background:#333; color:#fff; border:1px solid #555;">
+                    <option value="1" selected>难度 1 - 最强 (top-1 deterministic)</option>
+                    <option value="2">难度 2 - 中等 (R1 top-2 sample)</option>
+                    <option value="3">难度 3 - 简单 (R1 top-3 sample)</option>
+                </select>
+            </label>
+            <button class="btn-new" onclick="newGame()">新 Episode</button>
+            <button class="btn-step" id="btn-step" onclick="stepRound()" disabled>下一轮</button>
+            <button class="btn-step" id="btn-next-hand" onclick="newHand()" disabled style="display:none;">下一手</button>
+            <button class="btn-auto" onclick="autoPlay()">自动完成</button>
+            <button class="btn-step" id="btn-save-cases" onclick="saveHandAsCases()" title="导出当前 hand 为 case-train cases.json">💾 存 cases</button>
+        </div>
+        <div class="round-info" id="round-info">点击"新游戏"开始</div>
+
+        <div class="players" id="players-area"></div>
+
+        <div class="visible-info" id="visible-info" style="display:none;">
+            <div class="title">场上可见牌 (<span id="visible-count">0</span>张)</div>
+            <div id="visible-cards"></div>
+        </div>
+
+        <div class="log-area">
+            <div class="log-col p0" id="log-p0"><div class="col-header">P0 (AI主视角)</div></div>
+            <div class="log-col p1" id="log-p1"><div class="col-header">P1 (对手)</div></div>
+            <div class="log-col p2" id="log-p2"><div class="col-header">P2 (对手)</div></div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+    <script>
+        // 注: 不再加载 solver.js — 全部走后端 /api/solve
+        const API_BASE = '';                 // 同源, 后端 8001 静态服务
+        let game = null;
+        let gameId = null;                   // episode 唯一 id
+        let currentRound = 0;
+        let gameOver = false;     // 当前手是否结束
+        let hands = []; // 当前轮发到的牌
+        let playerActed = 0; // 当前轮已行动的玩家数
+        // === Episode 多手状态 ===
+        let handIdx = 0;
+        let episodeNet = [0, 0, 0];        // 各玩家累计 net 分
+        let inFantasy = [null, null, null];// 各玩家本手范状态: null/QQ/KK/AA/trips/re-enter
+        let isProcessing = false;
+        let episodeRounds = [];            // 每手每轮 solve 记录 (用于结束保存)
+
+        // 卡片序列化: 牌 → 字符串 ("Rs" or "X")
+        function cardSerialize(c) {
+            return isJoker(c) ? 'X' : (c.rank + c.suit);
+        }
+
+        // 调后端求解 — 返回 { layout: {top, middle, bottom}, discards, elapsedMs, level }
+        async function solveOnServer({ player, round, state, dealt, discardCount, mode }) {
+            const visibleExclude = new Set(game.visibleCards);
+            for (const cid of state.usedCards) visibleExclude.add(cid);
+            const levelSel = document.getElementById('aiLevel');
+            const body = {
+                gameId,
+                player,
+                round,
+                state: {
+                    top: state.top.map(cardSerialize),
+                    middle: state.middle.map(cardSerialize),
+                    bottom: state.bottom.map(cardSerialize),
+                    usedCards: [...visibleExclude],
+                    round,
+                },
+                dealt: dealt.map(cardSerialize),
+                discardCount: discardCount || 0,
+                mode: mode || 'normal',
+                jokerCount: game.numJokers || 0,
+            };
+            // AI 类型 (level): 'pure_mlp' (跳 MCTS) | 'low'/'medium'/'high' (MCTS 档位)
+            const lv = levelSel ? levelSel.value : 'pure_mlp';
+            if (lv === 'pure_mlp') {
+                body.pureMLP = true;
+                body.level = 'low'; // 任意 level, PureMLP 跳 rollout
+            } else {
+                body.level = lv;
+            }
+            // AI 难度 (topK): 1=最强 deterministic / 2=中等 R1 top-2 sample / 3=简单 R1 top-3 sample
+            const topkSel = document.getElementById('aiTopK');
+            const topk = topkSel ? parseInt(topkSel.value, 10) : 1;
+            if (topk >= 2) {
+                body.topK = topk;
+            }
+            const r = await fetch(API_BASE + '/api/solve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+            if (!r.ok) {
+                const err = await r.json().catch(() => ({ error: r.statusText }));
+                throw new Error('solve failed: ' + (err.error || r.status));
+            }
+            return r.json();
+        }
+
+        // 把后端返回的 layout 应用到本地 state — 按 dealt 卡片顺序匹配
+        function applyLayoutToState(playerIdx, layout, dealt, discards) {
+            const state = game.players[playerIdx];
+            // dealt 里可能有多张同名卡 (e.g. 2 jokers). 按消耗顺序匹配
+            const pool = dealt.slice();
+            const takeCard = (s) => {
+                for (let i = 0; i < pool.length; i++) {
+                    if (cardSerialize(pool[i]) === s) return pool.splice(i, 1)[0];
+                }
+                return null;
+            };
+            for (const s of (layout.top || [])) {
+                const c = takeCard(s);
+                if (c) { state.placeCard(c, 'top'); game.visibleCards.add(cardId(c)); }
+            }
+            for (const s of (layout.middle || [])) {
+                const c = takeCard(s);
+                if (c) { state.placeCard(c, 'middle'); game.visibleCards.add(cardId(c)); }
+            }
+            for (const s of (layout.bottom || [])) {
+                const c = takeCard(s);
+                if (c) { state.placeCard(c, 'bottom'); game.visibleCards.add(cardId(c)); }
+            }
+            for (const s of (discards || [])) {
+                const c = takeCard(s);
+                if (c) state.usedCards.add(cardId(c));
+            }
+        }
+
+        // SUIT_SYMBOLS, SUIT_COLORS, RANK_DISPLAY 已在 game.js 中定义
+
+        function cardHTML(card, extra = '') {
+            if (isJoker(card)) {
+                return `<div class="card joker ${extra}" style="background:linear-gradient(135deg,#ffc107,#ff5722);color:#fff;font-weight:700;">🃏</div>`;
+            }
+            const color = SUIT_COLORS[card.suit];
+            const display = RANK_DISPLAY[card.rank] + SUIT_SYMBOLS[card.suit];
+            return `<div class="card ${color} ${extra}">${display}</div>`;
+        }
+
+        function cardText(card) {
+            return isJoker(card) ? '🃏' : (RANK_DISPLAY[card.rank] + SUIT_SYMBOLS[card.suit]);
+        }
+
+        function emptyCardHTML(n) {
+            let html = '';
+            for (let i = 0; i < n; i++) html += '<div class="card empty">?</div>';
+            return html;
+        }
+
+        function renderPlayer(playerIdx) {
+            const state = game.players[playerIdx];
+            const top = state.top, mid = state.middle, bot = state.bottom;
+
+            let html = `<div class="player-header p${playerIdx}">`;
+            html += playerIdx === 0 ? 'P0 (AI主视角)' : `P${playerIdx} (AI对手)`;
+            if (inFantasy[playerIdx]) {
+                html += ` <span style="background:#ffc107;color:#000;font-size:11px;padding:2px 6px;border-radius:3px;margin-left:6px;">范:${inFantasy[playerIdx]}</span>`;
+            }
+            html += '</div>';
+
+            html += '<div class="row-label">头道 (3张)</div><div class="card-row">';
+            for (const c of top) html += cardHTML(c);
+            html += emptyCardHTML(3 - top.length);
+            html += '</div>';
+
+            html += '<div class="row-label">中道 (5张)</div><div class="card-row">';
+            for (const c of mid) html += cardHTML(c);
+            html += emptyCardHTML(5 - mid.length);
+            html += '</div>';
+
+            html += '<div class="row-label">底道 (5张)</div><div class="card-row">';
+            for (const c of bot) html += cardHTML(c);
+            html += emptyCardHTML(5 - bot.length);
+            html += '</div>';
+
+            // 当前轮发牌
+            if (hands[playerIdx] && !gameOver) {
+                html += '<div class="row-label">发牌</div><div class="dealt-row">';
+                for (const c of hands[playerIdx]) {
+                    const placed = [...top,...mid,...bot];
+                    const wasPlaced = placed.some(pc => pc.rank === c.rank && pc.suit === c.suit);
+                    const wasDiscarded = !wasPlaced && playerActed > playerIdx;
+                    html += cardHTML(c, wasDiscarded ? 'discarded' : '');
+                }
+                html += '</div>';
+            }
+
+            // 得分
+            if (gameOver || state.isComplete()) {
+                const score = state.getScore();
+                if (score.foul) {
+                    html += '<div class="score-line foul">犯规 (-20 to opp)</div>';
+                } else if (score.fantasy) {
+                    html += `<div class="score-line fantasy">范特西! royalty:${score.royalties}</div>`;
+                } else {
+                    html += `<div class="score-line normal">royalty: ${score.royalties}</div>`;
+                }
+            }
+            // Episode 累计 net
+            if (handIdx > 0) {
+                const sign = episodeNet[playerIdx] >= 0 ? '+' : '';
+                html += `<div style="text-align:center;font-size:12px;color:#888;margin-top:4px;">Episode net: <span style="color:${episodeNet[playerIdx] >= 0 ? '#4ade80' : '#f87171'};font-weight:bold;">${sign}${episodeNet[playerIdx]}</span></div>`;
+            }
+
+            return html;
+        }
+
+        function render() {
+            if (!game) return;
+            const area = document.getElementById('players-area');
+            let html = '';
+            for (let p = 0; p < 3; p++) {
+                const isActive = !gameOver && playerActed === p && currentRound > 0;
+                html += `<div class="player-board ${isActive ? 'active' : ''} ${p === 0 ? 'ai' : ''}">${renderPlayer(p)}</div>`;
+            }
+            area.innerHTML = html;
+
+            // 可见牌
+            const visInfo = document.getElementById('visible-info');
+            if (game.visibleCards.size > 0) {
+                visInfo.style.display = 'block';
+                document.getElementById('visible-count').textContent = game.visibleCards.size;
+                const allCards = createDeck(game.numJokers || 0);
+                const visCards = allCards.filter(c => game.visibleCards.has(cardId(c)));
+                // 按花色分组 (鬼牌单列)
+                const bySuit = { s: [], h: [], d: [], c: [], j: [] };
+                for (const c of visCards) bySuit[c.suit].push(c);
+                let cardsHtml = '';
+                for (const suit of ['s', 'h', 'd', 'c']) {
+                    if (bySuit[suit].length === 0) continue;
+                    bySuit[suit].sort((a, b) => rankIndex(b.rank) - rankIndex(a.rank));
+                    cardsHtml += bySuit[suit].map(c => cardText(c)).join(' ') + '  ';
+                }
+                if (bySuit.j.length > 0) cardsHtml += bySuit.j.map(() => '🃏').join(' ');
+                document.getElementById('visible-cards').textContent = cardsHtml;
+            } else {
+                visInfo.style.display = 'none';
+            }
+        }
+
+        function log(playerIdx, msg, highlight = false) {
+            // playerIdx: 0/1/2 for specific player, -1 for all columns
+            if (playerIdx === -1) {
+                for (let p = 0; p < 3; p++) {
+                    const div = document.getElementById('log-p' + p);
+                    div.innerHTML += `<div class="entry ${highlight ? 'highlight' : ''}">${msg}</div>`;
+                    div.scrollTop = div.scrollHeight;
+                }
+            } else {
+                const div = document.getElementById('log-p' + playerIdx);
+                div.innerHTML += `<div class="entry ${highlight ? 'highlight' : ''}">${msg}</div>`;
+                div.scrollTop = div.scrollHeight;
+            }
+        }
+        function logSep() {
+            for (let p = 0; p < 3; p++) {
+                document.getElementById('log-p' + p).innerHTML += '<div class="round-sep">────────</div>';
+            }
+        }
+
+        // === 启动时异步加载 主 MLP + FL MLP ===
+        let GLOBAL_MAIN_WEIGHTS = null;
+        // 后端健康检查 — 启动时拉一下显示在 UI
+        async function checkServerHealth() {
+            try {
+                const r = await fetch(API_BASE + '/api/health');
+                if (!r.ok) return null;
+                return await r.json();
+            } catch { return null; }
+        }
+        (async () => {
+            const h = await checkServerHealth();
+            const el = document.getElementById('round-info');
+            if (h) {
+                console.log('server:', h);
+                const cache = h.cache || {};
+                const lvl = h.defaultLevel || 'medium';
+                if (el) el.textContent = `后端就绪 (level=${lvl}, cache=${cache.size||0}/${cache.max||0}) - 点"新对局"开始`;
+            } else {
+                if (el) el.textContent = '⚠ 后端未就绪 — 请先启动 ofc-go';
+            }
+        })();
+
+        function newGame() {
+            const nj = parseInt(document.getElementById('numJokers').value) || 0;
+            game = new ThreePlayerGame(nj);
+            // episode 唯一 id (8 字节 hex) — 用于后端保存 + solve_log 关联
+            gameId = Array.from(crypto.getRandomValues(new Uint8Array(8)))
+                .map(b => b.toString(16).padStart(2, '0')).join('');
+            handIdx = 0;
+            episodeNet = [0, 0, 0];
+            inFantasy = [null, null, null];
+            isProcessing = false;
+            episodeRounds = [];
+            for (let p = 0; p < 3; p++) {
+                document.getElementById('log-p' + p).innerHTML = `<div class="col-header">${p === 0 ? 'P0 (AI主视角)' : 'P' + p + ' (对手)'}</div>`;
+            }
+            log(-1, `═══ 新 Episode (id=${gameId}) ═══`, true);
+            newHand();
+        }
+
+        // Episode 结束时上传完整记录 (供后续研究用)
+        async function saveEpisode() {
+            if (!gameId || episodeRounds.length === 0) return;
+            try {
+                const body = {
+                    id: gameId,
+                    jokerCount: game.numJokers || 0,
+                    players: [0, 1, 2].map(p => ({
+                        top: game.players[p].top.map(cardSerialize),
+                        middle: game.players[p].middle.map(cardSerialize),
+                        bottom: game.players[p].bottom.map(cardSerialize),
+                    })),
+                    rounds: episodeRounds,
+                    scores: { episodeNet, hands: handIdx },
+                    meta: { client: '3player.html', ts: Date.now() },
+                };
+                await fetch(API_BASE + '/api/games', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                });
+            } catch (e) { console.warn('saveEpisode failed:', e); }
+        }
+
+        function newHand() {
+            handIdx++;
+            game.newHand();
+            currentRound = 0;
+            gameOver = false;
+            hands = [];
+            playerActed = 0;
+            isProcessing = false;
+            document.getElementById('btn-next-hand').disabled = true;
+            document.getElementById('btn-next-hand').style.display = 'none';
+            logSep();
+            log(-1, `─── 第 ${handIdx} 手 ───`);
+            for (let p = 0; p < 3; p++) {
+                if (inFantasy[p]) log(p, `本手在范 (${inFantasy[p]})`, true);
+            }
+            // 范玩家在新一手开局立即发牌+摆牌 (用户需求: 进范后直接拿牌继续)
+            const flPlayers = [0, 1, 2].filter(p => inFantasy[p]);
+            if (flPlayers.length > 0) {
+                document.getElementById('btn-step').disabled = true;
+                document.getElementById('round-info').textContent = `第 ${handIdx} 手 - 范玩家摆牌中...`;
+                isProcessing = true;
+                render();
+                setTimeout(() => {
+                    executeFLPhase(/*atHandStart*/ true);
+                }, 50);
+            } else {
+                document.getElementById('btn-step').disabled = false;
+                document.getElementById('round-info').textContent = `第 ${handIdx} 手 - 点击"下一轮"开始`;
+                render();
+            }
+        }
+
+        function stepRound() {
+            if (isProcessing || gameOver || currentRound >= 5) return;
+            const nonFL = [0, 1, 2].filter(p => !inFantasy[p]);
+            // 全 FL: FL 在 newHand 已摆完 → 直接结手
+            if (nonFL.length === 0) {
+                isProcessing = true;
+                setTimeout(() => endHand(), 50);
+                return;
+            }
+            currentRound++;
+            const numCards = currentRound === 1 ? 5 : 3;
+            isProcessing = true;
+            // 只发给 non-FL 玩家
+            hands = [null, null, null];
+            for (const p of nonFL) {
+                hands[p] = game.dealCards(p, numCards);
+                game.players[p].round = currentRound;
+            }
+            playerActed = 0;
+            logSep();
+            for (const p of nonFL) {
+                log(p, `R${currentRound} 收到: ${hands[p].map(c => cardText(c)).join(' ')}`);
+            }
+            document.getElementById('round-info').textContent = `第${handIdx}手 R${currentRound} - AI决策中...`;
+            render();
+            setTimeout(() => executePlayerActions(), 50);
+        }
+
+        async function executePlayerActions() {
+            const roundStart = Date.now();
+            const nonFL = [0, 1, 2].filter(p => !inFantasy[p]);
+            for (const p of nonFL) {
+                const dealt = hands[p];
+                const state = game.players[p];
+                const beforeTop = state.top.length;
+                const beforeMid = state.middle.length;
+                const beforeBot = state.bottom.length;
+                const thinkStart = Date.now();
+                let result;
+                try {
+                    result = await solveOnServer({
+                        player: p,
+                        round: currentRound,
+                        state,
+                        dealt,
+                        discardCount: currentRound === 1 ? 0 : 1,
+                        mode: 'normal',
+                    });
+                } catch (err) {
+                    log(p, `求解失败: ${err.message}`, true);
+                    isProcessing = false;
+                    return;
+                }
+                const thinkTime = ((Date.now() - thinkStart) / 1000).toFixed(1);
+                applyLayoutToState(p, result.layout, dealt, result.discards);
+                episodeRounds.push({
+                    handIdx, player: p, round: currentRound,
+                    dealt: dealt.map(cardSerialize),
+                    layout: result.layout, discards: result.discards,
+                    serverElapsedMs: result.elapsedMs,
+                });
+                if (currentRound > 1 && result.discards) {
+                    for (const s of result.discards) log(p, `弃 ${s}`);
+                }
+                const newTop = state.top.slice(beforeTop).map(c => cardText(c));
+                const newMid = state.middle.slice(beforeMid).map(c => cardText(c));
+                const newBot = state.bottom.slice(beforeBot).map(c => cardText(c));
+                let parts = [];
+                if (newTop.length) parts.push('头[' + newTop.join(' ') + ']');
+                if (newMid.length) parts.push('中[' + newMid.join(' ') + ']');
+                if (newBot.length) parts.push('底[' + newBot.join(' ') + ']');
+                log(p, `放 ${parts.join(' ')} (${thinkTime}s)`);
+                playerActed = p + 1;
+                render();
+            }
+            const remaining = game.getTrueRemaining().length;
+            document.getElementById('round-info').textContent =
+                `第${handIdx}手 R${currentRound}完成 | 可见${game.visibleCards.size}张 | 剩${remaining}张 | ${((Date.now()-roundStart)/1000).toFixed(1)}s`;
+
+            if (currentRound >= 5) {
+                // R5 done — FL 已在 newHand 开局摆完, 直接结手
+                setTimeout(() => endHand(), 100);
+            } else {
+                isProcessing = false;
+            }
+        }
+
+        async function executeFLPhase(atHandStart) {
+            const flPlayers = [0, 1, 2].filter(p => inFantasy[p]);
+            if (flPlayers.length === 0) {
+                endHand();
+                return;
+            }
+            logSep();
+            log(-1, atHandStart ? '═ 范摆牌 (开局) ═' : '═ 范摆牌 (R5 后) ═', true);
+            for (const p of flPlayers) {
+                const trigger = inFantasy[p];
+                const N = getFantasyDealCount(trigger);
+                const dealt = game.dealCards(p, N);
+                const state = game.players[p];
+                log(p, `范发牌 ${N}张: ${dealt.map(c => cardText(c)).join(' ')}`);
+                const thinkStart = Date.now();
+                let result;
+                try {
+                    result = await solveOnServer({
+                        player: p,
+                        round: 0,
+                        state,
+                        dealt,
+                        discardCount: N - 13,
+                        mode: 'fantasy',
+                    });
+                } catch (err) {
+                    log(p, `范摆牌求解失败: ${err.message}, fallback`, true);
+                    result = null;
+                }
+                const thinkTime = ((Date.now() - thinkStart) / 1000).toFixed(2);
+                if (!result || !result.layout) {
+                    log(p, `范摆牌无返回, 用 fallback`, true);
+                    let i = 0;
+                    for (let s = 0; s < 3 && i < dealt.length; s++, i++) state.top.push(dealt[i]);
+                    for (let s = 0; s < 5 && i < dealt.length; s++, i++) state.middle.push(dealt[i]);
+                    for (let s = 0; s < 5 && i < dealt.length; s++, i++) state.bottom.push(dealt[i]);
+                    while (i < dealt.length) state.usedCards.add(cardId(dealt[i++]));
+                    for (const c of [...state.top, ...state.middle, ...state.bottom]) game.visibleCards.add(cardId(c));
+                } else {
+                    // 后端返回字符串卡片, 反序列化成 dealt 中的实际牌对象
+                    const pool = dealt.slice();
+                    const takeCard = (s) => {
+                        for (let i = 0; i < pool.length; i++) {
+                            if (cardSerialize(pool[i]) === s) return pool.splice(i, 1)[0];
+                        }
+                        return null;
+                    };
+                    const flLayout = {
+                        top: result.layout.top.map(takeCard).filter(Boolean),
+                        middle: result.layout.middle.map(takeCard).filter(Boolean),
+                        bottom: result.layout.bottom.map(takeCard).filter(Boolean),
+                        discards: (result.discards || []).map(takeCard).filter(Boolean),
+                    };
+                    game.placeFantasyHand(p, flLayout);
+                    log(p, `范摆: 头[${flLayout.top.map(cardText).join(' ')}]`);
+                    log(p, `      中[${flLayout.middle.map(cardText).join(' ')}]`);
+                    log(p, `      底[${flLayout.bottom.map(cardText).join(' ')}]`);
+                    log(p, `      弃[${flLayout.discards.map(cardText).join(' ')}] (${thinkTime}s)`);
+                    episodeRounds.push({
+                        handIdx, player: p, round: 0, mode: 'fantasy',
+                        dealt: dealt.map(cardSerialize),
+                        layout: result.layout, discards: result.discards,
+                        serverElapsedMs: result.elapsedMs,
+                    });
+                }
+            }
+            render();
+            isProcessing = false;
+            // 开局摆完: 检查是否还有非范玩家要走 R1-R5
+            if (atHandStart) {
+                const nonFL = [0, 1, 2].filter(p => !inFantasy[p]);
+                if (nonFL.length > 0) {
+                    document.getElementById('btn-step').disabled = false;
+                    document.getElementById('round-info').textContent = `范摆完 | 非范玩家 (P${nonFL.join(',P')}) 待走 R1-R5 - 点"下一轮"`;
+                } else {
+                    // 全 FL: 直接结手
+                    setTimeout(() => endHand(), 100);
+                }
+            } else {
+                // R5 后 FL: 直接结手
+                setTimeout(() => endHand(), 100);
+            }
+        }
+
+        function endHand() {
+            gameOver = true;
+            document.getElementById('btn-step').disabled = true;
+            logSep();
+            log(-1, `第 ${handIdx} 手结束`, true);
+            for (let p = 0; p < 3; p++) {
+                if (game.players[p].isComplete()) {
+                    const score = game.players[p].getScore();
+                    const te = score.topEval || (game.players[p].top.some(isJoker) ? evaluate3Joker(game.players[p].top) : evaluate3(game.players[p].top));
+                    const me = score.midEval || (game.players[p].middle.some(isJoker) ? evaluate5Joker(game.players[p].middle) : evaluate5(game.players[p].middle));
+                    const be = score.botEval || (game.players[p].bottom.some(isJoker) ? evaluate5Joker(game.players[p].bottom) : evaluate5(game.players[p].bottom));
+                    const status = score.foul ? '犯规(-20)' : (score.fantasy ? `进范(+${score.score})` : `royalty:${score.score}`);
+                    log(p, status, score.fantasy);
+                    log(p, `头:${HAND_NAMES[te.type]} 中:${HAND_NAMES[me.type]} 底:${HAND_NAMES[be.type]}`);
+                }
+            }
+            // Head-to-head
+            const hr = episodeHandScore(game.players);
+            for (let p = 0; p < 3; p++) {
+                episodeNet[p] += hr.nets[p];
+                const sign1 = hr.nets[p] >= 0 ? '+' : '';
+                const sign2 = episodeNet[p] >= 0 ? '+' : '';
+                log(p, `本手净: ${sign1}${hr.nets[p]} | episode: ${sign2}${episodeNet[p]}`, true);
+            }
+            // 检查下手 FL 触发
+            const nextFL = [null, null, null];
+            for (let p = 0; p < 3; p++) {
+                nextFL[p] = checkFantasyTrigger(game.players[p], !!inFantasy[p]);
+            }
+            inFantasy = nextFL;
+            const anyContinue = inFantasy.some(t => t !== null);
+            if (anyContinue) {
+                log(-1, '触发新一手:', true);
+                for (let p = 0; p < 3; p++) {
+                    if (inFantasy[p]) log(p, `下手进范 → ${inFantasy[p]} (${getFantasyDealCount(inFantasy[p])}张)`, true);
+                }
+                document.getElementById('btn-next-hand').disabled = false;
+                document.getElementById('btn-next-hand').style.display = 'inline-block';
+                document.getElementById('round-info').textContent = `第${handIdx}手结束 | 有人触发范 | 点"下一手"继续`;
+            } else {
+                log(-1, '═══ Episode 结束 ═══', true);
+                const sign = (n) => (n >= 0 ? '+' : '') + n;
+                document.getElementById('round-info').textContent =
+                    `Episode 结束 (${handIdx}手) | P0:${sign(episodeNet[0])} P1:${sign(episodeNet[1])} P2:${sign(episodeNet[2])}`;
+                saveEpisode();  // 上传整局记录
+            }
+            isProcessing = false;
+            render();
+        }
+
+        function autoPlay() {
+            if (!game) newGame();
+            const run = () => {
+                if (isProcessing) { setTimeout(run, 200); return; }
+                if (currentRound < 5 && !gameOver) {
+                    stepRound();
+                    setTimeout(run, 200);
+                } else if (gameOver && inFantasy.some(t => t !== null)) {
+                    newHand();
+                    setTimeout(run, 200);
+                }
+                // else episode 结束, 停
+            };
+            run();
+        }
+
+        // === 导出当前 hand 为 case-train cases.json ===
+        // P0 主视角. 每 round 1 个 case.
+        // expected = AI 当时摆法 (用户应手动改成期望摆法)
+        // wrongs = [] (用户加错误摆法)
+        function saveHandAsCases() {
+            if (!episodeRounds || episodeRounds.length === 0) {
+                alert('没有 round 数据可保存. 先跑几轮再点.');
+                return;
+            }
+
+            // 只导出 P0 (主视角) 当前 hand 的 round
+            const p0Rounds = episodeRounds.filter(r => r.player === 0 && r.handIdx === handIdx);
+            if (p0Rounds.length === 0) {
+                alert('当前 hand P0 没有 round 数据.');
+                return;
+            }
+
+            // 重建每 round 开始时 P0 的 state (累积前 round 的 layout)
+            const cases = [];
+            const stateAcc = { top: [], middle: [], bottom: [], usedCards: [] };
+            // 桌面 visible 牌 (其他玩家已摆 + 自己已弃)
+            // 简化: 每 round 用 game.visibleCards 的 snapshot 不可恢复, 改用 P0 之前的 placement + 此 round 之前所有玩家的 placement
+            const allBefore = (handIdx, beforeRound) => {
+                const used = new Set();
+                episodeRounds.forEach(r => {
+                    if (r.handIdx !== handIdx) return;
+                    if (r.round >= beforeRound && r.player === 0) return; // P0 此 round 不算 (要 build expected)
+                    if (r.round > beforeRound) return; // 还没发生
+                    // 全部 placement + discard 算 used
+                    if (r.layout) {
+                        ['top','middle','bottom'].forEach(k => (r.layout[k]||[]).forEach(c => used.add(c)));
+                    }
+                    if (r.discards) r.discards.forEach(c => used.add(c));
+                });
+                // 注: P0 当 round 之前的 placement 也算 state (不是 used)
+                return used;
+            };
+
+            for (const rr of p0Rounds) {
+                const round = rr.round;
+                // P0 之前 round 累积 placement → state
+                const stateP0 = { top: [], middle: [], bottom: [], usedCards: [] };
+                episodeRounds.forEach(r => {
+                    if (r.handIdx !== rr.handIdx || r.player !== 0) return;
+                    if (r.round >= round) return;
+                    if (r.layout) {
+                        (r.layout.top||[]).forEach(c => stateP0.top.push(c));
+                        (r.layout.middle||[]).forEach(c => stateP0.middle.push(c));
+                        (r.layout.bottom||[]).forEach(c => stateP0.bottom.push(c));
+                    }
+                });
+                // usedCards = 所有玩家之前 round 的 placements + discards
+                // (P0 在每 round 第一个出牌, 同 round 别人还没摆, 所以排除当 round 全部)
+                const used = new Set();
+                episodeRounds.forEach(r => {
+                    if (r.handIdx !== rr.handIdx) return;
+                    if (r.round >= round) return; // 严格小于
+                    if (r.layout) {
+                        ['top','middle','bottom'].forEach(k => (r.layout[k]||[]).forEach(c => used.add(c)));
+                    }
+                    if (r.discards) r.discards.forEach(c => used.add(c));
+                });
+                stateP0.usedCards = [...used];
+
+                cases.push({
+                    name: `hand${rr.handIdx}_R${round}_P0`,
+                    round,
+                    dealt: rr.dealt,
+                    state: stateP0,
+                    expecteds: [
+                        {
+                            top: rr.layout && rr.layout.top || [],
+                            middle: rr.layout && rr.layout.middle || [],
+                            bottom: rr.layout && rr.layout.bottom || [],
+                        }
+                    ],
+                    wrongs: [],
+                    labelValue: 200,
+                    weight: 1.0,
+                    _note: '⚠ expecteds[0] = AI 当时摆法. multi-solution 加更多 expected 进数组. 错摆法挪到 wrongs[]',
+                });
+            }
+
+            // 生成 JSON 下载
+            const json = JSON.stringify(cases, null, 2);
+            const blob = new Blob([json], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const ts = new Date().toISOString().replace(/[:.]/g,'-').slice(0,19);
+            a.download = `cases_${gameId || 'unknown'}_hand${handIdx}_${ts}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            log(-1, `导出 ${cases.length} 个 case 到 ${a.download}`, true);
+        }
+    </script>
+</body>
+</html>

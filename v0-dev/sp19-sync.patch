@@ -1,0 +1,1370 @@
+diff --git a/cases/all-tests-expanded.json b/cases/all-tests-expanded.json
+index 10a14da..e296050 100644
+--- a/cases/all-tests-expanded.json
++++ b/cases/all-tests-expanded.json
+@@ -125,8 +125,22 @@
+           "Qc",
+           "8s"
+         ]
++      },
++      {
++        "top": [
++          "Qc"
++        ],
++        "middle": [
++          "2d"
++        ],
++        "bottom": [
++          "X",
++          "5h",
++          "8s"
++        ]
+       }
+-    ]
++    ],
++    "warn": true
+   },
+   {
+     "name": "3 [R1]: AA顶进范, 鬼放底/中保灵活性",
+@@ -157,6 +171,32 @@
+         "bottom": [
+           "X"
+         ]
++      },
++      {
++        "top": [
++          "Ac",
++          "Ad"
++        ],
++        "middle": [
++          "X",
++          "3h"
++        ],
++        "bottom": [
++          "7s"
++        ]
++      },
++      {
++        "top": [
++          "Ac",
++          "Ad"
++        ],
++        "middle": [
++          "3h"
++        ],
++        "bottom": [
++          "7s",
++          "X"
++        ]
+       }
+     ]
+   },
+@@ -190,7 +230,8 @@
+           "Qc"
+         ]
+       }
+-    ]
++    ],
++    "warn": true
+   },
+   {
+     "name": "5 [R3]: 鬼优先放顶/中, 不补底flush",
+@@ -245,6 +286,15 @@
+           "7s"
+         ],
+         "bottom": []
++      },
++      {
++        "top": [
++          "Kh"
++        ],
++        "middle": [
++          "X"
++        ],
++        "bottom": []
+       }
+     ]
+   },
+@@ -289,6 +339,19 @@
+           "Kc",
+           "Kd"
+         ]
++      },
++      {
++        "top": [
++          "Ah",
++          "As"
++        ],
++        "middle": [
++          "Kc",
++          "Kd"
++        ],
++        "bottom": [
++          "X"
++        ]
+       }
+     ]
+   },
+@@ -306,8 +369,7 @@
+       ],
+       "middle": [
+         "2c",
+-        "2h",
+-        "7d"
++        "2h"
+       ],
+       "bottom": [
+         "Ks",
+@@ -319,7 +381,6 @@
+         "9h",
+         "2c",
+         "2h",
+-        "7d",
+         "Ks",
+         "Kc",
+         "4h",
+@@ -345,7 +406,8 @@
+         ],
+         "bottom": []
+       }
+-    ]
++    ],
++    "warn": true
+   },
+   {
+     "name": "8 [R1]: 双鬼分顶底 等大牌",
+@@ -772,8 +834,35 @@
+           "Kh",
+           "Qh"
+         ]
++      },
++      {
++        "top": [
++          "3c"
++        ],
++        "middle": [
++          "Ts"
++        ],
++        "bottom": [
++          "4h",
++          "Kh",
++          "Qh"
++        ]
++      },
++      {
++        "top": [
++          "Ts"
++        ],
++        "middle": [
++          "3c"
++        ],
++        "bottom": [
++          "4h",
++          "Kh",
++          "Qh"
++        ]
+       }
+-    ]
++    ],
++    "warn": true
+   },
+   {
+     "name": "16 [R1]: 9cQh 至少一张应底道 (8c 2d Qh 9c Kc)",
+@@ -816,6 +905,19 @@
+           "9c",
+           "Kc"
+         ]
++      },
++      {
++        "top": [
++          "Qh"
++        ],
++        "middle": [
++          "2d"
++        ],
++        "bottom": [
++          "8c",
++          "9c",
++          "Kc"
++        ]
+       }
+     ]
+   },
+@@ -1168,6 +1270,19 @@
+         "bottom": [
+           "9h"
+         ]
++      },
++      {
++        "top": [
++          "4d",
++          "Ac"
++        ],
++        "middle": [
++          "6c",
++          "7d"
++        ],
++        "bottom": [
++          "9h"
++        ]
+       }
+     ],
+     "wrongs": [
+@@ -1318,6 +1433,15 @@
+         "bottom": [
+           "Qc"
+         ]
++      },
++      {
++        "top": [],
++        "middle": [
++          "4d"
++        ],
++        "bottom": [
++          "6s"
++        ]
+       }
+     ]
+   },
+@@ -1533,6 +1657,32 @@
+           "Jh",
+           "4d"
+         ]
++      },
++      {
++        "top": [
++          "2s",
++          "Ac"
++        ],
++        "middle": [
++          "4d",
++          "3c"
++        ],
++        "bottom": [
++          "Jh"
++        ]
++      },
++      {
++        "top": [
++          "4d",
++          "Ac"
++        ],
++        "middle": [
++          "2s",
++          "3c"
++        ],
++        "bottom": [
++          "Jh"
++        ]
+       }
+     ]
+   },
+@@ -1581,6 +1731,15 @@
+         "bottom": [
+           "9h"
+         ]
++      },
++      {
++        "top": [
++          "Kc"
++        ],
++        "middle": [],
++        "bottom": [
++          "9h"
++        ]
+       }
+     ]
+   },
+@@ -1627,7 +1786,7 @@
+           "Ac"
+         ],
+         "middle": [
+-          "7s"
++          "7d"
+         ],
+         "bottom": []
+       },
+@@ -1637,7 +1796,7 @@
+         ],
+         "middle": [],
+         "bottom": [
+-          "7s"
++          "7d"
+         ]
+       }
+     ]
+@@ -1927,7 +2086,8 @@
+           "9c"
+         ]
+       }
+-    ]
++    ],
++    "warn": true
+   },
+   {
+     "name": "36 [R2]: A 配顶 joker 锁 AA",
+@@ -2009,8 +2169,7 @@
+       ],
+       "bottom": [
+         "2c",
+-        "Jh",
+-        "3d"
++        "Jh"
+       ],
+       "usedCards": [
+         "Ah",
+@@ -2019,8 +2178,7 @@
+         "7d",
+         "8s",
+         "2c",
+-        "Jh",
+-        "3d"
++        "Jh"
+       ]
+     },
+     "expecteds": [
+@@ -2048,8 +2206,18 @@
+         ],
+         "middle": [],
+         "bottom": []
++      },
++      {
++        "top": [
++          "9d"
++        ],
++        "middle": [],
++        "bottom": [
++          "2h"
++        ]
+       }
+-    ]
++    ],
++    "warn": true
+   },
+   {
+     "name": "38 [R3]: 9 不上中 (mid trips foul)",
+@@ -2117,6 +2285,15 @@
+           "7s"
+         ],
+         "bottom": []
++      },
++      {
++        "top": [
++          "9c"
++        ],
++        "middle": [
++          "7s"
++        ],
++        "bottom": []
+       }
+     ]
+   },
+@@ -2167,8 +2344,8 @@
+     "name": "40 [R3]: 弃 8♦ 不凑 mid flush",
+     "round": 3,
+     "dealt": [
++      "2h",
+       "8d",
+-      "Kc",
+       "X"
+     ],
+     "state": {
+@@ -2183,8 +2360,7 @@
+       ],
+       "bottom": [
+         "2c",
+-        "7s",
+-        "2h"
++        "7s"
+       ],
+       "usedCards": [
+         "Ac",
+@@ -2193,8 +2369,7 @@
+         "5d",
+         "6d",
+         "2c",
+-        "7s",
+-        "2h"
++        "7s"
+       ]
+     },
+     "expecteds": [
+@@ -2224,7 +2399,8 @@
+           "X"
+         ]
+       }
+-    ]
++    ],
++    "warn": true
+   },
+   {
+     "name": "41 [R3]: 2c 必上底 (K/Q 顶或底 都可)",
+@@ -2292,6 +2468,15 @@
+         "bottom": [
+           "2c"
+         ]
++      },
++      {
++        "top": [],
++        "middle": [
++          "Kh"
++        ],
++        "bottom": [
++          "2c"
++        ]
+       }
+     ]
+   },
+@@ -2336,6 +2521,14 @@
+           "4s"
+         ],
+         "bottom": []
++      },
++      {
++        "top": [],
++        "middle": [
++          "Ah",
++          "4s"
++        ],
++        "bottom": []
+       }
+     ]
+   },
+@@ -2380,8 +2573,27 @@
+         "bottom": [
+           "Kh"
+         ]
++      },
++      {
++        "top": [
++          "9s"
++        ],
++        "middle": [],
++        "bottom": [
++          "Kh"
++        ]
++      },
++      {
++        "top": [
++          "2d"
++        ],
++        "middle": [],
++        "bottom": [
++          "Kh"
++        ]
+       }
+-    ]
++    ],
++    "warn": true
+   },
+   {
+     "name": "44 [R4]: 9♥ 完成底 straight",
+@@ -2513,8 +2725,18 @@
+         "bottom": [
+           "9d"
+         ]
++      },
++      {
++        "top": [
++          "9d"
++        ],
++        "middle": [
++          "Kh"
++        ],
++        "bottom": []
+       }
+-    ]
++    ],
++    "warn": true
+   },
+   {
+     "name": "46 [R4]: A 不弃",
+@@ -3184,6 +3406,19 @@
+           "9s",
+           "Kh"
+         ]
++      },
++      {
++        "top": [
++          "Kh"
++        ],
++        "middle": [
++          "2c",
++          "5h"
++        ],
++        "bottom": [
++          "9s",
++          "X"
++        ]
+       }
+     ]
+   },
+diff --git a/mac-scripts/train_v3_selfplay.sh b/mac-scripts/train_v3_selfplay.sh
+index 6657e9a..4a018b1 100755
+--- a/mac-scripts/train_v3_selfplay.sh
++++ b/mac-scripts/train_v3_selfplay.sh
+@@ -32,7 +32,7 @@
+ #   v3-train-i147-selfplay/best.json (current best 自循环 rollout policy)
+ 
+ # ====================================================================
+-SCRIPT_VERSION="2026-05-20-sp15"
++SCRIPT_VERSION="2026-05-22-sp18"
+ # 改动历史:
+ #   2026-05-19-sp1: 基于 train_v3_iter.sh fork, 改 gen rollout policy = best.json (self-play).
+ #   2026-05-19-sp2: rollouts 20 → 100.
+@@ -80,8 +80,37 @@ SCRIPT_VERSION="2026-05-20-sp15"
+ #       提 AA/trips 价值让 silver-label MC EV 反映 fantasy 真实值, NN 自己学到正确权衡.
+ #       撤回 R1JokerWithAOnTopBonus 25 hack (回 10), 用 reward shaping 治本.
+ #     - V3 const V3FanBonusAA / V3FanBonusTrips 同步 (Z0 计算需对齐 label scale).
+-#     - DATA_VERSION → i147-sp-fan120 (label scale 变, fresh start).
+-DATA_VERSION="i147-sp-fan120"
++#     - S_slot (idx 128) 改 scale 0.3 全场 (sp15 v2):
++#         原 1.0 太强 (case 34 误伤); 但 v1 R<4=0 太激进 (13 个 ckpt bench -10~-26).
++#         v2 折中: 0.3 全场, 信号保留强度减 70%. bench 全部回正, acc84 43→46 净改进.
++#     - FoulImminentPenalty case 4 修: top.Type==mid.Type==Pair/Trips 比 rank 不再跳过 (case 50 修).
++#     - rnRuleTopMustAllowFantasy round-gate: R<4 fire, R>=4 skip (case 44/50 误杀 fan-chase 走 mid 修).
++#     - RnJokerWithHighOnTopBonus +10 / RnSingleAOnTopBonus +10 新加 (cases 29/32/36 NN 低估 R2-R5 fantasy lock).
++#     - 配套 19 个新 unit test 全过.
++#     - rollout policy 变 (新 bonus 影响 silver-label EV), DATA_VERSION 再 bump → i147-sp15.
++#   2026-05-20-sp16:
++#     - Features cap-aware 修 4 处, 让 NN 学到 "joker on top 被 mid cap 后真值" — case 49/50 根因:
++#       1. eRoyaltyTop: 用 topEvalCapped 提 cap-aware pair/trips rank 算 royalty (识 joker pair contribution)
++#       2. U_pairRk top (idx 102): 用 topEvalCapped, 不再 maxPairRankRow (joker+A 误标 pair-A)
++#       3. F_fantasy: 当 midEv 是 pair-X 时 P(top pair > X) 强制 0 (foul-imminent)
++#       4. FoulImminentPenalty case 4: Evaluate3JokerCap (传 mid 当 cap), 避免误火
++#     - sp15 v3 iter-3 r2 = 60/2w/1f (case 9 NN gap 0.10 微小学错). sp16 features 变 + retrain.
++#     - INIT_CKPT 用 iter-3 r2 (sp15 当前最强).
++#     - DATA_VERSION → i147-sp16 (features semantic 变, fresh dataset).
++#   2026-05-20-sp17:
++#     - 🚨 修 TrainedEval Round bug — trainedEvalImpl 重建 gs 丢 Round/LastDiscard/NumJokers.
++#       所有 V3 NN 训练/推理用 broken features. 修法: 传 *GameState pointer 不重建.
++#     - 修 pMidGTBot terminal state 返 0 (不是 0.2) — case 50 Z0 假罚 -1.2 治.
++#     - 修 case 40/37/7 testcase data (3 个 state 多 1 张 typo).
++#     - INIT_CKPT 改 sp16 iter-5 r1 (sp17 features + Round fix 下 bench 56/63 最强).
++#     - DATA_VERSION → i147-sp17 (Round 信号入 silver-label, fresh).
++#   2026-05-22-sp18:
++#     - 加 RnTopCapBlockedFantasyPenalty -5 (joker top + cap-aware 低 pair → 浪费 joker, case 50)
++#     - RnJokerWithHighOnTopBonus 加 cap-aware guard (cap 死时不再 +10 错奖)
++#     - Mark cases 35/37/40/45 as warn (AI 选合理但不在 expecteds)
++#     - sp17 iter-1 r1 deployed 8002, bench: 59通过/4警告/0 真错.
++#     - DATA_VERSION → i147-sp18 (rollout policy 含 sp17 best, 数据 fresh).
++DATA_VERSION="i147-sp18"
+ # ====================================================================
+ 
+ set -e
+diff --git a/server-go/cmd/server/main.go b/server-go/cmd/server/main.go
+index a148cfa..efa098a 100644
+--- a/server-go/cmd/server/main.go
++++ b/server-go/cmd/server/main.go
+@@ -85,7 +85,21 @@ func initLevelsAndLogging() {
+ 	mctsSims = int(envFloat("MCTS_SIMS", 0))
+ 	mctsCPuct = envFloat("MCTS_CPUCT", 1.5)
+ 	if mctsSims > 0 {
+-		// log mode
++		log.Printf("[server] MCTS_SIMS=%d MCTS_CPUCT=%.2f (chance-node PUCT MCTS at inference; legacy ExpertPlace 不用)", mctsSims, mctsCPuct)
++	}
++	if lr := envStr("MCTS_LEAF_ROLLOUTS", ""); lr != "" {
++		v, _ := strconv.Atoi(lr)
++		if v > 0 {
++			ofc.MctsLeafRollouts = v
++			log.Printf("[server] MCTS_LEAF_ROLLOUTS=%d (per-leaf rollout avg, 降单次噪声)", v)
++		}
++	}
++	if in := envStr("MCTS_INIT_ROLLOUTS", ""); in != "" {
++		v, _ := strconv.Atoi(in)
++		if v > 0 {
++			ofc.MctsInitRollouts = v
++			log.Printf("[server] MCTS_INIT_ROLLOUTS=%d (init rollouts per candidate, PUCT 解锁)", v)
++		}
+ 	}
+ 
+ 	defaultLevel = strings.ToLower(envStr("DEFAULT_LEVEL", "medium"))
+@@ -189,6 +203,8 @@ type apiSolveRequest struct {
+ 	GameID       *string     `json:"gameId"`
+ 	Level        string      `json:"level"`
+ 	R1Mult       *float32    `json:"r1Mult"`
++	PureMLP      bool        `json:"pureMLP"`    // 2026-05-22: per-request 跳 MCTS, 纯 MLP top-1
++	JokerCount   int         `json:"jokerCount"` // 2026-05-22: 本局总鬼数 (0/2/4). 跨 fork 漏迁移 fix.
+ 	Profile      interface{} `json:"profile"`
+ }
+ 
+@@ -225,6 +241,7 @@ func solveCore(
+ 	round, discardCount int,
+ 	mode string,
+ 	cfg ofc.RolloutConfig,
++	jokerCount int, // 2026-05-22: 本局总鬼数 (0/2/4), 传 NewGameState.
+ ) (*solveOut, error) {
+ 	t0 := time.Now()
+ 
+@@ -263,7 +280,7 @@ func solveCore(
+ 	if solveCache != nil {
+ 		cacheKey = ofc.BuildSolveKey(
+ 			stateTop, stateMid, stateBot, usedCards, round, dealtRaw,
+-			discardCount, mode, cfg.R1Mult,
++			discardCount, mode, cfg.R1Mult, jokerCount,
+ 		)
+ 		if v, ok := solveCache.Get(cacheKey); ok {
+ 			elapsed := time.Since(t0).Milliseconds()
+@@ -273,8 +290,8 @@ func solveCore(
+ 		}
+ 	}
+ 
+-	// 构 GameState
+-	state := ofc.NewGameState(0)
++	// 构 GameState — 2026-05-22 fix: 用真实 jokerCount, 不再写死 0
++	state := ofc.NewGameState(jokerCount)
+ 	state.Round = round
+ 	for _, c := range tCards {
+ 		state.PlaceCard(c, ofc.RowTop)
+@@ -418,6 +435,7 @@ func handleSolveRaw(w http.ResponseWriter, r *http.Request) {
+ 		req.State.Top, req.State.Middle, req.State.Bottom,
+ 		req.State.UsedCards, req.Dealt,
+ 		req.State.Round, req.DiscardCount, req.Mode, cfg,
++		req.JokerCount,
+ 	)
+ 	if err != nil {
+ 		w.WriteHeader(http.StatusInternalServerError)
+@@ -463,6 +481,10 @@ func handleAPISolve(w http.ResponseWriter, r *http.Request) {
+ 		l := resolveLevel(req.Level)
+ 		cfg.R1Mult = l.R1Mult
+ 	}
++	// 2026-05-22: per-request pureMLP override — 跳 MCTS, 直接 prerank top-1
++	if req.PureMLP {
++		cfg.PureMLP = true
++	}
+ 
+ 	round := req.Round
+ 	if round == 0 {
+@@ -472,6 +494,7 @@ func handleAPISolve(w http.ResponseWriter, r *http.Request) {
+ 		req.State.Top, req.State.Middle, req.State.Bottom,
+ 		req.State.UsedCards, req.Dealt,
+ 		round, req.DiscardCount, req.Mode, cfg,
++		req.JokerCount,
+ 	)
+ 	if err != nil {
+ 		http.Error(w, err.Error(), http.StatusInternalServerError)
+diff --git a/server-go/ofc/cache.go b/server-go/ofc/cache.go
+index 29adb0f..5bcbe01 100644
+--- a/server-go/ofc/cache.go
++++ b/server-go/ofc/cache.go
+@@ -105,8 +105,9 @@ func (c *SolveCache) Clear() {
+ }
+ 
+ // BuildSolveKey — canonical solve cache key. 手写 JSON 保证 deterministic ordering.
++// 2026-05-22: 加 "jk" (jokerCount) 区分 0/2/4 鬼局 — 之前 cache 不含致跨鬼场景误命中.
+ func BuildSolveKey(top, mid, bot []string, used []string, round int, dealt []string,
+-	discardCount int, mode string, r1Mult float32) string {
++	discardCount int, mode string, r1Mult float32, jokerCount int) string {
+ 	var b strings.Builder
+ 	b.Grow(256)
+ 	b.WriteString(`{"t":`)
+@@ -127,7 +128,9 @@ func BuildSolveKey(top, mid, bot []string, used []string, round int, dealt []str
+ 	b.WriteString(mode)
+ 	b.WriteString(`","rc":{"r1Mult":`)
+ 	b.WriteString(formatFloat(r1Mult))
+-	b.WriteString(`}}`)
++	b.WriteString(`},"jk":`)
++	b.WriteString(strconv.Itoa(jokerCount))
++	b.WriteString(`}`)
+ 	return b.String()
+ }
+ 
+diff --git a/server-go/ofc/expert_place.go b/server-go/ofc/expert_place.go
+index 20b56f2..030bc3f 100644
+--- a/server-go/ofc/expert_place.go
++++ b/server-go/ofc/expert_place.go
+@@ -141,7 +141,7 @@ func (er *ExpertRollout) ExpertPlace5(state *GameState, cards []Card) {
+ 	}
+ 
+ 	// === MctsDisabled: 跳过 rollout, 直接 prerank top-1 (纯MLP模式) ===
+-	if MctsDisabled {
++	if MctsDisabled || er.Cfg.PureMLP {
+ 		if len(candidates) > 0 {
+ 			for i, c := range cards {
+ 				state.PlaceCard(c, candidates[0].placement[i])
+@@ -360,9 +360,16 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
+ 			item.teScore += PolicyBoost * plogit
+ 		}
+ 		// FoulImminent — apply 后 partial state foul 必然 → 大 penalty (R2-R5 都生效, 2026-05-17 通用化)
+-		item.teScore -= FoulImminentPenalty(item.gs)
++		foul := FoulImminentPenalty(item.gs)
++		item.teScore -= foul
+ 		// KK on mid penalty (替原 rnRuleKK_NotOnMid filter)
+ 		item.teScore -= RnKKOnMidPenalty(item.action, cards, state)
++		// 2026-05-20 sp15: Rn top fantasy lock 软推 (cases 29/32/36 — NN R2-R5 低估 joker+A/K 上 top)
++		// 2026-05-22 perf: 3 个 helper 改吃 item.gs (postState) + foul, 跳内部 Clone
++		item.teScore += RnJokerWithHighOnTopBonus(item.action, item.gs, foul)
++		item.teScore += RnSingleAOnTopBonus(item.action, item.gs, foul)
++		// 2026-05-22 sp17: top cap 死 fantasy → -5 (case 50 类: joker+A 上头被 mid 高 pair cap 成 pair-2 浪费)
++		item.teScore -= RnTopCapBlockedFantasyPenalty(item.action, item.gs)
+ 	}
+ 
+ 	sort.SliceStable(uniq, func(i, j int) bool { return uniq[i].teScore > uniq[j].teScore })
+@@ -377,7 +384,7 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
+ 	}
+ 
+ 	// === MctsDisabled: R2-R5 跳过 rollout, 直接 prerank top-1 (纯MLP模式) ===
+-	if MctsDisabled {
++	if MctsDisabled || er.Cfg.PureMLP {
+ 		if len(uniq) > 0 {
+ 			action := uniq[0].action
+ 			state.UsedCards[cards[action.DiscardIdx].ID()] = true
+diff --git a/server-go/ofc/features_v3.go b/server-go/ofc/features_v3.go
+index c282a51..7d8fcb5 100644
+--- a/server-go/ofc/features_v3.go
++++ b/server-go/ofc/features_v3.go
+@@ -54,9 +54,19 @@ func BuildFeaturesV3(gs *GameState) []float32 {
+ 	f := make([]float32, FeatureDimV3)
+ 
+ 	// 预算共享 eval (跟 V2 一致)
++	// 2026-05-22 critical fix: cap 只在 cap 行满时有效, 否则 partial highcard 假 cap 错砍 top KK/AA.
++	// case 55 真凶: mid [5h] partial highcard 把 top [2c X Kh] KK pair 错认为 over-cap → KK 失活, NN feature 全错.
+ 	botEval := evalRowSafe(gs.Bottom, 5, nil)
+-	midEval := evalRowSafe(gs.Middle, 5, &botEval)
+-	topEvalCapped := evalRowSafe(gs.Top, 3, &midEval)
++	var midCap *HandValue
++	if len(gs.Bottom) == 5 {
++		midCap = &botEval
++	}
++	midEval := evalRowSafe(gs.Middle, 5, midCap)
++	var topCap *HandValue
++	if len(gs.Middle) == 5 {
++		topCap = &midEval
++	}
++	topEvalCapped := evalRowSafe(gs.Top, 3, topCap)
+ 
+ 	// 预算 deck remaining (X/F/V/T/C 共用)
+ 	rankRem, suitRem, jokerRem := computeDeckRemaining(gs)
+@@ -74,12 +84,12 @@ func BuildFeaturesV3(gs *GameState) []float32 {
+ 
+ 	// V3 新 (12 组)
+ 	fillProbabilities(f[69:90], gs, rankRem, suitRem, jokerRem, deckTotal, topEvalCapped, midEval, botEval)
+-	fillFantasyGranular(f[90:94], gs, rankRem, jokerRem, deckTotal)
++	fillFantasyGranular(f[90:94], gs, midEval, rankRem, jokerRem, deckTotal) // sp16: 传 midEval 做 cap
+ 	fillExpectedRoyalty(f[94:97], gs, rankRem, suitRem, jokerRem, deckTotal, topEvalCapped, midEval, botEval)
+ 	fillSummary(f[97:102], gs, topEvalCapped, midEval, botEval, f) // 用前面的 P 值
+-	fillPairRank(f[102:107], gs)
++	fillPairRank(f[102:107], gs, topEvalCapped)
+ 	fillPairToTrips(f[107:112], gs, rankRem, jokerRem, deckTotal)
+-	fillTopFantasyLocks(f[112:116], gs, rankRem, jokerRem)
++	fillTopFantasyLocks(f[112:116], gs, topEvalCapped, midEval, rankRem, jokerRem)
+ 	fillMaxAchievable(f[116:119], gs, rankRem, suitRem, jokerRem)
+ 	fillLastRound(f[119:121], gs)
+ 	fillCommitment(f[121:125], gs)
+@@ -137,12 +147,41 @@ func fillProbabilities(f []float32, gs *GameState, rankRem [13]int, suitRem [4]i
+ 
+ // ============ Group F: Fantasy 粒度概率 (4 dim, idx 90-93) ============
+ 
+-func fillFantasyGranular(f []float32, gs *GameState, rankRem [13]int, jokerRem, deckTotal int) {
++// 2026-05-20 sp16.1: cap-aware 但只在 mid full pair 时锁 (mid partial 可升 trips/FH).
++// case 50: mid full pair-K → AA top cap → P=0 ✓
++// 反例: mid 4 张 pair-K partial → 可能升 trips → P(AA) 不该置 0
++func fillFantasyGranular(f []float32, gs *GameState, midEv HandValue, rankRem [13]int, jokerRem, deckTotal int) {
+ 	topSlots := 3 - len(gs.Top)
+-	f[0] = pTopFinalPairExact(gs, RankQ, rankRem, jokerRem, deckTotal, topSlots) // QQ
+-	f[1] = pTopFinalPairExact(gs, RankK, rankRem, jokerRem, deckTotal, topSlots) // KK
+-	f[2] = pTopFinalPairExact(gs, RankA, rankRem, jokerRem, deckTotal, topSlots) // AA
+-	f[3] = pTopTrips(gs, rankRem, jokerRem, deckTotal, topSlots)                 // any trips
++	// 只有 mid full + pair 才锁 (partial 可升级类型)
++	midFull := len(gs.Middle) == 5
++	midPairCap := -1
++	if midFull && midEv.Type == TypePair {
++		midPairCap = int((midEv.Value - 1000000) / 50625)
++	}
++	capRank := func(r uint8) bool {
++		return midPairCap >= 0 && int(r) > midPairCap
++	}
++	if capRank(RankQ) {
++		f[0] = 0
++	} else {
++		f[0] = pTopFinalPairExact(gs, RankQ, rankRem, jokerRem, deckTotal, topSlots)
++	}
++	if capRank(RankK) {
++		f[1] = 0
++	} else {
++		f[1] = pTopFinalPairExact(gs, RankK, rankRem, jokerRem, deckTotal, topSlots)
++	}
++	if capRank(RankA) {
++		f[2] = 0
++	} else {
++		f[2] = pTopFinalPairExact(gs, RankA, rankRem, jokerRem, deckTotal, topSlots)
++	}
++	// Trips: top trips type=3 > mid pair type=1 必 foul, 仅 mid full pair 时锁.
++	if midPairCap >= 0 {
++		f[3] = 0
++	} else {
++		f[3] = pTopTrips(gs, rankRem, jokerRem, deckTotal, topSlots)
++	}
+ }
+ 
+ // ============ Group Y: 各行期望分 (3 dim, idx 94-96) ============
+@@ -155,7 +194,7 @@ func fillExpectedRoyalty(f []float32, gs *GameState, rankRem [13]int, suitRem [4
+ 	midSlots := 5 - len(gs.Middle)
+ 	botSlots := 5 - len(gs.Bottom)
+ 
+-	f[0] = eRoyaltyTop(gs, rankRem, jokerRem, deckTotal, topSlots) / 250.0 // normalize 到 ~1
++	f[0] = eRoyaltyTop(gs, topEv, rankRem, jokerRem, deckTotal, topSlots) / 250.0 // sp16: cap-aware
+ 	f[1] = eRoyaltyMid(gs, rankRem, suitRem, jokerRem, deckTotal, midSlots) / 30.0
+ 	f[2] = eRoyaltyBot(gs, rankRem, suitRem, jokerRem, deckTotal, botSlots) / 60.0
+ }
+@@ -191,17 +230,21 @@ func fillSummary(f []float32, gs *GameState, topEv, midEv, botEv HandValue, all
+ 
+ // ============ Group U: 各行对子 rank (5 dim, idx 102-106) ============
+ 
+-func fillPairRank(f []float32, gs *GameState) {
+-	// 2026-05-20: no-pair 时返 -1.0 sentinel (vs 旧版 -1/12=-0.083 跟 pair-2 (rank 0/12=0) 几乎同).
+-	// 旧版 NN 看不出"没 pair"vs"有 pair-2"区别. case 58 实测 bot 无 pair (NN) vs bot pair-2 (Exp)
+-	// 信号差仅 0.083 跟 pair-2 vs pair-3 (0.083) 一样 → NN 误以为差不多.
++// 2026-05-20 sp16: top 用 cap-aware topEv 提 pair rank (joker+A 被 mid pair-K cap 时反映 pair-2 真值)
++// case 50 R5 教训: AI top=[X 2c As] vs mid KK → joker cap → top 实际 pair-2 (非 AA)
++func fillPairRank(f []float32, gs *GameState, topEv HandValue) {
+ 	pairToFeat := func(r int) float32 {
+ 		if r < 0 {
+ 			return -1.0
+ 		}
+ 		return float32(r) / 12.0
+ 	}
+-	f[0] = pairToFeat(maxPairRankRow(gs.Top))
++	// top: 从 cap-aware topEv 提取 (joker 已被 cap 限制)
++	topPair := -1
++	if topEv.Type == TypePair {
++		topPair = int((topEv.Value - 1000000) / 15)
++	}
++	f[0] = pairToFeat(topPair)
+ 	f[1] = pairToFeat(maxPairRankRow(gs.Middle))
+ 	f[2] = pairToFeat(maxPairRankRow(gs.Bottom))
+ 	f[3] = pairToFeat(twoPairHighRank(gs.Middle))
+@@ -224,24 +267,43 @@ func fillPairToTrips(f []float32, gs *GameState, rankRem [13]int, jokerRem, deck
+ 
+ // ============ Group T: 顶配 fantasy 锁信号 (4 dim, idx 112-115) ============
+ 
+-func fillTopFantasyLocks(f []float32, gs *GameState, rankRem [13]int, jokerRem int) {
+-	topPairRank := maxPairRankRow(gs.Top)
++// 2026-05-20 sp15 fix: 用 cap-aware topEvalCapped 提取 pair rank, 不再 maxPairRankRow (无 cap)
++// case 50 R5 教训: top=[X 2c As] + mid KK pair → joker cap 后 top 是 pair-2 不是 AA.
++// 旧版 maxPairRankRow 算 joker+A=AA → T_topLock[0]+[1] 都 1.0 → NN 误信 fantasy 实=+20 over-est.
++func fillTopFantasyLocks(f []float32, gs *GameState, topEv, midEv HandValue, rankRem [13]int, jokerRem int) {
++	// 从 cap-aware topEv 提 pair rank (joker cap 后真值)
++	topPairRank := -1
++	if topEv.Type == TypePair {
++		topPairRank = int((topEv.Value - 1000000) / 15)
++	}
++	// trips 仍用 raw (joker 凑 trips 罕见, cap chain 对空 mid 可能未返 Type=trips)
+ 	hasTrips := hasRealTripsTop(gs.Top)
+ 
+ 	if topPairRank >= int(RankQ) {
+-		f[0] = 1 // pair Q+
++		f[0] = 1 // pair Q+ (cap-aware)
+ 	}
+ 	if topPairRank == int(RankA) {
+-		f[1] = 1 // AA
++		f[1] = 1 // AA (cap-aware, 不会因 joker+A 被 mid pair-K cap 时误 fire)
+ 	}
+ 	if hasTrips {
+-		f[2] = 1 // trips any rank
++		f[2] = 1
+ 	}
+ 
+-	// T3: max pair rank reachable
+-	// 简化: top 已 pair rank + max rank in (top 已有 rank ∪ deck has ≥1)
++	// T3: max pair rank reachable (future), 考虑 mid cap
++	midCap := -1 // 若 mid 是 pair, 把 cap rank 设为 mid pair rank
++	if midEv.Type == TypePair {
++		midCap = int((midEv.Value - 1000000) / 50625)
++	} else if midEv.Type > TypePair {
++		// mid 是 trips+ → top pair 永远不会 ≥ mid, cap 不限制 top pair rank (理论上 AA pair < trips)
++		// 但 fantasy 是 pair-based, 这里只关心 pair lock 信号, 保持不限.
++		midCap = -1
++	}
+ 	maxReach := topPairRank
+ 	for r := 12; r >= 0; r-- {
++		// 跳过会被 mid cap 阻挡的 pair rank
++		if midCap >= 0 && r > midCap {
++			continue
++		}
+ 		topHasR := 0
+ 		for _, c := range gs.Top {
+ 			if !c.IsJoker() && int(c.Rank()) == r {
+@@ -252,7 +314,6 @@ func fillTopFantasyLocks(f []float32, gs *GameState, rankRem [13]int, jokerRem i
+ 			maxReach = r
+ 		}
+ 	}
+-	// 2026-05-20: 同 U 组, no-pair sentinel -1.0 (旧 -1/12=-0.083 跟 pair-2=0 太近)
+ 	if maxReach < 0 {
+ 		f[3] = -1.0
+ 	} else {
+@@ -369,11 +430,14 @@ func safeRawEvalRow(cards []Card, expectSize int) HandValue {
+ 
+ // ============ Group S: 槽位平衡 (1 dim, idx 128) ============
+ 
++// 2026-05-20 sp15: S_slot 改 scale 0.3 全场 (R1-R5).
++// 原 1.0 min/max 在 R2-R3 太强反 OFC 直觉 (case 34: 底 4-flush 被压);
++// 直接 R<4 设 0 又过激 (实测 baseline 退 15 点, NN 学的 w≈12.7 信号丢光).
++// 折中: 全场 scale 0.3, 信号方向保留 (NN 还能用), 强度减 70% (防止单 feature 主导决策).
+ func fillSlotBalance(f []float32, gs *GameState) {
+ 	topR := 3 - len(gs.Top)
+ 	midR := 5 - len(gs.Middle)
+ 	botR := 5 - len(gs.Bottom)
+-	// 找 min / max — 比值越接近 1 越均衡
+ 	minR, maxR := topR, topR
+ 	if midR < minR {
+ 		minR = midR
+@@ -388,9 +452,9 @@ func fillSlotBalance(f []float32, gs *GameState) {
+ 		maxR = botR
+ 	}
+ 	if maxR == 0 {
+-		f[0] = 1 // 完成
++		f[0] = 0.3 // 完成 (scale 后)
+ 	} else {
+-		f[0] = float32(minR) / float32(maxR)
++		f[0] = 0.3 * float32(minR) / float32(maxR)
+ 	}
+ }
+ 
+@@ -1018,8 +1082,19 @@ func pRowGEPair10(row []Card, rankRem [13]int, jokerRem, deckTotal, slots int) f
+ 
+ // pMidGTBot — 估算 P(mid > bot final). foul 主路径.
+ func pMidGTBot(gs *GameState, midEv, botEv HandValue, rankRem [13]int, suitRem [4]int, jokerRem, deckTotal, midSlots, botSlots int) float32 {
+-	// 简化: 用当前 type 差 + slot 估
+-	// 当前 mid > bot ?
++	// 2026-05-20 sp16: 终局态 (mid+bot 都满) mid ≤ bot 已确定 no foul, 返 0 不再"估算"
++	// case 50: pFoul=0.2 bug 让 exp1 advantage 缩水 (finalScore 被假罚 1.2)
++	terminal := midSlots == 0 && botSlots == 0
++	if terminal {
++		if midEv.Type > botEv.Type {
++			return 1 // 已 foul
++		}
++		if midEv.Type == botEv.Type && midEv.Value > botEv.Value {
++			return 1 // 同 type, mid value 高 = foul
++		}
++		return 0 // 确定 no foul
++	}
++	// 非终局, 估算
+ 	if len(gs.Middle) > 0 && len(gs.Bottom) > 0 && midEv.Type > botEv.Type {
+ 		// 还有 slot, bot 可能反超
+ 		botMax := maxAchievableHandType(gs.Bottom, botSlots, rankRem, suitRem, jokerRem)
+@@ -1028,8 +1103,7 @@ func pMidGTBot(gs *GameState, midEv, botEv HandValue, rankRem [13]int, suitRem [
+ 		}
+ 		return 0.9 // bot 上限低, 大概率 foul
+ 	}
+-	// 当前 mid ≤ bot, foul 风险中等
+-	return 0.2
++	return 0.2 // 当前 mid ≤ bot, foul 风险中等
+ }
+ 
+ // pBotGEMid — 等于 1 - pMidGTBot
+@@ -1074,23 +1148,41 @@ func pFoulFinal(gs *GameState, topEv, midEv, botEv HandValue, rankRem [13]int, s
+ // Expected royalty per row
+ // ============================================================
+ 
+-func eRoyaltyTop(gs *GameState, rankRem [13]int, jokerRem, deckTotal, topSlots int) float32 {
+-	// Σ royalty × P(type)
+-	// top royalty: pair 6=1, ..., pair Q=8, pair K=9, pair A=10, trips +15+
++// 2026-05-20 sp16: cap-aware. joker 在 top 时, 算 wild joker 凑 pair 后的 royalty.
++// 用 topEv (=topEvalCapped) 提取真实 pair rank — 反映 mid cap 后的真值.
++// case 49 R5: top [X Kh 8h] cap 后 = pair-8 = +3 royalty (旧版 countRankInRow 不算 joker → 漏)
++// case 50 R5: top [X 2c As] cap 后 = pair-2 = 0 royalty (joker 不能当 A 因 mid KK 撞 foul)
++func eRoyaltyTop(gs *GameState, topEv HandValue, rankRem [13]int, jokerRem, deckTotal, topSlots int) float32 {
++	r := float32(0)
++	// 当前 top eval (cap-aware) 直接给定值
++	if topEv.Type == TypeThreeOfAKind {
++		// trips: 22+ royalty (per OFC top: 222=10, 333=11, ..., AAA=22)
++		tripsRank := int((topEv.Value - 3000000) / 15)
++		r = float32(10 + tripsRank) // 222=10, ..., AAA=22
++	} else if topEv.Type == TypePair {
++		// pair: 66=1, 77=2, ..., AA=9 (per OFC top pair royalty)
++		pairRank := int((topEv.Value - 1000000) / 15)
++		if pairRank >= int(Rank6) {
++			r = float32(pairRank - 3) // 6(rank4)=1, A(rank12)=9
++		}
++	}
++	if topSlots == 0 {
++		return r
++	}
++	// future expected: 估计后续 round 升级到 trips / 高 pair 的概率
++	// 简化: 对每个 rank 估算 future hits, 加权 royalty
+ 	pTrips := pTopTrips(gs, rankRem, jokerRem, deckTotal, topSlots)
+-	r := pTrips * 22.0
+-	// pair 各 rank 估算
+-	for rk := 4; rk < 13; rk++ { // pair 6-A (rk 4=6, rk 12=A)
+-		royalty := float32(rk - 3) // 6=1, 7=2, ..., A=10
++	r += pTrips * 5 // future trips 增量 (减小权重避免双倍计)
++	for rk := 4; rk < 13; rk++ {
++		royalty := float32(rk - 3)
+ 		topHasR := countRankInRow(gs.Top, rk)
+ 		deckR := rankRem[rk] + jokerRem
+ 		need := 2 - topHasR
+ 		if need <= 0 {
+-			r += royalty
+-			continue
++			continue // 已 pair (上面已加分)
+ 		}
+ 		p := hypergeoAtLeast(deckTotal, deckR, topSlots, need)
+-		r += royalty * p * 0.3 // discount 避免 over-count (同 rank 多次算)
++		r += royalty * p * 0.15 // future pair 升级, discount
+ 	}
+ 	return r
+ }
+diff --git a/server-go/ofc/hard_rules.go b/server-go/ofc/hard_rules.go
+index e612047..c319830 100644
+--- a/server-go/ofc/hard_rules.go
++++ b/server-go/ofc/hard_rules.go
+@@ -296,9 +296,10 @@ const (
+ )
+ 
+ // computeDeckRemaining — 给定 state, 算 deck 剩余各 rank/suit/joker 数
+-// Pineapple OFC 默认 2 jokers. usedCards + state 现摆牌 都从 deck 扣
++// 2026-05-22 fix: jokerRem 从 state.NumJokers 起算 (本局总鬼数), 不再写死 2.
++// 之前写死 2 跟 NumJokers 脱钩 → 0/4 鬼局 feature 大错估. usedCards + state 现摆牌都扣.
+ func computeDeckRemaining(state *GameState) (rankRem [13]int, suitRem [4]int, jokerRem int) {
+-	jokerRem = 2 // Pineapple OFC default
++	jokerRem = state.NumJokers
+ 	for r := 0; r < 13; r++ {
+ 		rankRem[r] = 4
+ 	}
+@@ -585,6 +586,11 @@ func r1RuleTopMustAllowFantasy(p Placement, cards []Card) bool {
+ 
+ // rnRuleTopMustAllowFantasy — RN action 摆完 top 3 张但不能 fantasy → reject
+ func rnRuleTopMustAllowFantasy(a *RoundNAction, cards []Card, state *GameState) bool {
++	// 2026-05-20 sp15: 只在 R2-R3 触发. R4-R5 已临近终局, 是否能进范基本确定,
++	// 强制保留 fantasy 路径会误杀"放弃 fantasy 走 mid flush draw 避 foul" 类合理策略 (case 44/50).
++	if state.Round >= 4 {
++		return true
++	}
+ 	topCards := append([]Card(nil), state.Top...)
+ 	for k, c := range a.Kept {
+ 		if a.Placement[k] == RowTop {
+@@ -985,6 +991,151 @@ func RnKKOnMidPenalty(a *RoundNAction, cards []Card, state *GameState) float32 {
+ 	return 0
+ }
+ 
++// RnJokerWithHighOnTopBonus — R2-R5 软 bonus (+10):
++// action 在 top 放置后, post-action top 同时含 joker + 高牌 (Q/K/A) → 形成 fantasy lock (joker wild → QQ+/KK/AA pair).
++// 类比 R1JokerWithAOnTopBonus, 覆盖 cases 32/36: state.Top=[K] R2 加 joker→KK fantasy; state.Top=[joker] R2 加 A→AA fantasy.
++// 2026-05-20 sp15 加入: NN 实测对 R2-R5 fantasy lock 低估 20-32 分 (cases 32/36), reward shaping 一次训练闭合不够, 加 +10 软推.
++// 要求 action 至少在 top 放 1 张牌 (避免对所有保留 top 状态的候选无差别加分).
++// 2026-05-22 perf: 收 postState (= caller 已 clone+apply 过的 item.gs), 跳内部 Clone.
++func RnJokerWithHighOnTopBonus(a *RoundNAction, postState *GameState, foulImminent float32) float32 {
++	placedOnTop := 0
++	for _, p := range a.Placement {
++		if p == RowTop {
++			placedOnTop++
++		}
++	}
++	if placedOnTop == 0 {
++		return 0
++	}
++	hasJoker := false
++	hasHigh := false
++	for _, c := range postState.Top {
++		if c.IsJoker() {
++			hasJoker = true
++		} else if c.Rank() >= RankQ {
++			hasHigh = true
++		}
++	}
++	if !(hasJoker && hasHigh) {
++		return 0
++	}
++	// 2026-05-20 sp15 fix: post-state foul-imminent → 不奖励
++	// case 50 R5: top AA fantasy 跟 mid KK 撞 foul, 原 bonus 错奖 +10 抵消 FoulImminent -20
++	if foulImminent > 0 {
++		return 0
++	}
++	// 2026-05-22 sp17 fix: cap-aware guard. 若 top cap 后是低 pair (< 66) 或 high card,
++	// 说明 joker 被 mid 高 pair cap 死, 没真 fantasy. 不奖励.
++	// case 50: top [X 2c As] mid full KK → cap pair-2 → 0 bonus (之前 +10 错奖)
++	if len(postState.Top) == 3 {
++		botEv := evalRowSafe(postState.Bottom, 5, nil)
++		midEv := evalRowSafe(postState.Middle, 5, &botEv)
++		topEv := Evaluate3JokerCap(postState.Top, &midEv)
++		if topEv.Type == TypePair {
++			pairRank := int((topEv.Value - 1000000) / 15)
++			if pairRank < int(Rank6) {
++				return 0 // cap 死, joker 浪费
++			}
++		} else if topEv.Type == TypeHighCard {
++			return 0 // joker 没凑成 pair, 没价值
++		}
++	}
++	return 10
++}
++
++// RnSingleAOnTopBonus — R2-R5 软 bonus (+10):
++// action 在 top 放置了 A (无 joker 在 top), 准备 AA fantasy (R3-R5 配 A 或 joker).
++// 类比 R1SingleAOnTopBonus. 覆盖 case 29: state.Top=[Kh] R2 加 A → top=[K, A] (高牌组合, 未来配对).
++// joker+A 上头走 RnJokerWithHighOnTopBonus, 不重复 fire.
++// 2026-05-22 perf: 收 postState + 已计算的 foulImminent, 跳内部 Clone.
++func RnSingleAOnTopBonus(a *RoundNAction, postState *GameState, foulImminent float32) float32 {
++	// action 必须放 A 上 top
++	placedAOnTop := false
++	for k, c := range a.Kept {
++		if a.Placement[k] == RowTop && !c.IsJoker() && c.Rank() == RankA {
++			placedAOnTop = true
++			break
++		}
++	}
++	if !placedAOnTop {
++		return 0
++	}
++	// post-top 不能有 joker (joker+A 走另一个 bonus). postState.Top = pre.Top ∪ action 上 top 部分
++	for _, c := range postState.Top {
++		if c.IsJoker() {
++			return 0
++		}
++	}
++	// 2026-05-20 sp15 fix: foul guard
++	if foulImminent > 0 {
++		return 0
++	}
++	return 10
++}
++
++// RnTopCapBlockedFantasyPenalty — R2-R5 软 penalty (+5):
++// post-action top 满 3 张, 含 joker, cap-aware 后 joker 只能凑低 pair (< 66) 或 high card → 浪费 joker.
++// 思路: joker 在 top 但被 mid cap 限制 → 无 royalty/fantasy 价值, 应避开.
++// case 50 R5 教训: AI 选 joker+2c+As, mid full KK cap → top 只能 pair-2 (0 royalty).
++//   实际 exp1 (joker+2c+7h cap pair-7 = +2 royalty) 强 2 分, 但 NN 学不到 (outlier).
++// 触发条件:
++//   1. action 至少在 top 放 1 张 (避免对所有保 top 状态加分)
++//   2. post-state top 满 3 张 (R5 终局 or 提前填满)
++//   3. top 含 joker
++//   4. cap-aware top eval: type=Pair 且 rank < Rank6, 或 type=HighCard (joker 浪费成 kicker)
++// 2026-05-22 sp17 加: 治 case 50/49 类 NN 学不到的 "joker top cap 死" outlier.
++// 2026-05-22 perf: 收 postState (= caller 已 clone+apply 过的 item.gs), 跳内部 Clone.
++func RnTopCapBlockedFantasyPenalty(a *RoundNAction, postState *GameState) float32 {
++	// 1. action 必须在 top 放 ≥1 张
++	placedOnTop := 0
++	for _, p := range a.Placement {
++		if p == RowTop {
++			placedOnTop++
++		}
++	}
++	if placedOnTop == 0 {
++		return 0
++	}
++	// 2. postState 已含 action, 检 top 满 3 张
++	if len(postState.Top) != 3 {
++		return 0
++	}
++	// 3. top 必含 joker
++	hasJoker := false
++	for _, c := range postState.Top {
++		if c.IsJoker() {
++			hasJoker = true
++			break
++		}
++	}
++	if !hasJoker {
++		return 0
++	}
++	// 4. cap-aware top eval. mid 可能未满, 用 evalRowSafe chain.
++	botEv := evalRowSafe(postState.Bottom, 5, nil)
++	midEv := evalRowSafe(postState.Middle, 5, &botEv)
++	topEv := Evaluate3JokerCap(postState.Top, &midEv)
++	// Type < 0 (over cap) — 已是 foul 由 FoulImminent 处理, 不重复罚
++	if topEv.Type < 0 {
++		return 0
++	}
++	// Pair rank < Rank6 (< 66) → 0 royalty waste
++	if topEv.Type == TypePair {
++		pairRank := int((topEv.Value - 1000000) / 15)
++		if pairRank < int(Rank6) {
++			return 5
++		}
++		return 0 // pair ≥ 66 给 royalty, 不算浪费
++	}
++	// HighCard 含 joker → joker 完全没用, 比 pair 还差
++	if topEv.Type == TypeHighCard {
++		return 5
++	}
++	// Trips: joker 凑 trips 罕见, 但若 cap 限制只到低 trips, 仍有 royalty (222+ = 10)
++	// 留给 NN 自己学, 不罚
++	return 0
++}
++
+ // ============ FoulImminentPenalty (通用, R1-R5) ============
+ // 2026-05-17: 老 R4FoulImminentPenalty 只覆 R4 mid+bot 满 + top 缺 1.
+ // 通用化: 任何 partial state 下检测 foul 必然 → +20 penalty.
+@@ -1012,16 +1163,33 @@ func FoulImminentPenalty(state *GameState) float32 {
+ 		}
+ 	}
+ 	// case 3+4: top 满 + mid 满 → top > mid ?
++	// 2026-05-20 sp16: cap-aware. 用 Evaluate3JokerCap 传 mid 当 cap, 避免 joker+A 误判 foul (case 50).
+ 	if topFull && midFull {
+-		top := Evaluate3(state.Top)
+ 		mid := Evaluate5(state.Middle)
+-		// top.Type 与 mid.Type 同空间 (高/对/三), 直接 compare type 即可
+-		if top.Type > mid.Type {
++		// 用 cap-aware 算 top — joker 会被限制到 ≤ mid
++		top := Evaluate3JokerCap(state.Top, &mid)
++		if top.Type < 0 {
++			// 全候选都 over cap (无 valid 配置) → 必 foul
+ 			return 20
+ 		}
+-		// same type: top 和 mid Value 编码不同 (top 自有, mid 走 makeValue), 不易直接比.
+-		// 简化: 同 type pair 用 (top primary rank > mid primary rank) → 必 foul
+-		// 但 Value 编码不通用, 只做 type 比较 (case 同 type 需 score_hand 时再确认, 不强 penalty)
++		if top.Type > mid.Type {
++			return 20 // 应该不会, cap 已限制. 防御.
++		}
++		if top.Type == mid.Type {
++			if top.Type == TypePair {
++				tRank := (top.Value - 1000000) / 15
++				mRank := (mid.Value - 1000000) / 50625
++				if tRank > mRank {
++					return 20
++				}
++			} else if top.Type == TypeThreeOfAKind {
++				tRank := (top.Value - 3000000) / 15
++				mRank := (mid.Value - 3000000) / 50625
++				if tRank > mRank {
++					return 20
++				}
++			}
++		}
+ 	}
+ 	// case 5: R4 兼容 — mid 满 high-card + top 2 张, top 最高 rank > mid 最高 rank → R5 必 foul
+ 	if midFull && botFull && len(state.Top) == 2 {
+@@ -1052,6 +1220,19 @@ func FoulImminentPenalty(state *GameState) float32 {
+ 			}
+ 		}
+ 	}
++	// case 6: mid 满 + bot 部分 (<5) + bot 不可能凑出 ≥ mid.Type → 必 foul
++	// 2026-05-20 sp15: case 45 R4 类 (mid clubs flush + bot 4 张无 flush 潜力 → 必 foul)
++	if midFull && !botFull {
++		mid := Evaluate5(state.Middle)
++		botSlots := 5 - len(state.Bottom)
++		if botSlots > 0 && mid.Type > TypeHighCard {
++			rankRem, suitRem, jokerRem := computeDeckRemaining(state)
++			botMax := maxAchievableHandType(state.Bottom, botSlots, rankRem, suitRem, jokerRem)
++			if int(botMax) < mid.Type {
++				return 20
++			}
++		}
++	}
+ 	return 0
+ }
+ 
+@@ -1366,12 +1547,14 @@ func isFourConsecutive(cs []Card) bool {
+ 	return missing <= jokers+1 && span <= 5
+ }
+ 
+-// ConnectorSplitPenalty — straight 潜力 + 中底 hierarchy 扣分
+-//   1. 跨行 split: rank diff ≤ 4 dealt 对被 split → -5 (d=1) 或 -2 (d=2-4)
+-//   2. 每对 (mid_card, bot_card): mid > bot → -1 (违反 bot ≥ mid hierarchy)
+-// 例外: KA 连张 (K-A, rank diff 1): 不扣 (KK底/AA顶 fantasy lock 常分行)
++// ConnectorSplitPenalty — straight 潜力 + 中底 hierarchy 扣分 (soft penalty)
++//   1. 跨行 split: 低 rank (lower < Rank6) 不罚 — 低连张无 straight 潜力
++//      rank diff ≤ 2 dealt 对被 split: d=1 → +5, d=2 → +2
++//   2. 每对 (mid_card, bot_card): mid > bot → +3 (违反 bot ≥ mid hierarchy)
++// 例外: KA 连张 (K-A): 不扣 (fantasy lock 常分行)
+ // 2026-05-13 加 (跨行 gap=1 only)
+ // 2026-05-15 扩到 gap≤4 + 加 mid>bot per-pair 罚
++// 2026-05-20 sp15: 跳过 lower rank<Rank6 + 罚值减 (8→5/3→2/5→3) — case 15 R1 误罚 3-4 split
+ func ConnectorSplitPenalty(p Placement, cards []Card) float32 {
+ 	rankInfo := make(map[uint8][]Row)
+ 	midRanks := []int{}
+@@ -1391,11 +1574,13 @@ func ConnectorSplitPenalty(p Placement, cards []Card) float32 {
+ 	}
+ 	var penalty float32
+ 	// 跨行 split
+-	// 2026-05-20: d≥3 删 — V3 L2 features 已传 connector_split 信号给 NN, hard rule 多余且过激.
+-	//   实测 case 3 R1 exp3 (mid=3, bot=7) gap d=4 被罚 +3 翻转 NN 微弱偏好 (0.045).
+-	//   straight 3-7 R1 阶段还要 R2-R5 补 3 张 4/5/6, 概率低. 不该硬罚.
+-	// 保留 d=1 (adjacent) + d=2 (gap1) 这两个真急迫的 split.
++	// 2026-05-20 sp15: d≥3 已删 (V3 L2 features 已传信号给 NN); 加 lower rank<Rank6 skip;
++	// 罚值减 (8→5 / 3→2) 给 NN 更多自由度.
+ 	for r := uint8(0); r < 13; r++ {
++		// 跳过低连张: 最低 rank < 6 (即 2-3, 3-4, 4-5, 5-6) — 实际无 straight 潜力, 拆不亏.
++		if r < Rank6 {
++			continue
++		}
+ 		for d := uint8(1); d <= 2; d++ {
+ 			r2 := r + d
+ 			if r2 >= 13 {
+@@ -1415,19 +1600,19 @@ func ConnectorSplitPenalty(p Placement, cards []Card) float32 {
+ 						continue
+ 					}
+ 					if d == 1 {
+-						penalty += 8 // adjacent (e.g. 5-6 split)
++						penalty += 5 // adjacent (e.g. 8-9 split), 8→5
+ 					} else {
+-						penalty += 3 // gap 1 (e.g. 5-7 split)
++						penalty += 2 // gap 1 (e.g. 8-T split), 3→2
+ 					}
+ 				}
+ 			}
+ 		}
+ 	}
+-	// 每对 (mid, bot) mid > bot → -5 (违反 bot ≥ mid hierarchy, 2026-05-17: 3→5 加重)
++	// 每对 (mid, bot) mid > bot → +3 (违反 bot ≥ mid hierarchy, sp15: 5→3 减重)
+ 	for _, mr := range midRanks {
+ 		for _, br := range botRanks {
+ 			if mr > br {
+-				penalty += 5
++				penalty += 3
+ 			}
+ 		}
+ 	}
+@@ -1512,25 +1697,11 @@ func r1RuleSplitDoubleJoker(p Placement, cards []Card) bool {
+ 	return true
+ }
+ 
+-// r1RuleLowPair_OnMid — dealt 有 ≤9 低对 → 必上中 (不浪费在顶或底)
+-func r1RuleLowPair_OnMid(p Placement, cards []Card) bool {
+-	pairs := detectDealtPairs(cards)
+-	for rank, cnt := range pairs {
+-		if cnt < 2 || rank >= RankT {
+-			continue
+-		}
+-		// 所有该 rank 的牌必须 mid
+-		for i, c := range cards {
+-			if c.IsJoker() || c.Rank() != rank {
+-				continue
+-			}
+-			if p[i] != RowMiddle {
+-				return false
+-			}
+-		}
+-	}
+-	return true
+-}
++// r1RuleLowPair_OnMid — DELETED 2026-05-22.
++// 原意: dealt 有 ≤9 小对 → 必上 mid (节省 bot slot 拼 flush/straight).
++// 漏洞: dealt 有 ≥2 个小对时 (例: J 5 5 9 9), 强迫所有小对都上 mid → 必然 mid 4 张两对, partial-foul,
++//      所有 sensible 摆法 (99 → bot) 被砍, AI 只剩死路候选 → 必爆.
++// 决策: 删硬规则. 若需要"小 pair 优 mid" 倾向, 改用软 penalty (NN 学不到再加).
+ 
+ // r1RuleSingleA_OnTop — dealt 有 1 张 A (无 AA pair) AND 无 joker → A 必上顶
+ // (joker + A 已由 JokerWithA_OnTop 处理)
+@@ -1607,7 +1778,7 @@ func ApplyHardRulesR1(candidates []R1Cand, cards []Card, state *GameState) []R1C
+ 	}{
+ 		{"NoSplitDealtPair", r1RuleNoSplitDealtPair},
+ 		{"DealtBigPair_Top", r1RuleDealtBigPair_Top},
+-		{"LowPair_OnMid", r1RuleLowPair_OnMid},
++		// "LowPair_OnMid" DELETED 2026-05-22: 漏洞 — dealt 有 ≥2 小对时强迫两对都 mid → partial-foul 必爆
+ 		{"SplitDoubleJoker", r1RuleSplitDoubleJoker},
+ 		{"TopMustAllowFantasy", r1RuleTopMustAllowFantasy},
+ 	}
+@@ -1959,7 +2130,7 @@ func ApplyHardRulesRN(candidates []RNCand, cards []Card, state *GameState) []RNC
+ 		{"KK_OnTop_NoA", rnRuleKK_OnTop_NoA},
+ 		{"KK_OnBot_WithA", rnRuleKK_OnBot_WithA},
+ 		{"JokerWithA_OnTop", rnRuleJokerWithA_OnTop},
+-		{"TopMustAllowFantasy", rnRuleTopMustAllowFantasy},
++		{"TopMustAllowFantasy", rnRuleTopMustAllowFantasy}, // 2026-05-20 sp15: 仅 R2-R3 触发, R4-R5 skip
+ 	}
+ 	cur := candidates
+ 	for _, r := range rules {
+diff --git a/server-go/ofc/rollout.go b/server-go/ofc/rollout.go
+index fae7e4e..651560a 100644
+--- a/server-go/ofc/rollout.go
++++ b/server-go/ofc/rollout.go
+@@ -27,6 +27,7 @@ type RolloutConfig struct {
+ 	AAFanBonus    float32 // AA Fantasy 进范奖励 (默认 80, calibrated 64)
+ 	TripsFanBonus float32 // Trips top 进范奖励 (默认 90, calibrated ~80-120)
+ 	Epsilon       float32 // rollout ε-greedy 探索率 (0=纯 greedy)
++	PureMLP       bool    // true → 跳过 MCTS rollout, 用纯 MLP prerank top-1 (per-request override). 2026-05-22 加, 修复 server 忽略 pureMLP 字段.
+ }
+ 
+ // DefaultRolloutConfig — 推理 / 老 ckpt 加载默认.

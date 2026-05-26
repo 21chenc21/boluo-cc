@@ -1,0 +1,52 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Node
+node_modules/
+
+# Build artifacts
+server-go-bin/
+*.exe
+
+# Runtime
+*.log
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Training outputs (大, 单独管理)
+v3-dataset*/
+v3-train-i147-sp1*/
+v3-train-i147-sp/
+v3-train-i147-sp-from-acc85/
+v3-rollout-smoke/
+v3-rollout-smoke-train/
+v3-smoke-*/
+v3-train/
+v3-train-i147/
+v3-train-i147-sp_copy/
+v3-train-i147-sp\ copy/
+# 大 dataset
+texas/data/
+texas/checkpoints/
+
+# Backup ckpts
+*.json.bak*
+*.bak-broken
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# tmp
+/tmp/
+/temp/

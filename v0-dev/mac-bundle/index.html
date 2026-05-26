@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大菠萝 OFC - MCTS策略求解器</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>大菠萝 (Pineapple OFC)</h1>
+        <div class="subtitle">单人MCTS策略求解器 | 优先级: 进范特西 > 得分 > 不炸</div>
+
+        <div class="main-layout">
+            <!-- Left Panel: Board + Controls -->
+            <div class="left-panel">
+                <!-- Round Info -->
+                <div class="round-info" id="round-info">点击"新游戏"开始</div>
+
+                <!-- Board -->
+                <div class="panel">
+                    <div class="panel-title">牌面</div>
+                    <div id="board"></div>
+                </div>
+
+                <!-- Dealt Cards -->
+                <div class="panel">
+                    <div class="panel-title">当前发牌</div>
+                    <div id="dealt-area"></div>
+                </div>
+
+                <!-- Controls -->
+                <div class="panel">
+                    <div class="panel-title">控制面板</div>
+                    <div class="controls">
+                        <button class="ctrl-btn btn-primary" onclick="newGame()">新游戏</button>
+                        <button class="ctrl-btn btn-secondary" onclick="dealCards()">发牌</button>
+                        <button class="ctrl-btn btn-warning" id="btn-solve" onclick="solveAndApply()">MCTS求解并放置</button>
+                        <button class="ctrl-btn btn-gold" onclick="autoPlay()">自动对局</button>
+                        <button class="ctrl-btn btn-danger" onclick="stopAuto()">停止</button>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <div id="solver-status"></div>
+                    </div>
+                </div>
+
+                <!-- Score -->
+                <div class="panel">
+                    <div class="panel-title">得分</div>
+                    <div id="score-display"></div>
+                </div>
+
+                <!-- Solver Output -->
+                <div class="panel">
+                    <div class="panel-title">MCTS分析结果</div>
+                    <div id="solver-output"></div>
+                </div>
+            </div>
+
+            <!-- Right Panel: History + Settings + Test -->
+            <div class="right-panel">
+                <!-- Settings -->
+                <div class="panel">
+                    <div class="panel-title">设置</div>
+                    <div class="settings-row">
+                        <label>模拟次数:</label>
+                        <input type="number" id="sim-count" value="2000" min="100" max="50000" step="500" onchange="updateSimulations()">
+                    </div>
+                </div>
+
+                <!-- Scoring Reference -->
+                <div class="panel">
+                    <div class="panel-title">计分规则</div>
+                    <div class="scoring-ref">
+                        <div class="ref-title">范特西条件 (头道):</div>
+                        <div><span class="ref-highlight">头3条: +17</span> | AA: +16 | KK: +15 | QQ: +14</div>
+                        <div>JJ: +13 | TT: +12 | 99: +11 | 88: +10 | 77: +9 | 66: +8</div>
+                        <div class="ref-title">中道Royalty:</div>
+                        <div>三条+2 | 顺子+4 | 同花+8 | 葫芦+12 | 四条+20 | 同花顺+30 | 皇同+50</div>
+                        <div class="ref-title">底道Royalty:</div>
+                        <div>顺子+2 | 同花+4 | 葫芦+6 | 四条+10 | 同花顺+15 | 皇同+25</div>
+                        <div class="ref-title" style="margin-top:8px;">优先级:</div>
+                        <div><span class="ref-highlight">进范特西(QQ+/头三条)</span> > 得分最大化 > 不犯规</div>
+                    </div>
+                </div>
+
+                <!-- Test Data -->
+                <div class="panel">
+                    <div class="panel-title">测试数据</div>
+                    <button class="ctrl-btn btn-gold" onclick="loadTestData()" style="margin-bottom:10px;">
+                        加载示例测试数据
+                    </button>
+                    <div style="margin-bottom:8px; font-size:13px; color:#aaa;">
+                        或输入自定义测试数据:
+                    </div>
+                    <textarea id="custom-test-input" placeholder="第1轮 发牌 [Jc,9h,8h,6c,3d]
+第1轮 [8h] [6c,3d] [Jc,9h]
+第2轮 发牌 [Ad,5h,4s] 弃牌 [4s]
+第2轮 [8h] [Ad,6c,5h,3d] [Jc,9h]
+..."></textarea>
+                    <button class="ctrl-btn btn-secondary" onclick="parseCustomTest()" style="margin-top:8px;">
+                        解析并运行
+                    </button>
+                </div>
+
+                <!-- History -->
+                <div class="panel">
+                    <div class="panel-title">对局历史</div>
+                    <div id="history" style="max-height: 400px; overflow-y: auto;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Training Panel (full width) -->
+        <div class="panel" style="margin-top: 20px;">
+            <div class="panel-title" style="color:#ff00ff;">进化策略训练</div>
+            <div class="train-config">
+                <div class="settings-row">
+                    <label>训练代数:</label>
+                    <input type="number" id="train-generations" value="50" min="5" max="1000">
+                </div>
+                <div class="settings-row">
+                    <label>种群大小:</label>
+                    <input type="number" id="train-popsize" value="8" min="4" max="30">
+                </div>
+                <div class="settings-row">
+                    <label>每代评估局数:</label>
+                    <input type="number" id="train-games" value="30" min="10" max="200">
+                </div>
+                <div class="settings-row">
+                    <label>模拟次数/局:</label>
+                    <input type="number" id="train-simcount" value="150" min="50" max="1000">
+                </div>
+                <div class="settings-row">
+                    <label>目标时长(分):</label>
+                    <input type="number" id="train-minutes" value="240" min="1" max="1440">
+                </div>
+                <div class="controls" style="margin-top:10px;">
+                    <button class="ctrl-btn btn-gold" id="train-btn-start" onclick="startTraining()">开始训练</button>
+                    <button class="ctrl-btn btn-danger" id="train-btn-stop" onclick="stopTraining()" disabled>停止训练</button>
+                </div>
+            </div>
+            <div id="train-progress" style="margin-top:15px;"></div>
+            <div id="train-log" style="max-height:200px; overflow-y:auto; margin-top:10px; font-size:12px;"></div>
+
+            <!-- Trained weights -->
+            <div id="trained-weights-section" style="display:none; margin-top:15px;">
+                <div class="panel-title" style="font-size:14px;">训练结果权重</div>
+                <textarea id="trained-weights" style="height:120px; font-size:11px;"></textarea>
+                <div class="controls" style="margin-top:8px;">
+                    <button class="ctrl-btn btn-primary" onclick="applyTrainedWeights()">应用权重</button>
+                    <button class="ctrl-btn btn-secondary" onclick="exportTrainedWeights()">导出权重</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Auto Log Panel (full width) -->
+        <div class="panel" style="margin-top: 20px;">
+            <div class="panel-title">自动对局日志</div>
+            <div class="controls" style="margin-bottom: 10px;">
+                <label style="font-size:13px; color:#aaa;">批量对局:</label>
+                <input type="number" id="batch-count" value="10" min="1" max="500" style="width:70px; background:#0f1b35; border:1px solid #1a3a5c; color:#e0e0e0; padding:4px 8px; border-radius:4px; font-size:13px;">
+                <button class="ctrl-btn btn-gold" onclick="startBatchWorker()">批量运行(Worker)</button>
+                <button class="ctrl-btn btn-danger" onclick="stopTraining()">停止</button>
+                <button class="ctrl-btn btn-secondary" onclick="exportLogs()">导出JSON</button>
+                <button class="ctrl-btn btn-danger" onclick="clearAutoLogs()" style="font-size:12px;">清空日志</button>
+                <span id="batch-status" style="color:#aaa; font-size:13px; margin-left:10px;"></span>
+            </div>
+            <div id="auto-log" style="max-height: 500px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+    <script src="solver.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

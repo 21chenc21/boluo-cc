@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>FL 摆牌测试</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', sans-serif; background: #1a1a2e; color: #eee; padding: 15px; min-height: 100vh; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        h1 { text-align: center; color: #ffc107; margin-bottom: 6px; }
+        .subtitle { text-align: center; color: #888; font-size: 13px; margin-bottom: 18px; }
+
+        .controls { background: #16213e; padding: 14px; border-radius: 8px; margin-bottom: 14px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .controls label { color: #ddd; font-size: 13px; }
+        .controls select, .controls input[type=number] {
+            padding: 6px 10px; background: #0a0a1a; color: #fff; border: 1px solid #555; border-radius: 4px; font-size: 14px;
+        }
+        button { padding: 8px 16px; border: none; border-radius: 5px; font-size: 14px; cursor: pointer; font-weight: bold; }
+        .btn-deal { background: #0ea5e9; color: white; }
+        .btn-place { background: #ffc107; color: #000; }
+        .btn-reset { background: #555; color: white; }
+
+        .panel { background: #16213e; padding: 14px; border-radius: 8px; margin-bottom: 12px; }
+        .panel-title { font-size: 13px; color: #aaa; margin-bottom: 8px; font-weight: bold; }
+        .row-label { font-size: 12px; color: #888; margin: 4px 0 3px; }
+        .card-row { display: flex; gap: 5px; padding: 6px; background: #0a0a1a; border-radius: 5px; min-height: 60px; align-items: center; flex-wrap: wrap; }
+        .card { width: 40px; height: 52px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; background: white; color: #333; border: 1px solid #999; }
+        .card.red { color: #dc2626; }
+        .card.black { color: #1a1a1a; }
+        .card.empty { background: #222; border: 1px dashed #444; color: #444; font-size: 12px; }
+        .card.discarded { opacity: 0.3; text-decoration: line-through; }
+        .card.joker { background: linear-gradient(135deg,#ffc107,#ff5722); color: white; }
+        .card.dealt { border: 2px solid #ffc107; }
+
+        .result-box { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .stat { background: #0a0a1a; padding: 10px; border-radius: 5px; }
+        .stat .label { color: #888; font-size: 12px; }
+        .stat .value { font-size: 18px; color: #4ade80; font-weight: bold; margin-top: 4px; }
+        .stat .value.bad { color: #f87171; }
+
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 12px; font-weight: bold; margin-left: 6px; }
+        .badge.green { background: #1a3a1a; color: #4ade80; }
+        .badge.red { background: #4a0000; color: #f87171; }
+        .badge.gold { background: #ffc107; color: #000; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎴 FL 摆牌测试</h1>
+        <div class="subtitle">v7_fan | 验证 expertPlaceFantasy beam search 摆牌效果</div>
+
+        <div class="controls">
+            <label>Trigger:
+                <select id="trigger">
+                    <option value="QQ">QQ (14张, 弃1)</option>
+                    <option value="KK">KK (15张, 弃2)</option>
+                    <option value="AA" selected>AA (16张, 弃3)</option>
+                    <option value="trips">三条/再范 (17张, 弃4)</option>
+                </select>
+            </label>
+            <label>Jokers:
+                <select id="numJokers">
+                    <option value="0">0</option>
+                    <option value="2" selected>2</option>
+                    <option value="4">4</option>
+                </select>
+            </label>
+            <label>Beam:
+                <input id="beamWidth" type="number" value="10" min="3" max="50" style="width:60px;">
+            </label>
+            <button class="btn-deal" onclick="randomDeal()">🎲 随机发牌</button>
+            <button class="btn-place" onclick="aiPlace()">🤖 AI 摆牌</button>
+            <button class="btn-reset" onclick="reset()">↻ 清回未分配</button>
+        </div>
+        <div style="text-align:center;color:#aaa;font-size:13px;margin-bottom:10px;">
+            💡 <b>点击牌</b>循环分配: 未分配 → 顶 → 中 → 底 → 弃 → 未分配。容量满会跳到下一格。下方实时算分。
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">发到的牌 (<span id="dealt-count">0</span>) — 点牌分配</div>
+            <div class="card-row" id="dealt-row"><span style="color:#666;font-size:12px;">点 🎲 随机发牌</span></div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">摆牌区 (手动 / AI 共用)</div>
+            <div class="row-label">头道 (3张)</div>
+            <div class="card-row" id="top-row"></div>
+            <div class="row-label">中道 (5张)</div>
+            <div class="card-row" id="mid-row"></div>
+            <div class="row-label">底道 (5张)</div>
+            <div class="card-row" id="bot-row"></div>
+            <div class="row-label">弃牌 (<span id="discard-count">0/0</span>)</div>
+            <div class="card-row" id="discard-row"></div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">评估</div>
+            <div class="result-box">
+                <div class="stat">
+                    <div class="label">Royalty</div>
+                    <div class="value" id="stat-royalty">-</div>
+                </div>
+                <div class="stat">
+                    <div class="label">Foul</div>
+                    <div class="value" id="stat-foul">-</div>
+                </div>
+                <div class="stat">
+                    <div class="label">本手范状态 (顶)</div>
+                    <div class="value" id="stat-fantasy">-</div>
+                </div>
+                <div class="stat">
+                    <div class="label">触发 Re-fantasy ✨</div>
+                    <div class="value" id="stat-refan">-</div>
+                </div>
+                <div class="stat">
+                    <div class="label">头/中/底 牌型</div>
+                    <div class="value" id="stat-types" style="font-size:14px;">-</div>
+                </div>
+                <div class="stat">
+                    <div class="label">Beam 耗时</div>
+                    <div class="value" id="stat-time" style="font-size:14px;">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+    <script src="solver.js"></script>
+    <script>
+        let dealtCards = [];
+        let cardLocations = {};   // cardId → 'unassigned' | 'top' | 'mid' | 'bot' | 'discard'
+        let game = null;
+        let evaluator = null;
+        let engine = null;
+
+        async function loadW(file) {
+            try {
+                const r = await fetch(file);
+                if (!r.ok) return null;
+                const d = await r.json();
+                if (!d.w1 || !d.means) return null;
+                console.log(`${file} loaded: round=${d.round}, acc=${(d.accuracy*100).toFixed(2)}%, samples=${d.samplesCount}`);
+                return {
+                    means: d.means, stds: d.stds,
+                    w1: d.w1, b1: d.b1, w2: d.w2, b2: d.b2, w3: d.w3, b3: d.b3,
+                    yMean: d.yMean, yStd: d.yStd
+                };
+            } catch { return null; }
+        }
+        async function init() {
+            evaluator = new ExpertEvaluator();
+            engine = new ExpertRollout(evaluator);
+            const mainW = await loadW('trained-main-weights.json');
+            const flW = await loadW('trained-fan-weights.json');
+            if (mainW) engine._weights = mainW;
+            if (flW) engine._flWeights = flW;
+            if (!mainW) console.log('main MLP not loaded, using inline');
+            if (!flW) console.log('FL MLP not loaded, FL falls back to main');
+        }
+
+        function clickableCard(card, location) {
+            const cid = cardId(card);
+            const extra = location === 'discard' ? 'discarded' : location === 'unassigned' ? 'dealt' : '';
+            if (isJoker(card)) return `<div class="card joker ${extra}" style="cursor:pointer;" title="点击循环到 顶/中/底/弃" onclick="cycleCard('${cid}')">🃏</div>`;
+            const color = SUIT_COLORS[card.suit];
+            const display = RANK_DISPLAY[card.rank] + SUIT_SYMBOLS[card.suit];
+            return `<div class="card ${color} ${extra}" style="cursor:pointer;" title="点击循环到 顶/中/底/弃" onclick="cycleCard('${cid}')">${display}</div>`;
+        }
+        function emptyCardHTML(n) {
+            let h = ''; for (let i = 0; i < n; i++) h += '<div class="card empty">?</div>'; return h;
+        }
+
+        // 容量
+        function caps() {
+            const N = dealtCards.length;
+            return { top: 3, mid: 5, bot: 5, discard: N - 13, unassigned: 999 };
+        }
+        function countAt(loc) {
+            let c = 0;
+            for (const card of dealtCards) if (cardLocations[cardId(card)] === loc) c++;
+            return c;
+        }
+
+        // 点击循环: unassigned → top → mid → bot → discard → unassigned
+        function cycleCard(cid) {
+            const order = ['unassigned', 'top', 'mid', 'bot', 'discard'];
+            const cur = cardLocations[cid] || 'unassigned';
+            const limits = caps();
+            // 找下一个未满的 location
+            let idx = order.indexOf(cur);
+            for (let i = 0; i < order.length; i++) {
+                idx = (idx + 1) % order.length;
+                const next = order[idx];
+                if (next === 'unassigned') { cardLocations[cid] = next; rerender(); return; }
+                if (countAt(next) < limits[next]) { cardLocations[cid] = next; rerender(); return; }
+            }
+        }
+
+        function rerender() {
+            const groups = { unassigned: [], top: [], mid: [], bot: [], discard: [] };
+            for (const c of dealtCards) {
+                const loc = cardLocations[cardId(c)] || 'unassigned';
+                groups[loc].push(c);
+            }
+            // 升序排序 (joker 排最后), 每行内按 rank 从小到大
+            const ascSort = (a, b) => (isJoker(a) ? 13 : rankIndex(a.rank)) - (isJoker(b) ? 13 : rankIndex(b.rank));
+            for (const k of Object.keys(groups)) groups[k].sort(ascSort);
+            const N = dealtCards.length;
+            const expDiscard = Math.max(0, N - 13);
+            document.getElementById('dealt-row').innerHTML = groups.unassigned.map(c => clickableCard(c, 'unassigned')).join('') || '<span style="color:#666;font-size:12px;">(全部已分配)</span>';
+            document.getElementById('dealt-count').textContent = `${groups.unassigned.length} 待分配 / 共 ${N}`;
+            document.getElementById('top-row').innerHTML = groups.top.map(c => clickableCard(c, 'top')).join('') + emptyCardHTML(3 - groups.top.length);
+            document.getElementById('mid-row').innerHTML = groups.mid.map(c => clickableCard(c, 'mid')).join('') + emptyCardHTML(5 - groups.mid.length);
+            document.getElementById('bot-row').innerHTML = groups.bot.map(c => clickableCard(c, 'bot')).join('') + emptyCardHTML(5 - groups.bot.length);
+            document.getElementById('discard-row').innerHTML = groups.discard.map(c => clickableCard(c, 'discard')).join('') || (expDiscard > 0 ? '<span style="color:#666;font-size:12px;">(还需弃 ' + (expDiscard - groups.discard.length) + ' 张)</span>' : '');
+            document.getElementById('discard-count').textContent = `${groups.discard.length} / ${expDiscard}`;
+            updateStats(groups, expDiscard);
+        }
+
+        function updateStats(groups, expDiscard) {
+            const complete = groups.top.length === 3 && groups.mid.length === 5 && groups.bot.length === 5 && groups.discard.length === expDiscard;
+            const setStat = (id, txt, bad) => {
+                const el = document.getElementById(id);
+                el.textContent = txt;
+                el.className = 'value' + (bad ? ' bad' : '');
+            };
+            if (!complete) {
+                const remain = (3 - groups.top.length) + (5 - groups.mid.length) + (5 - groups.bot.length) + (expDiscard - groups.discard.length);
+                setStat('stat-royalty', `(待完成: 还需 ${remain})`, false);
+                setStat('stat-foul', '-', false);
+                setStat('stat-fantasy', '-', false);
+                setStat('stat-refan', '-', false);
+                setStat('stat-types', '-', false);
+                setStat('stat-time', '-', false);
+                return;
+            }
+            const sc = scoreHand(groups.top, groups.mid, groups.bot);
+            setStat('stat-royalty', sc.foul ? '0 (foul)' : sc.royalties.toString(), sc.foul);
+            setStat('stat-foul', sc.foul ? '✗ 是 (-20)' : '✓ 否', sc.foul);
+            setStat('stat-fantasy', sc.fantasy ? '✓ 范' : '✗ 否', !sc.fantasy);
+            const refan = checkFantasyTrigger({ top: groups.top, middle: groups.mid, bottom: groups.bot }, true);
+            setStat('stat-refan', refan ? `✓ ${refan} (下手 ${getFantasyDealCount(refan)} 张)` : '✗ 链结束', !refan);
+            const tStr = HAND_NAMES[sc.topEval.type] || '?';
+            const mStr = HAND_NAMES[sc.midEval.type] || '?';
+            const bStr = HAND_NAMES[sc.botEval.type] || '?';
+            setStat('stat-types', `${tStr} / ${mStr} / ${bStr}`, false);
+        }
+
+        function randomDeal() {
+            const trigger = document.getElementById('trigger').value;
+            const nj = parseInt(document.getElementById('numJokers').value);
+            const N = getFantasyDealCount(trigger);
+            if (!N) { alert('Invalid trigger'); return; }
+            game = new ThreePlayerGame(nj);
+            dealtCards = game.dealCards(0, N);
+            cardLocations = {};
+            for (const c of dealtCards) cardLocations[cardId(c)] = 'unassigned';
+            document.getElementById('stat-time').textContent = '-';
+            rerender();
+        }
+
+        function aiPlace() {
+            if (!dealtCards || dealtCards.length === 0) { alert('先发牌'); return; }
+            const N = dealtCards.length;
+            const discardCount = N - 13;
+            const beam = parseInt(document.getElementById('beamWidth').value) || 10;
+            const state = game.players[0];
+            state.top = []; state.middle = []; state.bottom = []; state.usedCards = new Set();
+            state.getRemainingDeck = function() {
+                return createDeck(game.numJokers).filter(c => !this.usedCards.has(cardId(c)));
+            };
+            const t0 = performance.now();
+            const result = engine.expertPlaceFantasy(state, dealtCards, discardCount, beam, 0);
+            const elapsed = (performance.now() - t0).toFixed(1);
+            if (!result) { alert('AI 摆牌失败'); return; }
+            // 写入 cardLocations (覆盖手动)
+            cardLocations = {};
+            for (const c of result.layout.top) cardLocations[cardId(c)] = 'top';
+            for (const c of result.layout.middle) cardLocations[cardId(c)] = 'mid';
+            for (const c of result.layout.bottom) cardLocations[cardId(c)] = 'bot';
+            for (const c of result.layout.discards) cardLocations[cardId(c)] = 'discard';
+            for (const c of dealtCards) if (!(cardId(c) in cardLocations)) cardLocations[cardId(c)] = 'unassigned';
+            rerender();
+            document.getElementById('stat-time').textContent = `AI 用时 ${elapsed} ms`;
+        }
+
+        function reset() {
+            // 清回未分配 (保留已发的牌)
+            for (const c of dealtCards) cardLocations[cardId(c)] = 'unassigned';
+            rerender();
+        }
+
+        init();
+    </script>
+</body>
+</html>
