@@ -56,6 +56,11 @@ API endpoints 在 `/api/*`, 静态文件 (3player.html 等) 在 `/`.
   // === 鬼牌局 ===
   "jokerCount": 2,                  // 本局总鬼数. 0=无鬼 / 2=标准 Pineapple / 4=双副. 默认 0!
 
+  // === 外部追踪字段 (2026-05-26 加) — 记入 solve_log 便于按外部维度查询 ===
+  "game_id": "112565853-0",         // 外部 game session id (snake_case). 跟内部 gameId (UUID) 区分.
+  "uid": "user-12345",              // 用户 id. 用于按用户查行为 / 排查 "坐下失败" 等问题.
+  "seat_number": 0,                 // 座位号 (0/1/2 for 3 player). 用于按座位定位 log.
+
   // === 可选 ===
   "mode": "normal",                 // "normal" (默认) | "fantasy"
   "gameId": "abc",                  // 写 solve_log 关联
@@ -68,6 +73,8 @@ API endpoints 在 `/api/*`, 静态文件 (3player.html 等) 在 `/`.
 > **⚠ pureMLP 用途**: 跳 MCTS (R1 8s → 280ms), 测 NN 直接能力. 生产推荐 `pureMLP=true` (~280ms/R1). `level` 在 pureMLP 模式下是占位.
 
 > **⚠ topK = AI 难度**: 1=最强 (deterministic top-1, 实测 5 seed × 200 games 平均 fantasy 63.2 / score 4884 / foul 58.2), 2=中等 (R1 top-2 sample, fantasy 61.6 / score 4593 / foul 60.4), 3=简单 (R1 top-3 sample). 只 R1 用 sample, R2-R5 永远 top-1 (实测全 round sample 灾难性 fantasy -42 / score -75%). 默认 1.
+
+> **⚠ game_id / uid / seat_number**: 外部追踪字段, **每次请求都建议传**. 全部 3 字段进 solve_log.request_json. 排查"用户 X 在 game Y 座位 Z 的求解"用. 不传则 log 无外部 id, 只能按时间或 dealt 模糊查.
 
 > **AI 类型 (level) vs AI 难度 (topK) 区分**:
 > - **AI 类型** = MCTS 档位 (pureMLP / low / medium / high). 实测 MCTS 都退步 6-17 case, **生产只用 pureMLP**.
@@ -198,6 +205,65 @@ cache 关 (`SOLVE_CACHE_SIZE=0`) 时 `cache: { enabled: false }`.
 
 ---
 
+## Solve 日志 (`solve_log` 表)
+
+2026-05-26 起 `ofc-dev-v3` start.sh 默认 `SOLVE_LOG=on SOLVE_LOG_RETAIN=100000`. 所有 `/api/solve` 调用进 sqlite `solve_log` 表.
+
+Schema:
+```sql
+CREATE TABLE solve_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    game_id TEXT,             -- 内部 gameId (UUID), 不是外部 game_id
+    player INTEGER,           -- 内部 player 0/1/2
+    round INTEGER,
+    mode TEXT,                -- 'normal' / 'fantasy'
+    request_json TEXT NOT NULL,  -- 含 game_id / uid / seat_number 全外部字段
+    response_json TEXT NOT NULL,
+    elapsed_ms INTEGER,
+    created_at INTEGER NOT NULL  -- ms timestamp
+);
+```
+
+### 常用查询
+
+按 **uid** 查某用户的所有 solve:
+```python
+import sqlite3, json, time
+c = sqlite3.connect('/home/chguang/boluo-cc/ofc-dev-v3/games.db').cursor()
+for r in c.execute(
+    "SELECT id, request_json, response_json, created_at FROM solve_log "
+    "WHERE request_json LIKE '%\"uid\":\"2637881\"%' ORDER BY id DESC"
+).fetchall():
+    req = json.loads(r[1])
+    print(f'[{r[0]}] {time.ctime(r[3]/1000)} game={req.get("game_id")} seat={req.get("seat_number")}')
+    print(f'  rsp: {r[2][:200]}')
+```
+
+按 **外部 game_id** 查:
+```sql
+SELECT id, mode, request_json, response_json, created_at
+FROM solve_log
+WHERE request_json LIKE '%112565853-0%'
+ORDER BY id DESC;
+```
+
+按 **fantasy mode** 查:
+```sql
+SELECT * FROM solve_log WHERE mode = 'fantasy' ORDER BY id DESC LIMIT 50;
+```
+
+按 **uid + game_id 联合**:
+```sql
+SELECT * FROM solve_log
+WHERE request_json LIKE '%"uid":"2637881"%'
+  AND request_json LIKE '%112565853-0%'
+ORDER BY id DESC;
+```
+
+> `SOLVE_LOG_RETAIN=100000` 保留最近 10 万条, 超出自动 prune. 长期归档建议每天 dump 一次.
+
+---
+
 ## 性能 / 模式选择 (2026-05-23 实测)
 
 | 模式 | 设置 | R1 耗时 | testcase 63 | 备注 |
@@ -294,20 +360,42 @@ ofc-go -addr=:8002 -static=. -db=games.db -weights=big-models/best.json
 ### curl
 
 ```bash
-# pureMLP (生产推荐, ~250ms R1)
+# pureMLP (生产推荐, ~280ms R1) — 含全部外部追踪字段
 curl -X POST http://localhost:8002/api/solve \
   -H 'Content-Type: application/json' \
-  -d '{"round":1,"state":{"top":[],"middle":[],"bottom":[],"usedCards":[]},"dealt":["Ks","Kh","5d","9c","2s"],"discardCount":0,"jokerCount":2,"pureMLP":true,"level":"low"}'
+  -d '{
+    "game_id": "112565853-0",
+    "uid": "2637881",
+    "seat_number": 0,
+    "round": 1,
+    "state": {"top":[],"middle":[],"bottom":[],"usedCards":[]},
+    "dealt": ["Ks","Kh","5d","9c","2s"],
+    "discardCount": 0,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "topK": 1
+  }'
 
-# MCTS medium (生产强化, ~5s R1)
+# MCTS medium (不推荐生产, ~17s R1)
 curl -X POST http://localhost:8002/api/solve \
   -H 'Content-Type: application/json' \
   -d '{"round":1,"state":{"top":[],"middle":[],"bottom":[],"usedCards":[]},"dealt":["Ks","Kh","5d","9c","2s"],"discardCount":0,"jokerCount":2,"level":"medium"}'
 
-# fantasy
+# fantasy (一次摆 14-17 张, ~500ms)
 curl -X POST http://localhost:8002/api/solve \
   -H 'Content-Type: application/json' \
-  -d '{"round":99,"state":{"top":[],"middle":[],"bottom":[],"usedCards":[]},"dealt":["Ks","Kh","Kd","As","Ah","Ad","Ac","2s","3h","4d","5c","6s","7h","8d"],"discardCount":1,"mode":"fantasy","jokerCount":2}'
+  -d '{
+    "game_id": "112565853-0",
+    "uid": "2637881",
+    "seat_number": 0,
+    "round": 99,
+    "mode": "fantasy",
+    "state": {"top":[],"middle":[],"bottom":[],"usedCards":[]},
+    "dealt": ["Ks","Kh","Kd","As","Ah","Ad","Ac","2s","3h","4d","5c","6s","7h","8d"],
+    "discardCount": 1,
+    "jokerCount": 2,
+    "pureMLP": true
+  }'
 
 # 健康
 curl http://localhost:8002/api/health | jq

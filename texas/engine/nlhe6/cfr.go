@@ -19,7 +19,6 @@ type MCCFR struct {
 
 	regret     map[uint64][]float64
 	strategy   map[uint64][]float64
-	sigmaBuf   map[uint64][]float64
 	numActions map[uint64]int
 
 	rng   *rand.Rand
@@ -38,7 +37,6 @@ func NewMCCFR(cfg *GameConfig, seed int64) *MCCFR {
 		cfg:        cfg,
 		regret:     make(map[uint64][]float64),
 		strategy:   make(map[uint64][]float64),
-		sigmaBuf:   make(map[uint64][]float64),
 		numActions: make(map[uint64]int),
 		rng:        rand.New(rand.NewSource(seed)),
 		useRMPlus:  true,
@@ -56,22 +54,17 @@ func (m *MCCFR) WithIDFn(fn func(*State) uint64) *MCCFR {
 func (m *MCCFR) Iters() int       { return m.iters }
 func (m *MCCFR) NumInfosets() int { return len(m.regret) }
 
-func (m *MCCFR) ensure(id uint64, n int) (r, s, sigma []float64) {
+// ensure — return regret and strategy slices for this infoset.
+// Allocates if new or length-mismatched (hash collision recovery).
+func (m *MCCFR) ensure(id uint64, n int) (r, s []float64) {
 	r, ok := m.regret[id]
-	// Allocate if new OR if cached length doesn't match current legal-action
-	// count (hash collision: two different states mapped to same id, with
-	// different legal-action counts). Treat collision as new state — lose
-	// accumulated regret but continue. With 27-bit hist hash at 6-max scale
-	// (~10M infosets) collisions are non-negligible but bounded.
 	if !ok || len(r) != n {
 		r = make([]float64, n)
 		m.regret[id] = r
 		m.strategy[id] = make([]float64, n)
-		m.sigmaBuf[id] = make([]float64, n)
 		m.numActions[id] = n
 	}
 	s = m.strategy[id]
-	sigma = m.sigmaBuf[id]
 	return
 }
 
@@ -164,7 +157,11 @@ func (m *MCCFR) walk(s *State, trav Seat) float64 {
 	id := m.idFn(s)
 	legal := s.LegalActions()
 	nA := len(legal)
-	regret, stratSum, sigma := m.ensure(id, nA)
+	regret, stratSum := m.ensure(id, nA)
+	// sigma allocated per-walk-node on stack (small slice, GC handles fast).
+	// Eliminates per-infoset sigmaBuf map → saves ~33% memory for big tables.
+	var sigmaArr [8]float64
+	sigma := sigmaArr[:nA]
 	regretMatching(regret, sigma)
 
 	if s.Cur == trav {
@@ -236,6 +233,7 @@ func regretMatching(regret, out []float64) {
 }
 
 // AverageStrategy — normalized per-infoset action probabilities.
+// Allocates a fresh map (training-side σ remains intact for further iter).
 func (m *MCCFR) AverageStrategy() map[uint64][]float64 {
 	out := make(map[uint64][]float64, len(m.strategy))
 	for k, ss := range m.strategy {
@@ -256,6 +254,37 @@ func (m *MCCFR) AverageStrategy() map[uint64][]float64 {
 		}
 		out[k] = probs
 	}
+	return out
+}
+
+// TakeAverageStrategy — same result as AverageStrategy but mutates m.strategy
+// in-place and frees regret map. After calling, m can no longer Iter.
+// Halves peak memory usage at the train→dump transition; required for σ ≥
+// 200k iter on 7.7GB system.
+func (m *MCCFR) TakeAverageStrategy() map[uint64][]float64 {
+	// Free training-only fields BEFORE normalization → bigger headroom for GC.
+	m.regret = nil
+	m.numActions = nil
+	// Mutate m.strategy in place: cumulative sums → normalized probs.
+	for _, ss := range m.strategy {
+		var sum float64
+		for _, v := range ss {
+			sum += v
+		}
+		if sum > 0 {
+			inv := 1.0 / sum
+			for i := range ss {
+				ss[i] *= inv
+			}
+		} else {
+			u := 1.0 / float64(len(ss))
+			for i := range ss {
+				ss[i] = u
+			}
+		}
+	}
+	out := m.strategy
+	m.strategy = nil // m no longer trainable
 	return out
 }
 

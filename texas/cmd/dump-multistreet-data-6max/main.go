@@ -17,6 +17,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -118,8 +119,13 @@ func main() {
 				i, *iters, time.Since(t0).Seconds(), m.NumInfosets())
 		}
 	}
-	avg := m.AverageStrategy()
-	log.Printf("[dump] trained: %d abstract infosets in %.1fs", len(avg), time.Since(t0).Seconds())
+	// TakeAverageStrategy: in-place normalization + free regret/sigmaBuf.
+	// Halves memory peak vs AverageStrategy (which double-allocates). Required
+	// for σ ≥ 200k iter on 7.7GB system. m can no longer Iter after this.
+	avg := m.TakeAverageStrategy()
+	log.Printf("[dump] trained: %d abstract infosets in %.1fs (in-place avg)", len(avg), time.Since(t0).Seconds())
+	// Hint GC to reclaim regret/sigmaBuf now.
+	runtime.GC()
 
 	if err := os.MkdirAll(filepath.Dir(*outPath), 0o755); err != nil {
 		log.Fatalf("mkdir: %v", err)

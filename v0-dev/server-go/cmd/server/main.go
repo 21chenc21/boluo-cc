@@ -201,6 +201,9 @@ type apiSolveRequest struct {
 	DiscardCount int         `json:"discardCount"`
 	Mode         string      `json:"mode"`
 	GameID       *string     `json:"gameId"`
+	ExtGameID    string      `json:"game_id"`     // 2026-05-26: 外部 game id (e.g. "112565853-0") — log 关联用, 跟内部 gameId 区分
+	UID          string      `json:"uid"`         // 2026-05-26: 用户 id — log 关联用户行为
+	SeatNumber   *int        `json:"seat_number"` // 2026-05-26: 座位号 (0-2 for 3 player) — log 关联座位
 	Level        string      `json:"level"`
 	R1Mult       *float32    `json:"r1Mult"`
 	PureMLP      bool        `json:"pureMLP"`    // 2026-05-22: per-request 跳 MCTS, 纯 MLP top-1
@@ -532,6 +535,16 @@ func handleAPISolve(w http.ResponseWriter, r *http.Request) {
 			}
 			req := map[string]interface{}{
 				"state": in.State, "dealt": in.Dealt, "discardCount": in.DiscardCount, "mode": mode,
+			}
+			// 2026-05-26: 外部 game_id / uid / seat_number 一起写进 request_json, 方便按外部维度查 solve_log
+			if in.ExtGameID != "" {
+				req["game_id"] = in.ExtGameID
+			}
+			if in.UID != "" {
+				req["uid"] = in.UID
+			}
+			if in.SeatNumber != nil {
+				req["seat_number"] = *in.SeatNumber
 			}
 			gameDB.LogSolve(ofc.LogSolveInput{
 				GameID: in.GameID, Player: in.Player, Round: &round, Mode: &mode,

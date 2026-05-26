@@ -841,15 +841,45 @@ AIVAT 让 h2h 精度跨入 Pluribus ballpark (~±50-200 mbb/g 量级). σ scaleu
 - AIVAT 6-max 比 HU 简单 AIVAT 强 (var ↓ 75% vs HU 59%)
 - 200k σ scale-up OOM 教训: `AverageStrategy()` double-alloc, W6 必修
 
-## Phase 3 W6 (下次)
+## ✅ Phase 3 W6: polish + deploy (2026-05-25)
 
-按价值:
-1. **AverageStrategy in-place 修 OOM** — unblock σ 500k+ overnight scale
-2. **更大 NN (1024/512/256) + 300+ epoch** — 压 KL 到 0.05
-3. **Range-aware LBR** — paper-grade 绝对数字
-4. **Pluribus-style runtime subgame search** — production 终态
+### W6 deliverables
+- **Memory fix** (TakeAverageStrategy in-place + sigmaBuf map → stack array): peak memory ~50% ↓, unblock 200k+ σ scale
+- **σ 200k iter** SUCCESS: missing 14.4% → 6.98% (linear progression from 50k)
+- **Bigger NN** (1024/512/256, 300 epochs, 7305s): KL 0.0713 → **0.0565** (-21%)
+- **cmd/server-6max** HTTP API (5ms latency, AA UTG 6-max 验证 aggression 88.8%)
+- **DEPLOY.md** + server README
 
-但 KL 0.07 + h2h CI 含 0 已 **functional POC**. W6 关键决策: polish to paper-grade 还是 直接 production engineering (deployment loop, real opponent bench)?
+### 4-metric POC 终态 (W6, 200k σ + big NN)
+
+| Metric | W4 | W5 | **W6** | Status |
+|---|---|---|---|---|
+| KL | 0.071 | 0.0713 | **0.0565** | ⚠️ close (12% over threshold) |
+| **h2h AIVAT** | n/a | -59 ±256 | **+56 ±242 (CI 含 0)** | ✓ var ↓ 77% |
+| **LBR(σ) vs LBR(NN)** | 2720/2612 | 1824/2320 (+27%) | **2115/2142 (+1.3%)** | ✓ basically identical |
+| NN OOD | 0% | 0% | 0% | ✓ |
+
+### 关键修正 W5 担忧
+- W5 LBR(NN) > LBR(σ) by 27% → 担忧 "NN distill ceiling"
+- **W6 1024/512/256 NN 把差距压到 1.3%** — NN ceiling 是 model capacity 不是 fundamental
+
+### Performance baseline
+- MCCFR 6-max: ~1.1 ms/iter
+- 200k σ training: 220s + 6s dump = 226s end-to-end
+- Server ONNX inference: 5 ms (incl. state replay)
+- h2h play: 1.4 ms/hand
+- LBR play: 13 ms/hand (15 MC inner)
+
+## Phase 3 W7 (下次)
+
+按价值降序:
+1. **σ 500k iter overnight** — 期望 missing < 4%, LBR(σ) ~1500
+2. **Range-aware LBR** — paper-grade 绝对数字 (~200-600 mbb/g 真值)
+3. **Slumbot HUNL 实战 calibration** — 公开 API, overnight 10k+ 手 absolute baseline
+4. **Pluribus-style runtime subgame search** — production strength jump (2-3 周)
+5. **真玩家对战** — frontend + WebSocket protocol → 行为 log driven 迭代
+
+**POC 实用闭环已达到**. W7 是 "polish to publication" vs "ship to users" 选择.
 
 ## Phase 3 后续
 

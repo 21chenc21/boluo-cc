@@ -32,6 +32,8 @@ echo "[start] ofc-dev-v3 on :$PORT, weights=big-models/best.json (V3 sp15 57/63)
 #   - low/medium/high: r1Mult 缩放 + MCTS sims (慢但更强)
 SOLVE_CACHE_SIZE="${SOLVE_CACHE_SIZE:-0}" \
 DEFAULT_LEVEL="${DEFAULT_LEVEL:-medium}" \
+SOLVE_LOG="${SOLVE_LOG:-on}" \
+SOLVE_LOG_RETAIN="${SOLVE_LOG_RETAIN:-100000}" \
 exec "$BIN" \
     -addr=":$PORT" \
     -weights="$WEIGHTS" \
