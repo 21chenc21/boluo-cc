@@ -26,10 +26,9 @@ if [ ! -f "$WEIGHTS" ]; then
     exit 1
 fi
 
-echo "[start] ofc-dev-v3 on :$PORT, weights=big-models/best.json (V3 sp15 57/63), MCTS=on (level 生效), static=."
-# 不设 DISABLE_MCTS, 让 level dropdown (low/medium/high/pure_mlp) 正常工作:
-#   - pure_mlp: 客户端 pureMLP:true → 跳 MCTS (~40ms)
-#   - low/medium/high: r1Mult 缩放 + MCTS sims (慢但更强)
+echo "[start] ofc-dev-v3 on :$PORT, weights=big-models/best.json (V3 sp19 iter-3 r1), SOLVE_LOG=on, static=."
+# 生产唯一推荐: pureMLP:true (~280ms R1).
+# MCTS path (level low/medium/high) 实测比 pureMLP 退步 6-17 case, 仅 dev 调试用.
 SOLVE_CACHE_SIZE="${SOLVE_CACHE_SIZE:-0}" \
 DEFAULT_LEVEL="${DEFAULT_LEVEL:-medium}" \
 SOLVE_LOG="${SOLVE_LOG:-on}" \

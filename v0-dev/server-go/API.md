@@ -1,86 +1,82 @@
 # V3 Solver API
 
-OFC Pineapple AI 解算服务 — 单 Go binary (`ofc-go`), 同进程: HTTP API + 静态文件 + SQLite DB + LRU cache + V3 NN inference.
+OFC Pineapple AI 解算 HTTP 服务. 单 Go binary `ofc-dev-v3`, 同进程: HTTP + 静态文件 + SQLite + V3 NN inference.
 
-**当前状态** (2026-05-23): V3 NN (147-d features), **sp19 iter-3 r1 太子** ckpt (fixed-features-trained) 部署在 `ofc-dev-v3:8002`. V2/v7_fan 已退役.
-
-**部署 ckpt**: `big-models/best.json` md5 = `239f9a9b06f11034ecbe33889d456cb8` (sp19 iter-3 r1).
-
-## Base URL
-
-```
-http://localhost:8002/        # ofc-dev-v3 生产 (V3 NN, 147-d)
-```
-
-API endpoints 在 `/api/*`, 静态文件 (3player.html 等) 在 `/`.
-
-## 端点一览
-
-| 路径 | 方法 | 用途 |
-|------|------|------|
-| `/api/solve` | POST | 主解算 (game-friendly) |
-| `/solve` | POST | 同上但用 raw `rolloutConfig` (parity test) |
-| `/api/health` | GET | 健康 / 监控 |
-| `/health` | GET | 同上 (兼容) |
-| `/api/games` | POST/GET | 保存/列对局 |
-| `/api/games/:id` | GET | 取对局详情 |
-| `/cache/clear` | GET | 清 LRU cache |
-| `/*.html`, `/*.js`, `/*.css` | GET | 静态文件 (前端) |
+**生产部署**: `34.92.248.175:8002`, V3 NN sp19 iter-3 r1 (md5 `239f9a9b06f11034ecbe33889d456cb8`).
 
 ---
 
-## `POST /api/solve` — 主解算
+## `POST /api/solve` — 主接口
 
-请求 body:
+### 请求 body
+
+#### ⭐ 必填
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `round` | int | 1=R1 摆5 / 2-5=R2-5 弃1摆2 / 99=fantasy 一次摆 14-17 张 |
+| `state` | object | 当前棋盘状态 (见下) |
+| `state.top` | string[] | 头道已摆牌 |
+| `state.middle` | string[] | 中道已摆牌 |
+| `state.bottom` | string[] | 底道已摆牌 |
+| `state.usedCards` | string[] | 已 placed + 弃 + opp visible 全部 (**不含 dealt 本轮的牌**) |
+| `dealt` | string[] | 本轮发牌. R1=5 张, R2-5=3 张, fantasy=14-17 张 |
+| `discardCount` | int | R1=0, R2-5=1, fantasy=N-13 |
+| `jokerCount` | int | 本局总鬼数 (**0/2/4**). ⚠ 不传按 0, 2 鬼局结果偏! |
+
+#### ⭐ 强烈建议传 (生产关键)
+
+| 字段 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `pureMLP` | bool | **`false`** | 生产**必传 `true`** (~280ms R1). 不传走 MCTS = 17s + 退步 6-17 case |
+
+#### 可选 — AI 难度 (前端做强弱档)
+
+| 字段 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `topK` | int | **`1`** | 1=最强 deterministic / 2=中等 R1 top-2 sample / 3=简单 R1 top-3 sample. 只 R1 sample, R2-R5 永远 top-1 |
+
+#### 可选 — 外部追踪 (建议传, 排查问题用)
+
+| 字段 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `game_id` | string | `""` | 外部 game session id (例 `"112565853-0"`). 进 solve_log |
+| `uid` | string | `""` | 用户 id. 排查"用户 X 行为" |
+| `seat_number` | int | `0` | 座位号 0/1/2. 排查"座位 Y 求解" |
+
+#### 可选 — 其他
+
+| 字段 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `mode` | string | `"normal"` | `"normal"` / `"fantasy"` (round=99 时必 fantasy) |
+| `level` | string | `"medium"` | MCTS 档位 `"low"/"medium"/"high"`. pureMLP=true 时**忽略** |
+| `r1Mult` | float | (level 查表) | 直传 MCTS r1Mult, 覆盖 level. pureMLP=true 时**忽略** |
+| `gameId` | string | `null` | 内部 episode UUID (跟 `game_id` 区分) |
+| `player` | int | `null` | 内部 player 0/1/2 |
+
+### 生产推荐请求
 
 ```json
 {
-  "round": 1,                       // 必填. 1=R1 摆5, 2-5=R2-5 弃1摆2, 99=fantasy
-  "state": {                        // 必填
-    "top": ["Ks", "Kh"],
-    "middle": ["5d"],
-    "bottom": [],
-    "usedCards": ["Js", "Qc"]
+  "round": 1,
+  "state": {
+    "top": [], "middle": [], "bottom": [],
+    "usedCards": []
   },
-  "dealt": ["Ac", "9h", "3s"],      // 必填. R1=5 张, R2-5=3 张, fantasy=14-17 张
-  "discardCount": 1,                // R1=0, R2-5=1, fantasy=N-13
+  "dealt": ["Ks","Kh","5d","9c","2s"],
+  "discardCount": 0,
+  "jokerCount": 2,
 
-  // === AI 类型 (MCTS 档位, 三选一; 生产唯一推荐 pureMLP) ===
-  "level": "low",                   // 'high'/'medium'/'low' MCTS 档位 (实测都退步, 不推荐生产)
-  "r1Mult": 2.5,                    // 或直接传数值 (覆盖 level)
-  "pureMLP": true,                  // ⭐ true → 跳 MCTS, 仅 NN value-head (~250-370ms). 生产唯一推荐.
+  "pureMLP": true,
+  "topK": 1,
 
-  // === AI 难度 (top-K sample, 2026-05-23 新增) ===
-  "topK": 1,                        // 1=最强 top-1 deterministic (default) / 2=中等 R1 top-2 sample / 3=简单 R1 top-3 sample. R2-R5 永远 top-1 保 endgame quality.
-
-  // === 鬼牌局 ===
-  "jokerCount": 2,                  // 本局总鬼数. 0=无鬼 / 2=标准 Pineapple / 4=双副. 默认 0!
-
-  // === 外部追踪字段 (2026-05-26 加) — 记入 solve_log 便于按外部维度查询 ===
-  "game_id": "112565853-0",         // 外部 game session id (snake_case). 跟内部 gameId (UUID) 区分.
-  "uid": "user-12345",              // 用户 id. 用于按用户查行为 / 排查 "坐下失败" 等问题.
-  "seat_number": 0,                 // 座位号 (0/1/2 for 3 player). 用于按座位定位 log.
-
-  // === 可选 ===
-  "mode": "normal",                 // "normal" (默认) | "fantasy"
-  "gameId": "abc",                  // 写 solve_log 关联
-  "player": 0                       // 0/1/2
+  "game_id": "112565853-0",
+  "uid": "2637881",
+  "seat_number": 0
 }
 ```
 
-> **⚠ jokerCount 必传**: 默认 0, 但 Pineapple OFC 标准是 2 鬼局. 0/2/4 鬼局 NN feature 计算不同, 不传则按 0 算 → 2 鬼局推理结果偏差大. 2026-05-22 修复跨 fork 漏迁移 bug.
-
-> **⚠ pureMLP 用途**: 跳 MCTS (R1 8s → 280ms), 测 NN 直接能力. 生产推荐 `pureMLP=true` (~280ms/R1). `level` 在 pureMLP 模式下是占位.
-
-> **⚠ topK = AI 难度**: 1=最强 (deterministic top-1, 实测 5 seed × 200 games 平均 fantasy 63.2 / score 4884 / foul 58.2), 2=中等 (R1 top-2 sample, fantasy 61.6 / score 4593 / foul 60.4), 3=简单 (R1 top-3 sample). 只 R1 用 sample, R2-R5 永远 top-1 (实测全 round sample 灾难性 fantasy -42 / score -75%). 默认 1.
-
-> **⚠ game_id / uid / seat_number**: 外部追踪字段, **每次请求都建议传**. 全部 3 字段进 solve_log.request_json. 排查"用户 X 在 game Y 座位 Z 的求解"用. 不传则 log 无外部 id, 只能按时间或 dealt 模糊查.
-
-> **AI 类型 (level) vs AI 难度 (topK) 区分**:
-> - **AI 类型** = MCTS 档位 (pureMLP / low / medium / high). 实测 MCTS 都退步 6-17 case, **生产只用 pureMLP**.
-> - **AI 难度** = NN top-K sample. 给前端做强弱档. topK=1 最强, topK=2/3 给玩家"赢面".
-
-响应:
+### 响应
 
 ```json
 {
@@ -89,217 +85,16 @@ API endpoints 在 `/api/*`, 静态文件 (3player.html 等) 在 `/`.
     "middle": ["9h"],
     "bottom": []
   },
-  "discards": ["3s"],
-  "elapsedMs": 1234,                // Go 解算耗时 (含 cache lookup)
-  "totalMs": 1240,                  // 端到端
-  "level": "high",                  // "custom" = 直传 r1Mult
-  "r1Mult": 2.0,
-  "cached": false                   // true → LRU 命中, elapsedMs=0
+  "discards": ["3s"],            // R1 时空, R2-5 弃 1 张, fantasy 弃 N-13 张
+  "elapsedMs": 283,              // Go 解算耗时
+  "totalMs": 283,
+  "level": "medium",             // server 用的 level
+  "r1Mult": 0.5,                 // server 用的 r1Mult
+  "cached": false                // true → LRU 命中
 }
 ```
 
-错误响应:
-- `400 dealt required` / `400 bad request: ...`
-- `500 fantasy: no layout (Go all phases failed)` — 极端 case
-
----
-
-## `POST /solve` — Raw 解算 (parity test)
-
-直接接 Go 内部形状 (含 `rolloutConfig`):
-
-```json
-{
-  "state": { "top": [], "middle": [], "bottom": [], "usedCards": [], "round": 1 },
-  "dealt": ["Ks","Kh","5d","9c","2s"],
-  "discardCount": 0,
-  "mode": "normal",
-  "jokerCount": 2,
-  "rolloutConfig": { "r1Mult": 0.5 }
-}
-```
-
-响应外层包 `ok`:
-
-```json
-{
-  "ok": true,
-  "layout": { "top": [...], "middle": [...], "bottom": [...] },
-  "discards": [...],
-  "elapsedMs": 800,
-  "cached": false
-}
-```
-
-`/solve` 给 `parity-*.js` 测试 + 老 client; 业务调用一律 `/api/solve`.
-
----
-
-## `GET /api/health`
-
-```json
-{
-  "ok": true,
-  "totalSolved": 142,
-  "avgElapsedMs": 850,
-  "levels": {
-    "high":   { "r1Mult": 1.0 },
-    "medium": { "r1Mult": 0.5 },
-    "low":    { "r1Mult": 0.25 }
-  },
-  "defaultLevel": "medium",
-  "cache": {
-    "enabled": true,
-    "size": 47, "max": 5000,
-    "hits": 28, "misses": 114,
-    "hitRate": 0.197
-  },
-  "solveLog": { "mode": "off", "rate": 0.1, "retain": 50000, "count": 0 }
-}
-```
-
-cache 关 (`SOLVE_CACHE_SIZE=0`) 时 `cache: { enabled: false }`.
-
----
-
-## `POST /api/games` — 保存对局
-
-```json
-{
-  "id": "abc123",                   // 可选, 不传自动生成 16-hex
-  "jokerCount": 2,
-  "players": [...],
-  "rounds": [...],
-  "scores": [...],
-  "meta": {...}
-}
-```
-
-响应: `{ "id": "abc123", "ok": true }`.
-
-## `GET /api/games?limit=20` — 列对局
-
-```json
-{
-  "games": [
-    { "id": "...", "created_at": 1777618839323, "joker_count": 2, "scores": {...} }
-  ]
-}
-```
-
-`limit` 默认 20, 上限 200.
-
-## `GET /api/games/:id` — 详情
-
-返回完整对局, 不存在 `404 {"error":"not found"}`.
-
----
-
-## `GET /cache/clear` — 清 LRU
-
-```json
-{ "ok": true }
-```
-
-或 `{ "ok": false, "error": "cache disabled" }` 如果 `SOLVE_CACHE_SIZE=0`.
-
----
-
-## Solve 日志 (`solve_log` 表)
-
-2026-05-26 起 `ofc-dev-v3` start.sh 默认 `SOLVE_LOG=on SOLVE_LOG_RETAIN=100000`. 所有 `/api/solve` 调用进 sqlite `solve_log` 表.
-
-Schema:
-```sql
-CREATE TABLE solve_log (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    game_id TEXT,             -- 内部 gameId (UUID), 不是外部 game_id
-    player INTEGER,           -- 内部 player 0/1/2
-    round INTEGER,
-    mode TEXT,                -- 'normal' / 'fantasy'
-    request_json TEXT NOT NULL,  -- 含 game_id / uid / seat_number 全外部字段
-    response_json TEXT NOT NULL,
-    elapsed_ms INTEGER,
-    created_at INTEGER NOT NULL  -- ms timestamp
-);
-```
-
-### 常用查询
-
-按 **uid** 查某用户的所有 solve:
-```python
-import sqlite3, json, time
-c = sqlite3.connect('/home/chguang/boluo-cc/ofc-dev-v3/games.db').cursor()
-for r in c.execute(
-    "SELECT id, request_json, response_json, created_at FROM solve_log "
-    "WHERE request_json LIKE '%\"uid\":\"2637881\"%' ORDER BY id DESC"
-).fetchall():
-    req = json.loads(r[1])
-    print(f'[{r[0]}] {time.ctime(r[3]/1000)} game={req.get("game_id")} seat={req.get("seat_number")}')
-    print(f'  rsp: {r[2][:200]}')
-```
-
-按 **外部 game_id** 查:
-```sql
-SELECT id, mode, request_json, response_json, created_at
-FROM solve_log
-WHERE request_json LIKE '%112565853-0%'
-ORDER BY id DESC;
-```
-
-按 **fantasy mode** 查:
-```sql
-SELECT * FROM solve_log WHERE mode = 'fantasy' ORDER BY id DESC LIMIT 50;
-```
-
-按 **uid + game_id 联合**:
-```sql
-SELECT * FROM solve_log
-WHERE request_json LIKE '%"uid":"2637881"%'
-  AND request_json LIKE '%112565853-0%'
-ORDER BY id DESC;
-```
-
-> `SOLVE_LOG_RETAIN=100000` 保留最近 10 万条, 超出自动 prune. 长期归档建议每天 dump 一次.
-
----
-
-## 性能 / 模式选择 (2026-05-23 实测)
-
-| 模式 | 设置 | R1 耗时 | testcase 63 | 备注 |
-|---|---|---|---|---|
-| **pureMLP** ⭐ | `pureMLP:true` | ~275ms | **61/2w/0f** | **生产唯一选择**, NN value-head top-1 |
-| MCTS low | `level:"low"` | ~7.7s | (未实测此档) | r1Mult=0.25 |
-| MCTS medium | `level:"medium"` | ~17s | **48/4w/11f (-13)** | r1Mult=0.5, **MCTS 反而退步 13 case** |
-| MCTS high | `level:"high"` | ~56s | **54/2w/7f (-7)** | r1Mult=1.0 |
-| MCTS 2x | `r1Mult=2.0` | ~110s | 55/2w/6f (-6) | sims 加多分数收敛但**仍 < pureMLP** |
-
-> **重要**: sp19 NN 太强, MCTS rollout (ExpertRollout policy) **反而拖后腿**. MCTS sims 越多越接近 pureMLP, 但永远追不上. 生产**只用 pureMLP**.
->
-> sp19 iter-3 r1 + fixed features bench: standard 61/2w/0f + gamecase 3/3 = **64/66 testcase**. 实战 200 局对打 fantasy 63, foul 58, avg score 5097 (比 sp18 太子 +8.5%).
->
-> MCTS 保留仅供: (1) 调试看 NN 错估, (2) NN ckpt 退化时兜底, (3) 训练 self-play silver-label gen.
-
----
-
-## Cache key (2026-05-22 加 jk)
-
-```json
-{ "t": sortedTop, "m": sortedMid, "b": sortedBot, "u": sortedUsed,
-  "r": round, "d": sortedDealt, "dc": discardCount, "mo": mode,
-  "rc": { "r1Mult": ... }, "jk": jokerCount }
-```
-
-0/2/4 鬼局击中不同 cache. 命中 → `cached: true`, `elapsedMs: 0`.
-
----
-
-## Mode 字段
-
-| mode | 说明 |
-|---|---|
-| `normal` | R1-R5 标准摆牌, 三阶段 MCTS + V3 NN (147-d features) prerank |
-| `fantasy` | FL 范特西摆牌 (14-17 张 1 次摆完). reFan/nonReFan 锚直枚举 + beam search + V3 NN eval |
+错误: `400` (bad request) / `500` (fantasy 罕见 fallback fail).
 
 ---
 
@@ -307,51 +102,62 @@ ORDER BY id DESC;
 
 | 字符串 | 含义 |
 |---|---|
-| `As` | 黑桃 A |
-| `Kh` | 红桃 K |
-| `Td` | 方块 T (10) |
-| `2c` | 梅花 2 |
-| `X` | 鬼牌 (joker, 单一) |
-| `Xj0`, `Xj1` | 多张鬼牌时, jid 区分 |
-
-Suits: `s`=♠, `h`=♥, `d`=♦, `c`=♣
-Ranks: `2 3 4 5 6 7 8 9 T J Q K A`
+| `As` `Kh` `Td` `2c` | rank + suit (`s`♠/`h`♥/`d`♦/`c`♣, ranks `2-9 T J Q K A`) |
+| `X` | 鬼牌 (单一) |
+| `Xj0`, `Xj1` | 多张鬼牌时 jid 区分 |
 
 ---
 
-## 配置 — 命令行 flag
+## 其他端点
 
-```bash
-ofc-go -addr=:8002 -static=. -db=games.db -weights=big-models/best.json
+| 路径 | 方法 | 说明 |
+|---|---|---|
+| `/api/health` | GET | 健康检查, 返 `{ok, totalSolved, solveLog, cache, levels}` |
+| `/api/games` | POST/GET | 保存/列对局 (limit 默认 20, 上限 200) |
+| `/api/games/:id` | GET | 取对局详情, 不存在 404 |
+| `/cache/clear` | GET | 清 LRU cache |
+| `/solve` | POST | Raw (parity test 用, 业务一律走 `/api/solve`) |
+| `/*.html` `/*.js` | GET | 静态文件 |
+
+---
+
+## Solve 日志 (`solve_log` 表)
+
+`SOLVE_LOG=on` (start.sh default), 每次 `/api/solve` 进表 (retain=100000).
+
+Schema:
+```sql
+CREATE TABLE solve_log (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    game_id       TEXT,           -- 内部 gameId (非外部 game_id)
+    player        INTEGER,
+    round         INTEGER,
+    mode          TEXT,           -- normal / fantasy
+    request_json  TEXT NOT NULL,  -- 含外部 game_id / uid / seat_number
+    response_json TEXT NOT NULL,
+    elapsed_ms    INTEGER,
+    created_at    INTEGER NOT NULL
+);
 ```
 
-| Flag | 默认 | 说明 |
-|---|---|---|
-| `-addr` | `:8001` | TCP 监听 |
-| `-unix` | (空) | Unix socket 路径 (覆盖 -addr) |
-| `-static` | 自动 | 前端文件根目录 |
-| `-db` | `games.db` | sqlite 文件路径. `-db ""` 关 DB (`/api/games*` 返回 503) |
-| `-weights` | (embedded) | 覆盖 embedded weights, 加载指定 V3 ckpt JSON |
+### 常用查询
 
-## 配置 — 环境变量
+按 **uid** 查:
+```sql
+SELECT id, request_json, response_json, created_at FROM solve_log
+WHERE request_json LIKE '%"uid":"2637881"%'
+ORDER BY id DESC;
+```
 
-| 变量 | 默认 | 说明 |
-|---|---|---|
-| `SOLVE_CACHE_SIZE` | 2000 | LRU 容量, 0=关 (调试期推荐 0) |
-| `DEFAULT_LEVEL` | medium | 不传 level/r1Mult 时的默认档 |
-| `HIGH_MULT` | 1.0 | 覆盖 high 档 r1Mult |
-| `MEDIUM_MULT` | 0.5 | 覆盖 medium 档 r1Mult |
-| `LOW_MULT` | 0.25 | 覆盖 low 档 r1Mult |
-| `DISABLE_MCTS` | (off) | 设非空 → 全局跳 MCTS, ExpertPlace5/3 直接 prerank top-1 (per-request `pureMLP` 同效果) |
-| `DISABLE_HARD_RULES` | (off) | 设非空 → 跳过所有硬规则 filter (调试用) |
-| `POLICY_BOOST` | 0 | head3 policy logit 加权到 prerank score (默认 0=不用 policy head) |
-| `MCTS_SIMS_MULT` | 1.0 | MCTS sims 倍率 (越大越精越慢) |
-| `MCTS_PRERANK_W` | 0 | stage1 = w * prerank + (1-w) * rollout_mean. 1=纯 prerank skip rollout |
-| `SOLVE_LOG` | off | `off` / `sample` / `on` |
-| `SOLVE_LOG_RATE` | 0.1 | sample 模式采样率 |
-| `SOLVE_LOG_RETAIN` | 50000 | solve_log 表保留最近 N 条 |
+按 **外部 game_id** 查:
+```sql
+SELECT * FROM solve_log WHERE request_json LIKE '%112565853-0%' ORDER BY id DESC;
+```
 
-> ofc-dev-v3 `start.sh` 当前设 `SOLVE_CACHE_SIZE=0` (调试期), 生产前改回 5000.
+按 **fantasy mode** 查:
+```sql
+SELECT * FROM solve_log WHERE mode = 'fantasy' ORDER BY id DESC LIMIT 50;
+```
 
 ---
 
@@ -360,115 +166,78 @@ ofc-go -addr=:8002 -static=. -db=games.db -weights=big-models/best.json
 ### curl
 
 ```bash
-# pureMLP (生产推荐, ~280ms R1) — 含全部外部追踪字段
 curl -X POST http://localhost:8002/api/solve \
   -H 'Content-Type: application/json' \
   -d '{
-    "game_id": "112565853-0",
-    "uid": "2637881",
-    "seat_number": 0,
     "round": 1,
     "state": {"top":[],"middle":[],"bottom":[],"usedCards":[]},
     "dealt": ["Ks","Kh","5d","9c","2s"],
     "discardCount": 0,
     "jokerCount": 2,
     "pureMLP": true,
-    "topK": 1
-  }'
-
-# MCTS medium (不推荐生产, ~17s R1)
-curl -X POST http://localhost:8002/api/solve \
-  -H 'Content-Type: application/json' \
-  -d '{"round":1,"state":{"top":[],"middle":[],"bottom":[],"usedCards":[]},"dealt":["Ks","Kh","5d","9c","2s"],"discardCount":0,"jokerCount":2,"level":"medium"}'
-
-# fantasy (一次摆 14-17 张, ~500ms)
-curl -X POST http://localhost:8002/api/solve \
-  -H 'Content-Type: application/json' \
-  -d '{
+    "topK": 1,
     "game_id": "112565853-0",
     "uid": "2637881",
-    "seat_number": 0,
-    "round": 99,
-    "mode": "fantasy",
-    "state": {"top":[],"middle":[],"bottom":[],"usedCards":[]},
-    "dealt": ["Ks","Kh","Kd","As","Ah","Ad","Ac","2s","3h","4d","5c","6s","7h","8d"],
-    "discardCount": 1,
-    "jokerCount": 2,
-    "pureMLP": true
+    "seat_number": 0
   }'
-
-# 健康
-curl http://localhost:8002/api/health | jq
-```
-
-### Node.js
-
-```js
-const http = require('http');
-const data = JSON.stringify({
-  round: 1,
-  state: { top: [], middle: [], bottom: [], usedCards: [] },
-  dealt: ['Ks','Kh','5d','9c','2s'],
-  discardCount: 0,
-  jokerCount: 2,
-  pureMLP: true,
-  level: 'low',
-});
-http.request({
-  hostname: 'localhost', port: 8002, path: '/api/solve', method: 'POST',
-  headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) },
-}, (res) => {
-  let body = ''; res.on('data', c => body += c);
-  res.on('end', () => console.log(JSON.parse(body)));
-}).end(data);
 ```
 
 ### Python
 
 ```python
 import requests
-r = requests.post('http://localhost:8002/api/solve', json={
+r = requests.post('http://34.92.248.175:8002/api/solve', json={
     'round': 1,
     'state': {'top': [], 'middle': [], 'bottom': [], 'usedCards': []},
     'dealt': ['Ks','Kh','5d','9c','2s'],
     'discardCount': 0,
     'jokerCount': 2,
     'pureMLP': True,
-    'level': 'low',
+    'topK': 1,
+    'game_id': '112565853-0',
+    'uid': '2637881',
+    'seat_number': 0,
 })
 print(r.json())
 ```
 
 ---
 
-## 错误处理
+## 性能 / 难度选择
 
-| 状态码 | 触发 | 推荐动作 |
-|---|---|---|
-| 400 | dealt/state 缺、bad card 字符串 | 检查请求 |
-| 404 | `/api/games/:id` 不存在 | 检查 id |
-| 405 | wrong method (`/api/solve` 非 POST) | 改 POST |
-| 500 | fantasy 三阶段全 fail (理论不发生) | 上报 |
-| 503 | `/api/games*` 但 DB 没启用 (`-db ""`) | 启用 DB |
+| 配置 | R1 延迟 | testcase | 推荐 |
+|---|---|---|---|
+| **pureMLP + topK=1** | **~280ms** | **61/63** | ⭐ 生产唯一 |
+| pureMLP + topK=2 | ~280ms | 58/63 | 中等难度 (玩家有赢面) |
+| pureMLP + topK=3 | ~280ms | 54/63 | 简单难度 |
+| MCTS low (`level:"low"`) | ~7s | (~) | dev 调试 |
+| MCTS medium | ~17s | 48/63 (-13) | **不推荐** |
+| MCTS high | ~56s | 54/63 (-7) | **不推荐** |
 
-无内置 timeout — 客户端按模式自己设. 推荐:
-- pureMLP: 5s
-- MCTS low: 10s
-- MCTS medium: 30s
-- MCTS high: 60s
-- fantasy: 10s
+> sp19 NN 太强, MCTS rollout 反而拖后腿. **生产只用 pureMLP**.
 
 ---
 
-## 频率 / 并发
+## 配置 (Server 启动)
 
-无内置限流. 实测 (Linux 4 核, level=medium):
-- 单请求: ~1s (Mac M1 ~200ms)
-- 4 并发: ~1s 各
-- 8 并发: ~2s 各 (CPU 饱和)
-- pureMLP 模式 R1 ~300ms 各, 数千 QPS
+### Flag
 
-加 NGINX 限流 / Cloudflare 防 DDoS 视部署需要.
+| Flag | 默认 | 说明 |
+|---|---|---|
+| `-addr` | `:8001` | TCP 监听 |
+| `-static` | 自动 | 前端文件根目录 |
+| `-db` | `games.db` | sqlite. `-db ""` 关 DB |
+| `-weights` | (embed) | 覆盖 embed weights 加载指定 V3 ckpt |
+
+### Env
+
+| 变量 | 默认 | 说明 |
+|---|---|---|
+| `SOLVE_CACHE_SIZE` | 2000 | LRU. 0=关 (生产推荐 5000) |
+| `SOLVE_LOG` | off | `off`/`sample`/`on` (start.sh default `on`) |
+| `SOLVE_LOG_RETAIN` | 50000 | (start.sh default 100000) |
+| `DEFAULT_LEVEL` | medium | 不传 level 时的默认档 |
+| `DISABLE_MCTS` | (off) | 全局跳 MCTS (per-request `pureMLP` 同效果) |
 
 ---
 
@@ -476,33 +245,32 @@ print(r.json())
 
 ```bash
 cd ofc-dev-v3
-./start.sh                # 启 (默认 :8002, weights=big-models/best.json)
-SOLVE_CACHE_SIZE=5000 ./start.sh    # 生产 cache 开 (调试期 ./start.sh 默认 0)
+./start.sh                          # 启 (port 8002)
+SOLVE_CACHE_SIZE=5000 ./start.sh    # 生产开 cache
 ```
 
-要换 ckpt:
+切 ckpt:
 ```bash
-cp v3-train-i147-spXX-XXX/iter-N/round-001-accXX.json big-models/best.json
-# kill + 重启 server
+cp big-models/best.json big-models/best.json.bak-$(date +%Y%m%d-%H%M%S)
+cp /path/to/new.json big-models/best.json
 kill $(pgrep -f "ofc-dev-v3.*8002"); ./start.sh
 ```
 
-**部署历史**:
-- sp17 iter-1 r1 (broken-features): 59/63 standard + 2/3 gamecase = 61/66
-- sp18 iter-3 r1 (broken-features): 61/63 standard + 3/3 gamecase = 64/66
-- **sp19 iter-3 r1 (fixed-features, 当前)**: 61/63 standard + 3/3 gamecase = 64/66, 实战 +8.5% score
+### 部署历史
+
+- **sp19 iter-3 r1** ⭐ 当前 (md5 `239f9a9b06f11034ecbe33889d456cb8`) — 实战 +8.5% score vs sp18
+- sp18 iter-3 r1 (broken features): 64/66
+- sp17 iter-1 r1: 61/66
 
 ---
 
 ## V3 NN 系统简介
 
-- **Input**: 147-d feature (21 group, V3 design doc 在 `features_v3_design.md`)
+- **Input**: 147-d feature (21 group, `features_v3_design.md`)
 - **Network**: 4-head MLP (value / fan-prob / foul-prob / policy)
-- **Training**: silver-label MC rollout (100 sims) self-play, `-jokers 2`
-- **Hard rules**: `hard_rules.go` (R1 5 条 + R2-5 **7 条**) + 软 penalty/bonus. 删除历史:
-  - R1 `r1RuleLowPair_OnMid` 2026-05-22 删 — multiple small pairs 强制 partial-foul bug
-  - R2-5 `rnRuleJokerWithA_OnTop` 2026-05-31 删 — state.top 已有 A 时强迫加 X+A 形成 trips A → cap chain 必 foul (case ypk-159252810-11)
-- **MCTS**: 3-stage (s1c=30 / s2c=8 / s3c=3) + V3 NN prerank
-- **Pure MLP mode**: 跳 MCTS, 仅 prerank top-1 (生产快路径)
-
-详情见 `MEMORY.md` 索引.
+- **Training**: silver-label MC rollout (100 sims) self-play `-jokers 2`
+- **Hard rules**: R1 5 条 + R2-5 7 条 + 软 penalty/bonus. 删除历史:
+  - 2026-05-22 `r1RuleLowPair_OnMid` — small pair 强制 mid 漏洞
+  - 2026-05-31 `rnRuleJokerWithA_OnTop` — state.top 已有 A 时强迫 trips foul (case ypk-159252810-11)
+- **MCTS**: 3-stage prerank + V3 NN value head (生产不用)
+- **Pure MLP mode**: 跳 MCTS, prerank top-1 (R1 top-K sample 可选)
