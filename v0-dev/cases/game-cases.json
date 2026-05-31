@@ -71,5 +71,37 @@
         "bottom": ["Qh"]
       }
     ]
+  },
+  {
+    "name": "实战 4 [R3]: state.top 已有 Ad + dealt joker+A — joker 应救 mid trips, 不强迫 X+A 都上头 (cap chain foul)",
+    "round": 3,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": ["X", "7d", "Ah"],
+    "state": {
+      "top": ["Ad"],
+      "middle": ["9h", "6c", "2d"],
+      "bottom": ["Qd", "Kc", "Qc"],
+      "usedCards": ["Ad", "Qd", "Kc", "9h", "6c", "5h", "5s", "3h", "8c", "Jc", "6s", "5c", "4s", "9d", "Jd", "Qc", "4c", "2d", "As", "Jh", "Ac", "6h", "X", "7d", "Ah"]
+    },
+    "expecteds": [
+      {
+        "top": ["Ah"],
+        "middle": ["X"],
+        "bottom": []
+      },
+      {
+        "top": ["Ah"],
+        "middle": [],
+        "bottom": ["X"]
+      }
+    ],
+    "wrongs": [
+      {
+        "top": ["X", "Ah"],
+        "middle": [],
+        "bottom": []
+      }
+    ]
   }
 ]

@@ -2096,36 +2096,13 @@ func rnRuleKK_NotOnMid(a *RoundNAction, cards []Card, state *GameState) bool {
 	return true
 }
 
-// rnRuleJokerWithA_OnTop — dealt 有 X + A → kept 中 joker + A 都必须放 top (或已在 state.top)
-func rnRuleJokerWithA_OnTop(a *RoundNAction, cards []Card, state *GameState) bool {
-	if !dealtHasJoker(cards) || !dealtHasA(cards) {
-		return true
-	}
-	// state.top 已有 joker?
-	stateTopHasJoker := false
-	stateTopHasA := false
-	for _, c := range state.Top {
-		if c.IsJoker() {
-			stateTopHasJoker = true
-		} else if c.Rank() == RankA {
-			stateTopHasA = true
-		}
-	}
-	// kept 中需补满
-	keptTopHasJoker := stateTopHasJoker
-	keptTopHasA := stateTopHasA
-	for i, c := range a.Kept {
-		if a.Placement[i] != RowTop {
-			continue
-		}
-		if c.IsJoker() {
-			keptTopHasJoker = true
-		} else if c.Rank() == RankA {
-			keptTopHasA = true
-		}
-	}
-	return keptTopHasJoker && keptTopHasA
-}
+// rnRuleJokerWithA_OnTop — DELETED 2026-05-31.
+// 原意: dealt 有 X + A → kept 中 joker + A 都必须放 top (锁 AA fantasy).
+// 漏洞: 不看 state.top 已有 A/K 等 — state.top=[Ad] 时强迫加 joker+Ah → top 满 3 张 trips A
+//       → mid 凑不到 trips A → cap chain 必 foul. case ypk-159252810-11 实战触发.
+// NN 自己 know: state.top=[Ad] 下选 X→mid (拼 trips 9) + Ah→top (pair-A fantasy lock) score 116,
+//              比规则强迫的 X+Ah→top trips A foul (score 26) 高 +90.
+// 删硬规则, 让 NN 自己学. 类似 r1RuleLowPair_OnMid 漏洞.
 
 // RNCand — wrapper for ApplyHardRulesRN
 type RNCand struct {
@@ -2144,7 +2121,7 @@ func ApplyHardRulesRN(candidates []RNCand, cards []Card, state *GameState) []RNC
 		{"NoSplitKeptPair", func(a *RoundNAction, c []Card, s *GameState) bool { return rnRuleNoSplitKeptPair(a, c) }},
 		{"KK_OnTop_NoA", rnRuleKK_OnTop_NoA},
 		{"KK_OnBot_WithA", rnRuleKK_OnBot_WithA},
-		{"JokerWithA_OnTop", rnRuleJokerWithA_OnTop},
+		// "JokerWithA_OnTop" DELETED 2026-05-31: 不看 state.top 已有 A → 强迫 X+A 都上头变 trips foul. case ypk-159252810-11.
 		{"TopMustAllowFantasy", rnRuleTopMustAllowFantasy}, // 2026-05-20 sp15: 仅 R2-R3 触发, R4-R5 skip
 	}
 	cur := candidates
