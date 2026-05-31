@@ -499,7 +499,9 @@ kill $(pgrep -f "ofc-dev-v3.*8002"); ./start.sh
 - **Input**: 147-d feature (21 group, V3 design doc 在 `features_v3_design.md`)
 - **Network**: 4-head MLP (value / fan-prob / foul-prob / policy)
 - **Training**: silver-label MC rollout (100 sims) self-play, `-jokers 2`
-- **Hard rules**: `hard_rules.go` (R1 5 条 + R2-5 8 条) + 软 penalty/bonus. R1 `r1RuleLowPair_OnMid` 2026-05-22 删 (multiple small pairs 强制 partial-foul bug).
+- **Hard rules**: `hard_rules.go` (R1 5 条 + R2-5 **7 条**) + 软 penalty/bonus. 删除历史:
+  - R1 `r1RuleLowPair_OnMid` 2026-05-22 删 — multiple small pairs 强制 partial-foul bug
+  - R2-5 `rnRuleJokerWithA_OnTop` 2026-05-31 删 — state.top 已有 A 时强迫加 X+A 形成 trips A → cap chain 必 foul (case ypk-159252810-11)
 - **MCTS**: 3-stage (s1c=30 / s2c=8 / s3c=3) + V3 NN prerank
 - **Pure MLP mode**: 跳 MCTS, 仅 prerank top-1 (生产快路径)
 
