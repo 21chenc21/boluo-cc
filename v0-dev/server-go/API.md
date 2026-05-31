@@ -113,9 +113,8 @@ MCTS path (level=low/medium/high):
 
 | 字符串 | 含义 |
 |---|---|
-| `As` `Kh` `Td` `2c` | rank + suit (`s`♠/`h`♥/`d`♦/`c`♣, ranks `2-9 T J Q K A`) |
-| `X` | 鬼牌 (单一) |
-| `Xj0`, `Xj1` | 多张鬼牌时 jid 区分 |
+| `As` `Kh` `Td` `2c` | rank + suit. Suits: `s`♠ `h`♥ `d`♦ `c`♣. Ranks: `2 3 4 5 6 7 8 9 T J Q K A` |
+| `X` | 鬼牌. **多鬼场景仍都是 `X`** (server 内部用 `Xj0/Xj1` 持久化, API I/O 层面不区分) |
 
 ---
 
