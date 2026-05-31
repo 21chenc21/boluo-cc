@@ -103,5 +103,37 @@
         "bottom": []
       }
     ]
+  },
+  {
+    "name": "实战 5 [R5]: mid/bot 满 + dealt 含 JJ — 必弃 Jh/Jc 一张避 top JJ-A foul (rnRuleNoDiscardPairMember 删后)",
+    "round": 5,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": ["8c", "Jh", "Jc"],
+    "state": {
+      "top": ["Ah"],
+      "middle": ["6h", "7h", "5h", "5s", "Ks"],
+      "bottom": ["Tc", "Th", "3d", "8s", "9c"],
+      "usedCards": ["6h", "7h", "5h", "Ah", "Tc", "6s", "5c", "5s", "Th", "8d", "Kh", "Qc", "3d", "8s", "9d", "Jd", "Kc", "Ks", "9c", "4d", "Qd", "X"]
+    },
+    "expecteds": [
+      {
+        "top": ["8c", "Jc"],
+        "middle": [],
+        "bottom": []
+      },
+      {
+        "top": ["8c", "Jh"],
+        "middle": [],
+        "bottom": []
+      }
+    ],
+    "wrongs": [
+      {
+        "top": ["Jh", "Jc"],
+        "middle": [],
+        "bottom": []
+      }
+    ]
   }
 ]

@@ -1838,21 +1838,13 @@ func rnRuleNoDiscardAce(a *RoundNAction, cards []Card, state *GameState) bool {
 	return d.IsJoker() || d.Rank() != RankA
 }
 
-// rnRuleNoDiscardPairMember — 不弃 dealt 中成对的 rank (仅 ≥T 高对, 低对 22-99 可弃)
-func rnRuleNoDiscardPairMember(a *RoundNAction, cards []Card) bool {
-	pairs := detectDealtPairs(cards)
-	if len(pairs) == 0 {
-		return true
-	}
-	d := cards[a.DiscardIdx]
-	if d.IsJoker() {
-		return true
-	}
-	if cnt, ok := pairs[d.Rank()]; ok && cnt >= 2 && d.Rank() >= RankT {
-		return false
-	}
-	return true
-}
+// rnRuleNoDiscardPairMember — DELETED 2026-05-31.
+// 原意: dealt 含 ≥T 高对 → 不弃 pair 成员 (保 royalty).
+// 漏洞: 不看 cap chain — R5 mid/bot 满时, 强迫 top 加 pair → top > mid → 必 foul.
+// case ypk-180814154-1 R5: state top[Ah] mid pair-5 bot pair-T, dealt [8c Jh Jc] →
+//   规则砍掉 high-A-J-8 (score 16.35) 只留 JJ pair-A (score 1.06 必 foul). AI 被迫选 foul.
+// NN 自己 score 已识别 (JJ pair score 1.06 最低), 但规则砍光不爆候选.
+// 第 3 个同模式漏洞: r1RuleLowPair_OnMid / rnRuleJokerWithA_OnTop / 本规则 都是硬规则一刀切忽略 cap chain.
 
 // rnRuleNoSplitKeptPair — kept 中同 rank ≥2 必须同行
 func rnRuleNoSplitKeptPair(a *RoundNAction, cards []Card) bool {
@@ -2117,7 +2109,7 @@ func ApplyHardRulesRN(candidates []RNCand, cards []Card, state *GameState) []RNC
 	}{
 		{"NoDiscardJoker", func(a *RoundNAction, c []Card, s *GameState) bool { return rnRuleNoDiscardJoker(a, c) }},
 		{"NoDiscardAce", func(a *RoundNAction, c []Card, s *GameState) bool { return rnRuleNoDiscardAce(a, c, s) }},
-		{"NoDiscardPairMember", func(a *RoundNAction, c []Card, s *GameState) bool { return rnRuleNoDiscardPairMember(a, c) }},
+		// "NoDiscardPairMember" DELETED 2026-05-31: dealt ≥T 高对强迫不弃, R5 mid/bot 满时 top 加 pair → cap chain 必 foul. case ypk-180814154-1.
 		{"NoSplitKeptPair", func(a *RoundNAction, c []Card, s *GameState) bool { return rnRuleNoSplitKeptPair(a, c) }},
 		{"KK_OnTop_NoA", rnRuleKK_OnTop_NoA},
 		{"KK_OnBot_WithA", rnRuleKK_OnBot_WithA},
