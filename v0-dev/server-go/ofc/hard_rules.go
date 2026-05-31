@@ -1830,12 +1830,10 @@ func rnRuleNoDiscardJoker(a *RoundNAction, cards []Card) bool {
 }
 
 // rnRuleNoDiscardAce — 不弃 A (仅 R2-R3; R4-R5 终局可弃 A 凑底)
-func rnRuleNoDiscardAce(a *RoundNAction, cards []Card, state *GameState) bool {
-	if state.Round >= 4 {
-		return true
-	}
-	d := cards[a.DiscardIdx]
-	return d.IsJoker() || d.Rank() != RankA
+// rnRuleNoDiscardAce — DELETED 2026-05-31. R2-R3 不弃 A 规则.
+// NN 自然偏好 A (NN 给 A 高 value, 几乎不会弃), 规则冗余. 用户判定多余.
+func rnRuleNoDiscardAce_DELETED(a *RoundNAction, cards []Card, state *GameState) bool {
+	return true
 }
 
 // rnRuleNoDiscardPairMember — DELETED 2026-05-31.
@@ -1847,23 +1845,9 @@ func rnRuleNoDiscardAce(a *RoundNAction, cards []Card, state *GameState) bool {
 // 第 3 个同模式漏洞: r1RuleLowPair_OnMid / rnRuleJokerWithA_OnTop / 本规则 都是硬规则一刀切忽略 cap chain.
 
 // rnRuleNoSplitKeptPair — kept 中同 rank ≥2 必须同行
-func rnRuleNoSplitKeptPair(a *RoundNAction, cards []Card) bool {
-	rankRows := make(map[uint8][]Row)
-	for i, c := range a.Kept {
-		if c.IsJoker() {
-			continue
-		}
-		rankRows[c.Rank()] = append(rankRows[c.Rank()], a.Placement[i])
-	}
-	for _, rows := range rankRows {
-		if len(rows) >= 2 {
-			for _, r := range rows[1:] {
-				if r != rows[0] {
-					return false
-				}
-			}
-		}
-	}
+// rnRuleNoSplitKeptPair — DELETED 2026-05-31. kept 中同 rank ≥2 必同行 规则.
+// NN 自然不拆 pair (拆开两端弱), 规则冗余. 用户判定多余.
+func rnRuleNoSplitKeptPair_DELETED(a *RoundNAction, cards []Card) bool {
 	return true
 }
 
@@ -1905,32 +1889,10 @@ func rnRuleKK_OnTop_NoA(a *RoundNAction, cards []Card, state *GameState) bool {
 	return true
 }
 
-// rnRuleKK_OnBot_WithA — dealt 含 KK pair AND state 仍有 A 可摸 → KK 必上底 (等 A 配)
-func rnRuleKK_OnBot_WithA(a *RoundNAction, cards []Card, state *GameState) bool {
-	pairs := detectDealtPairs(cards)
-	cnt, ok := pairs[RankK]
-	if !ok || cnt < 2 {
-		return true
-	}
-	// state.top 已有 Q 高时, KK 顶/底都允许 (case 62: 3A used 也允许 KK 顶)
-	// 只在 deck 仍多 A (≥2) 时强制 KK 底
-	availA := 0
-	for r := uint8(0); r < 4; r++ {
-		c := MakeCard(RankA, r)
-		if !state.UsedCards[c.ID()] {
-			availA++
-		}
-	}
-	if availA < 2 {
-		return true // 1-0 A available, KK 顶或底
-	}
-	for i, c := range a.Kept {
-		if !c.IsJoker() && c.Rank() == RankK {
-			if a.Placement[i] != RowBottom {
-				return false
-			}
-		}
-	}
+// rnRuleKK_OnBot_WithA — DELETED 2026-05-31. dealt KK + deck 还有 A → KK 必下底 规则.
+// 压抑 NN 判断: R2 dealt[Kh Kc 8d] empty state, NN top-1 = KK 上 mid (score 30.75),
+// 规则强制 KK 上 bot (rk 1, score 27.92, -3). 跟 r1RuleLowPair_OnMid 等同模式 (硬规则强制具体位置).
+func rnRuleKK_OnBot_WithA_DELETED(a *RoundNAction, cards []Card, state *GameState) bool {
 	return true
 }
 
@@ -2108,11 +2070,11 @@ func ApplyHardRulesRN(candidates []RNCand, cards []Card, state *GameState) []RNC
 		fn   func(*RoundNAction, []Card, *GameState) bool
 	}{
 		{"NoDiscardJoker", func(a *RoundNAction, c []Card, s *GameState) bool { return rnRuleNoDiscardJoker(a, c) }},
-		{"NoDiscardAce", func(a *RoundNAction, c []Card, s *GameState) bool { return rnRuleNoDiscardAce(a, c, s) }},
+		// "NoDiscardAce" DELETED 2026-05-31: NN 自然不弃 A, 规则冗余.
 		// "NoDiscardPairMember" DELETED 2026-05-31: dealt ≥T 高对强迫不弃, R5 mid/bot 满时 top 加 pair → cap chain 必 foul. case ypk-180814154-1.
-		{"NoSplitKeptPair", func(a *RoundNAction, c []Card, s *GameState) bool { return rnRuleNoSplitKeptPair(a, c) }},
+		// "NoSplitKeptPair" DELETED 2026-05-31: NN 自然不拆 pair, 规则冗余.
 		{"KK_OnTop_NoA", rnRuleKK_OnTop_NoA},
-		{"KK_OnBot_WithA", rnRuleKK_OnBot_WithA},
+		// "KK_OnBot_WithA" DELETED 2026-05-31: 压抑 NN — R2 dealt[KK 8d] NN 想 KK 上 mid (score 30.75), 规则强制 KK 上 bot (score 27.92).
 		// "JokerWithA_OnTop" DELETED 2026-05-31: 不看 state.top 已有 A → 强迫 X+A 都上头变 trips foul. case ypk-159252810-11.
 		{"TopMustAllowFantasy", rnRuleTopMustAllowFantasy}, // 2026-05-20 sp15: 仅 R2-R3 触发, R4-R5 skip
 	}
