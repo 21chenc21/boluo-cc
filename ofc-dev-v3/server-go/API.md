@@ -78,19 +78,30 @@ OFC Pineapple AI 解算 HTTP 服务. 单 Go binary `ofc-dev-v3`, 同进程: HTTP
 
 ### 响应
 
+pureMLP=true (生产路径):
 ```json
 {
-  "layout": {
-    "top": ["Ac"],
-    "middle": ["9h"],
-    "bottom": []
-  },
+  "layout": { "top": ["Ac"], "middle": ["9h"], "bottom": [] },
   "discards": ["3s"],            // R1 时空, R2-5 弃 1 张, fantasy 弃 N-13 张
-  "elapsedMs": 283,              // Go 解算耗时
+  "elapsedMs": 283,
   "totalMs": 283,
-  "level": "medium",             // server 用的 level
-  "r1Mult": 0.5,                 // server 用的 r1Mult
+  "level": "pureMLP",            // 标识跳了 MCTS
+  "topK": 2,                     // 回显请求的 topK (=0 时省略)
   "cached": false                // true → LRU 命中
+  // r1Mult 字段省略 (pureMLP 不用 MCTS 缩放)
+}
+```
+
+MCTS path (level=low/medium/high):
+```json
+{
+  "layout": { ... },
+  "discards": [...],
+  "elapsedMs": 7700,
+  "totalMs": 7700,
+  "level": "low",                // server 实际用的 level
+  "r1Mult": 0.25,                // MCTS r1Mult
+  "cached": false
 }
 ```
 

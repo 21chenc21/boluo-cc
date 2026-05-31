@@ -217,8 +217,9 @@ type apiSolveResponse struct {
 	Discards  []string            `json:"discards"`
 	ElapsedMs int64               `json:"elapsedMs"`
 	TotalMs   int64               `json:"totalMs"`
-	Level     string              `json:"level"`
-	R1Mult    float32             `json:"r1Mult"`
+	Level     string              `json:"level"`             // pureMLP=true 时返 "pureMLP", 否则 low/medium/high/custom
+	R1Mult    float32             `json:"r1Mult,omitempty"`  // pureMLP=true 时省略 (MCTS 缩放参数不生效)
+	TopK      int                 `json:"topK,omitempty"`    // 2026-05-31: 回显 AI 难度 (1=最强 / 2-3=sample)
 	Cached    bool                `json:"cached"`
 }
 
@@ -510,20 +511,26 @@ func handleAPISolve(w http.ResponseWriter, r *http.Request) {
 	}
 
 	levelLabel := strings.ToLower(req.Level)
-	if hasDirect {
+	if cfg.PureMLP {
+		levelLabel = "pureMLP" // 跳 MCTS, level/r1Mult 占位
+	} else if hasDirect {
 		levelLabel = "custom"
 	} else if levelLabel == "" {
 		levelLabel = defaultLevel
 	}
 
 	resp := apiSolveResponse{
-		Layout:        out.Layout,
-		Discards:      out.Discards,
-		ElapsedMs:     out.ElapsedMs,
-		TotalMs:       time.Since(tStart).Milliseconds(),
-		Level:         levelLabel,
-		R1Mult: cfg.R1Mult,
-		Cached: out.Cached,
+		Layout:    out.Layout,
+		Discards:  out.Discards,
+		ElapsedMs: out.ElapsedMs,
+		TotalMs:   time.Since(tStart).Milliseconds(),
+		Level:     levelLabel,
+		TopK:      req.TopK, // 0=default(top-1), 2/3=R1 sample
+		Cached:    out.Cached,
+	}
+	// 仅 MCTS path 时返 r1Mult (pureMLP 时占位无意义, 省略)
+	if !cfg.PureMLP {
+		resp.R1Mult = cfg.R1Mult
 	}
 
 	// solve_log (sample / on)
