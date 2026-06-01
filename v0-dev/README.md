@@ -1,4 +1,72 @@
-# v0-dev — round-004 + 6 新 feature 继续训练 (2026-05-09)
+# v0-dev — OFC Pineapple V3 NN Solver
+
+主代码目录. 改动 → 这里. (`ofc-dev-v3/server-go/` 是废弃副本, 不维护)
+
+## 当前状态 (2026-06-01)
+
+- **太子 ckpt**: `ofc-dev-v3/big-models/best.json` md5 `239f9a9b06f11034ecbe33889d456cb8` (V3 sp19 iter-3 r1)
+- **生产**: `34.92.248.175:8002`, pureMLP path, ~280ms/R1
+- **Bench**: std 63 = **61/2w/0f** (pureMLP), gamecase = **8/8**
+
+## 解算路径
+
+| 路径 | 触发 | 速度 | 推荐 |
+|---|---|---|---|
+| **`ExpertPlace3/5`** (NN+硬规则) | `pureMLP:true` | ~280ms | ⭐ 生产唯一 |
+| `MCTSSearch` (NN+rollout) | `pureMLP:false` | 7-56s | dev 调试, 实测比 pureMLP 弱 |
+
+## 当前生效规则 (2026-06-01)
+
+**R1 硬**: 5 条 (NoSplitDealtPair / DealtBigPair_Top / SplitDoubleJoker / TopMustAllowFantasy / JokerWithK_OnTop_NoA)
+
+**R2-R5 硬**: 3 条 (NoDiscardJoker / KK_OnTop_NoA / TopMustAllowFantasy round-gated R2-R3)
+
+**R1 软**:
+- penalty: ConnectorSplit / FourInRow / IncoherentRow / TopNonAKX / JokerOnTopWithAA / **FoulImminent**
+- bonus: SameSuitInRow / JokerWithAOnTop / SingleAOnTop / FlushGroupOnBot
+
+**R2-R5 软**:
+- penalty: **FoulImminent** / RnKKOnMid / **RnJokersSameRow** (-10, 2026-06-01 加)
+- bonus: RnSingleAOnTop
+
+详情见 `server-go/ofc/hard_rules.go` 注释.
+
+## 测试工具
+
+| 工具 | 用途 |
+|---|---|
+| `cmd/bench-cases` (Go) | std 63 + gamecase batch (~3s) |
+| `cmd/r1-trace-nn` | R1 候选 NN+规则+147-d feature dump |
+| `cmd/rn-trace-nn` | R2-R5 同上 |
+| `replay-prod.sh` | uid+game_id 复现 prod vs local diff |
+| `test-cases.js` | HTTP /api/solve case 测 (Node.js) |
+| `run-cases.sh` | 启 local server + test-cases.js (wrapper) |
+
+**标准 bug 流程** (用户 ypk case 系列确立):
+1. `replay-prod.sh <uid> <game_id>` 找 diff round
+2. `rn-trace-nn` / `r1-trace-nn` 看 NN raw TE 排第几 + 哪条软硬规则在影响
+3. 决策: 修 guard / 加软规则 / 删冗余规则
+4. 加 gamecase + 单测 + std 63 验无 regression
+5. 用户明确 "推 prod" 才部署
+
+## 部署
+
+binary 从这 build, scp 到 prod:
+
+```bash
+cd v0-dev/server-go
+go build -o ../../ofc-dev-v3/server-go-bin/ofc-dev-v3 ./cmd/server
+# 用户 OK 后:
+scp -i ~/boluo-cc/chguang-gcp/googlecloud \
+    ../../ofc-dev-v3/server-go-bin/ofc-dev-v3 \
+    chguang@34.92.248.175:~/boluo-cc/ofc-dev-v3/server-go-bin/
+```
+
+详见 `ofc-dev-v3/DEPLOY.md` + memory `feedback_no_unrequested_prod_push.md`.
+
+---
+
+# 历史: round-004 + 6 新 feature 继续训练 (2026-05-09)
 
 基于 production round-004-acc91 (56-d, h1=256/h2=128, testcase 56/63)
 通过 **feature-extension warm-start** 扩到 96-d 继续 finetune.
