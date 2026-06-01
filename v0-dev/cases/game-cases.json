@@ -231,5 +231,34 @@
         "bottom": ["X"]
       }
     ]
+  },
+  {
+    "name": "fan-case 1 [范]: 16 张 dealt 含双 7 双 T 双 Q — TTT trips 锁范 + 双 flush (修 FindReFanAnchors slice bug 后)",
+    "round": 99,
+    "mode": "fantasy",
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": ["8h", "6s", "2h", "7s", "Ah", "Js", "9h", "X", "Qd", "As", "Qh", "Kc", "Tc", "3c", "Ts", "4s"],
+    "discardCount": 3,
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "expecteds": [
+      {
+        "top": ["Tc", "Ts", "X"],
+        "middle": ["6s", "7s", "Js", "As", "4s"],
+        "bottom": ["8h", "2h", "Ah", "9h", "Qh"]
+      }
+    ],
+    "wrongs": [
+      {
+        "top": ["Ah", "As", "Kc"],
+        "middle": ["6s", "7s", "Js", "Ts", "4s"],
+        "bottom": ["8h", "2h", "9h", "X", "Qh"]
+      }
+    ]
   }
 ]

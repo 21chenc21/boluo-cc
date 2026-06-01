@@ -42,12 +42,14 @@ type LayoutSpec struct {
 }
 
 type TestCase struct {
-	Name      string       `json:"name"`
-	Round     int          `json:"round"`
-	Dealt     []string     `json:"dealt"`
-	State     StateSpec    `json:"state"`
-	Expecteds []LayoutSpec `json:"expecteds"`
-	Warn      bool         `json:"warn"` // 2026-05-20: 非匹配时计警告不计错误 (NN 选不在 expecteds 但不是大错)
+	Name         string       `json:"name"`
+	Round        int          `json:"round"`
+	Mode         string       `json:"mode"`         // 2026-06-01: "fantasy" for round=99
+	DiscardCount int          `json:"discardCount"` // 2026-06-01: fantasy 需 = len(Dealt) - 13
+	Dealt        []string     `json:"dealt"`
+	State        StateSpec    `json:"state"`
+	Expecteds    []LayoutSpec `json:"expecteds"`
+	Warn         bool         `json:"warn"` // 2026-05-20: 非匹配时计警告不计错误
 }
 
 func loadCases(path string) ([]TestCase, error) {
@@ -170,6 +172,33 @@ func runOneCase(c TestCase, jokers int, cfg *ofc.RolloutConfig, rng *rand.Rand) 
 	beforeUsed := make(map[string]bool, len(state.UsedCards))
 	for k, v := range state.UsedCards {
 		beforeUsed[k] = v
+	}
+
+	// 2026-06-01: fantasy mode (round=99) 走 ExpertPlaceFantasy, dealt 14-17 张, discardCount = len-13
+	if c.Round == 99 || c.Mode == "fantasy" {
+		dc := c.DiscardCount
+		if dc == 0 {
+			dc = len(dealt) - 13
+		}
+		r := ofc.ExpertPlaceFantasy(dealt, dc)
+		if r != nil {
+			// fantasy 直接出完整 layout, 不区分 added (state 必为空)
+			aiTop = cardsToStr(r.Layout.Top)
+			aiMid = cardsToStr(r.Layout.Middle)
+			aiBot = cardsToStr(r.Layout.Bottom)
+			if len(r.Layout.Discards) > 0 {
+				discard = r.Layout.Discards[0].String()
+			}
+		}
+		// match: fantasy 的 expected 是 FULL layout (不是 added)
+		for _, exp := range c.Expecteds {
+			if sortKey(aiTop) == sortKey(exp.Top) &&
+				sortKey(aiMid) == sortKey(exp.Middle) &&
+				sortKey(aiBot) == sortKey(exp.Bottom) {
+				return true, aiTop, aiMid, aiBot, discard
+			}
+		}
+		return false, aiTop, aiMid, aiBot, discard
 	}
 
 	er := &ofc.ExpertRollout{Rng: rng, Cfg: *cfg}
