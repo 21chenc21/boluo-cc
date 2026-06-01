@@ -543,7 +543,17 @@ func handleAPISolve(w http.ResponseWriter, r *http.Request) {
 			req := map[string]interface{}{
 				"state": in.State, "dealt": in.Dealt, "discardCount": in.DiscardCount, "mode": mode,
 			}
-			// 2026-05-26: 外部 game_id / uid / seat_number 一起写进 request_json, 方便按外部维度查 solve_log
+			// 2026-06-01 fix: 之前只存 6 字段, 漏 jokerCount/pureMLP/topK 致 ypk case bug 分析误判
+			// (用户报 "前端传了 jokerCount", 但 solve_log 不显示, 因为不存)
+			req["jokerCount"] = in.JokerCount
+			req["pureMLP"] = in.PureMLP
+			if in.TopK > 0 {
+				req["topK"] = in.TopK
+			}
+			if in.Level != "" {
+				req["level"] = in.Level
+			}
+			// 2026-05-26: 外部 game_id / uid / seat_number 一起写进 request_json
 			if in.ExtGameID != "" {
 				req["game_id"] = in.ExtGameID
 			}

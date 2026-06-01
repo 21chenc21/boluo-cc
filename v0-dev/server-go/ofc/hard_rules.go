@@ -1006,62 +1006,32 @@ func RnKKOnMidPenalty(a *RoundNAction, cards []Card, state *GameState) float32 {
 	return 0
 }
 
-// RnJokerWithHighOnTopBonus — R2-R5 软 bonus (+10):
-// action 在 top 放置后, post-action top 同时含 joker + 高牌 (Q/K/A) → 形成 fantasy lock (joker wild → QQ+/KK/AA pair).
-// 类比 R1JokerWithAOnTopBonus, 覆盖 cases 32/36: state.Top=[K] R2 加 joker→KK fantasy; state.Top=[joker] R2 加 A→AA fantasy.
-// 2026-05-20 sp15 加入: NN 实测对 R2-R5 fantasy lock 低估 20-32 分 (cases 32/36), reward shaping 一次训练闭合不够, 加 +10 软推.
-// 要求 action 至少在 top 放 1 张牌 (避免对所有保留 top 状态的候选无差别加分).
-// 2026-05-22 perf: 收 postState (= caller 已 clone+apply 过的 item.gs), 跳内部 Clone.
-func RnJokerWithHighOnTopBonus(a *RoundNAction, postState *GameState, foulImminent float32) float32 {
-	placedOnTop := 0
-	for _, p := range a.Placement {
-		if p == RowTop {
-			placedOnTop++
-		}
-	}
-	if placedOnTop == 0 {
-		return 0
-	}
-	hasJoker := false
-	hasHigh := false
-	for _, c := range postState.Top {
+// RnJokersSameRowPenalty — R2-R5 软 penalty (+10):
+// post-action mid 或 bot 任一行含 ≥2 鬼牌 → 罚 10.
+// 鼓励 X 分散 (不堆 mid 或 bot), 给 top fantasy lock 留余地.
+// 2026-06-01 加: ypk-98042186-4 R2 case — NN 把 R2 dealt X 塞进 mid (跟 R1 X 同行),
+// 错过 X+Kc 上头锁 AA fantasy 的远期收益. ypk-98042186-5 R2 测 -5 不够翻, 需 -10.
+func RnJokersSameRowPenalty(a *RoundNAction, postState *GameState) float32 {
+	midJokers, botJokers := 0, 0
+	for _, c := range postState.Middle {
 		if c.IsJoker() {
-			hasJoker = true
-		} else if c.Rank() >= RankQ {
-			hasHigh = true
+			midJokers++
 		}
 	}
-	if !(hasJoker && hasHigh) {
-		return 0
-	}
-	// 2026-05-20 sp15 fix: post-state foul-imminent → 不奖励
-	// case 50 R5: top AA fantasy 跟 mid KK 撞 foul, 原 bonus 错奖 +10 抵消 FoulImminent -20
-	if foulImminent > 0 {
-		return 0
-	}
-	// 2026-05-22 sp17 fix: cap-aware guard. 若 top cap 后是低 pair (< 66) 或 high card,
-	// 说明 joker 被 mid 高 pair cap 死, 没真 fantasy. 不奖励.
-	// case 50: top [X 2c As] mid full KK → cap pair-2 → 0 bonus (之前 +10 错奖)
-	if len(postState.Top) == 3 {
-		botEv := evalRowSafe(postState.Bottom, 5, nil)
-		midEv := evalRowSafe(postState.Middle, 5, &botEv)
-		topEv := Evaluate3JokerCap(postState.Top, &midEv)
-		if topEv.Type == TypePair {
-			pairRank := int((topEv.Value - 1000000) / 15)
-			if pairRank < int(Rank6) {
-				return 0 // cap 死, joker 浪费
-			}
-		} else if topEv.Type == TypeHighCard {
-			return 0 // joker 没凑成 pair, 没价值
+	for _, c := range postState.Bottom {
+		if c.IsJoker() {
+			botJokers++
 		}
 	}
-	return 10
+	if midJokers >= 2 || botJokers >= 2 {
+		return 10
+	}
+	return 0
 }
 
 // RnSingleAOnTopBonus — R2-R5 软 bonus (+10):
 // action 在 top 放置了 A (无 joker 在 top), 准备 AA fantasy (R3-R5 配 A 或 joker).
 // 类比 R1SingleAOnTopBonus. 覆盖 case 29: state.Top=[Kh] R2 加 A → top=[K, A] (高牌组合, 未来配对).
-// joker+A 上头走 RnJokerWithHighOnTopBonus, 不重复 fire.
 // 2026-05-22 perf: 收 postState + 已计算的 foulImminent, 跳内部 Clone.
 func RnSingleAOnTopBonus(a *RoundNAction, postState *GameState, foulImminent float32) float32 {
 	// action 必须放 A 上 top
@@ -1086,69 +1056,6 @@ func RnSingleAOnTopBonus(a *RoundNAction, postState *GameState, foulImminent flo
 		return 0
 	}
 	return 10
-}
-
-// RnTopCapBlockedFantasyPenalty — R2-R5 软 penalty (+5):
-// post-action top 满 3 张, 含 joker, cap-aware 后 joker 只能凑低 pair (< 66) 或 high card → 浪费 joker.
-// 思路: joker 在 top 但被 mid cap 限制 → 无 royalty/fantasy 价值, 应避开.
-// case 50 R5 教训: AI 选 joker+2c+As, mid full KK cap → top 只能 pair-2 (0 royalty).
-//   实际 exp1 (joker+2c+7h cap pair-7 = +2 royalty) 强 2 分, 但 NN 学不到 (outlier).
-// 触发条件:
-//   1. action 至少在 top 放 1 张 (避免对所有保 top 状态加分)
-//   2. post-state top 满 3 张 (R5 终局 or 提前填满)
-//   3. top 含 joker
-//   4. cap-aware top eval: type=Pair 且 rank < Rank6, 或 type=HighCard (joker 浪费成 kicker)
-// 2026-05-22 sp17 加: 治 case 50/49 类 NN 学不到的 "joker top cap 死" outlier.
-// 2026-05-22 perf: 收 postState (= caller 已 clone+apply 过的 item.gs), 跳内部 Clone.
-func RnTopCapBlockedFantasyPenalty(a *RoundNAction, postState *GameState) float32 {
-	// 1. action 必须在 top 放 ≥1 张
-	placedOnTop := 0
-	for _, p := range a.Placement {
-		if p == RowTop {
-			placedOnTop++
-		}
-	}
-	if placedOnTop == 0 {
-		return 0
-	}
-	// 2. postState 已含 action, 检 top 满 3 张
-	if len(postState.Top) != 3 {
-		return 0
-	}
-	// 3. top 必含 joker
-	hasJoker := false
-	for _, c := range postState.Top {
-		if c.IsJoker() {
-			hasJoker = true
-			break
-		}
-	}
-	if !hasJoker {
-		return 0
-	}
-	// 4. cap-aware top eval. mid 可能未满, 用 evalRowSafe chain.
-	botEv := evalRowSafe(postState.Bottom, 5, nil)
-	midEv := evalRowSafe(postState.Middle, 5, &botEv)
-	topEv := Evaluate3JokerCap(postState.Top, &midEv)
-	// Type < 0 (over cap) — 已是 foul 由 FoulImminent 处理, 不重复罚
-	if topEv.Type < 0 {
-		return 0
-	}
-	// Pair rank < Rank6 (< 66) → 0 royalty waste
-	if topEv.Type == TypePair {
-		pairRank := int((topEv.Value - 1000000) / 15)
-		if pairRank < int(Rank6) {
-			return 5
-		}
-		return 0 // pair ≥ 66 给 royalty, 不算浪费
-	}
-	// HighCard 含 joker → joker 完全没用, 比 pair 还差
-	if topEv.Type == TypeHighCard {
-		return 5
-	}
-	// Trips: joker 凑 trips 罕见, 但若 cap 限制只到低 trips, 仍有 royalty (222+ = 10)
-	// 留给 NN 自己学, 不罚
-	return 0
 }
 
 // ============ FoulImminentPenalty (通用, R1-R5) ============

@@ -28,7 +28,7 @@ OFC Pineapple AI 解算 HTTP 服务. 单 Go binary `ofc-dev-v3`, 同进程: HTTP
 
 | 字段 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `pureMLP` | bool | **`false`** | 生产**必传 `true`** (~280ms R1). 不传走 MCTS = 17s + 退步 6-17 case |
+| `pureMLP` | bool | **`false`** | 生产**必传 `true`** (~280ms R1, ExpertPlace3 路径). 不传走 MCTSSearch rollout = 17s + 退步 6-17 case |
 
 #### 可选 — AI 难度 (前端做强弱档)
 
@@ -215,16 +215,16 @@ print(r.json())
 
 ## 性能 / 难度选择
 
-| 配置 | R1 延迟 | testcase | 推荐 |
-|---|---|---|---|
-| **pureMLP + topK=1** | **~280ms** | **61/63** | ⭐ 生产唯一 |
-| pureMLP + topK=2 | ~280ms | 58/63 | 中等难度 (玩家有赢面) |
-| pureMLP + topK=3 | ~280ms | 54/63 | 简单难度 |
-| MCTS low (`level:"low"`) | ~7s | (~) | dev 调试 |
-| MCTS medium | ~17s | 48/63 (-13) | **不推荐** |
-| MCTS high | ~56s | 54/63 (-7) | **不推荐** |
+| 配置 | 路径 | R1 延迟 | testcase | 推荐 |
+|---|---|---|---|---|
+| **pureMLP + topK=1** | ExpertPlace3 (NN+硬规则) | **~280ms** | **61/63** | ⭐ 生产唯一 |
+| pureMLP + topK=2 | ExpertPlace3 + R1 top-2 sample | ~280ms | 58/63 | 中等难度 (玩家有赢面) |
+| pureMLP + topK=3 | ExpertPlace3 + R1 top-3 sample | ~280ms | 54/63 | 简单难度 |
+| MCTS low (`level:"low"`) | MCTSSearch rollout | ~7s | (~) | dev 调试 |
+| MCTS medium | MCTSSearch rollout | ~17s | 48/63 (-13) | **不推荐 (弱)** |
+| MCTS high | MCTSSearch rollout | ~56s | 54/63 (-7) | **不推荐 (弱)** |
 
-> sp19 NN 太强, MCTS rollout 反而拖后腿. **生产只用 pureMLP**.
+> sp19 NN 太强, MCTS rollout (`mcts.go MCTSSearch`) 反而拖后腿. **生产只用 pureMLP (ExpertPlace3)**. MCTSSearch 仅训练 (`cmd/alphazero-train`) 和单元测试用, 不进生产解算路径.
 
 ---
 
@@ -279,8 +279,11 @@ kill $(pgrep -f "ofc-dev-v3.*8002"); ./start.sh
 - **Input**: 147-d feature (21 group, `features_v3_design.md`)
 - **Network**: 4-head MLP (value / fan-prob / foul-prob / policy)
 - **Training**: silver-label MC rollout (100 sims) self-play `-jokers 2`
-- **Hard rules**: R1 5 条 + R2-5 7 条 + 软 penalty/bonus. 删除历史:
-  - 2026-05-22 `r1RuleLowPair_OnMid` — small pair 强制 mid 漏洞
+- **Hard rules**: R1 5 条 + R2-5 3 条 + 软 penalty/bonus. 删除历史:
+  - 2026-05-22 `r1RuleLowPair_OnMid` — small pair 强制 mid → partial-foul 漏洞 (case J5599)
   - 2026-05-31 `rnRuleJokerWithA_OnTop` — state.top 已有 A 时强迫 trips foul (case ypk-159252810-11)
-- **MCTS**: 3-stage prerank + V3 NN value head (生产不用)
-- **Pure MLP mode**: 跳 MCTS, prerank top-1 (R1 top-K sample 可选)
+  - 2026-05-31 `rnRuleNoDiscardPairMember` — 强迫不弃高对 → R5 cap chain 必 foul (case ypk-180814154-1)
+  - 2026-05-31 `rnRuleNoDiscardAce` / `rnRuleNoSplitKeptPair` / `rnRuleKK_OnBot_WithA` — NN 自然学到, 规则冗余或压抑
+- **解算路径**:
+  - **ExpertPlace3/5** (生产): NN 前向 + 硬规则过滤 + R1 候选 prerank top-1, 唯一进生产 (`pureMLP:true`)
+  - **MCTSSearch** (`mcts.go`): NN+rollout, 实测比 ExpertPlace3 弱 (sp19 NN 太强, rollout 拖后腿). 仅训练 / 单元测试用, **不进生产**

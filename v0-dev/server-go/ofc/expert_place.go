@@ -388,12 +388,13 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 		item.teScore -= foul
 		// KK on mid penalty (替原 rnRuleKK_NotOnMid filter)
 		item.teScore -= RnKKOnMidPenalty(item.action, cards, state)
-		// 2026-05-20 sp15: Rn top fantasy lock 软推 (cases 29/32/36 — NN R2-R5 低估 joker+A/K 上 top)
-		// 2026-05-22 perf: 3 个 helper 改吃 item.gs (postState) + foul, 跳内部 Clone
-		item.teScore += RnJokerWithHighOnTopBonus(item.action, item.gs, foul)
+		// 2026-05-20 sp15: Rn top fantasy lock 软推 (case 29 — NN R2-R5 低估 A 上 top)
+		// 2026-05-31 删 RnJokerWithHighOnTopBonus + RnTopCapBlockedFantasyPenalty:
+		//   cap-aware guard 漏了 Type<0 (over cap) 情况, top AAA over mid pair cap 时还 +10,
+		//   推翻 NN 真选 (NN 让 X 进 bot 凑 trips/Ad 进 bot), 致 ypk-97780042-1 R4 foul.
 		item.teScore += RnSingleAOnTopBonus(item.action, item.gs, foul)
-		// 2026-05-22 sp17: top cap 死 fantasy → -5 (case 50 类: joker+A 上头被 mid 高 pair cap 成 pair-2 浪费)
-		item.teScore -= RnTopCapBlockedFantasyPenalty(item.action, item.gs)
+		// 2026-06-01 加: 鬼同行罚 (mid/bot 任一行 ≥2 鬼) → -5
+		item.teScore -= RnJokersSameRowPenalty(item.action, item.gs)
 	}
 
 	sort.SliceStable(uniq, func(i, j int) bool { return uniq[i].teScore > uniq[j].teScore })

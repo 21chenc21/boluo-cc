@@ -138,10 +138,12 @@ func FindReFanAnchors(dealt []Card) []FantasyAnchor {
 
 	anchors := make([]FantasyAnchor, 0)
 	// (1) 顶 trips
+	// 2026-06-01 修: 原 `cs[:3-min(3-len(cs), 0)]` 是 bug — len(cs)=2 时 cs[:3] 越界读到零值 Card "2s",
+	// 致 AAA/QQQ/TTT anchor 用 2s 代替 joker, fantasy re-fan 全失败. 改成跟 bot-quads 同模式.
 	for _, r := range rankOrder {
 		cs := byRank[r]
 		if len(cs)+J >= 3 {
-			realUsed := cs[:3-min(3-len(cs), 0)]
+			realUsed := cs
 			if len(cs) >= 3 {
 				realUsed = cs[:3]
 			}
@@ -533,7 +535,8 @@ func enumMidBot(topCards, remaining []Card, discardCount int) *FantasyResult {
 										for e := d + 1; e < M; e++ {
 											bot := []Card{rest[a], rest[b], rest[c], rest[d], rest[e]}
 											botEval := eval5Maybe(bot)
-											if botEval.Value <= midEval.Value {
+											// 2026-06-01 修: <= 改 <, OFC 允许 bot==mid (e.g. 两 same-value flush). 老代码错砍 tie.
+											if botEval.Value < midEval.Value {
 												continue
 											}
 											sc := ScoreHand(topCards, mid, bot)
@@ -1453,7 +1456,9 @@ func AntiFoulFallback(dealt []Card, discardCount int) *FantasyLayout {
 		}
 	}
 	// 策略 4: 多次 shuffle, 取升序 — 这里去掉 RNG (测试稳定), 改为枚举一些 deterministic 排列
-	for shift := 1; shift < 20; shift++ {
+	// 2026-06-01 修: shift 上限 20 超过 len(asc) (fantasy dealt 通常 14-17), `asc[shift:]` 越界 panic.
+	// 改成 shift < len(asc).
+	for shift := 1; shift < len(asc); shift++ {
 		rotated := append([]Card{}, asc[shift:]...)
 		rotated = append(rotated, asc[:shift]...)
 		sort.SliceStable(rotated, func(i, j int) bool {

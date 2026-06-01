@@ -135,5 +135,101 @@
         "bottom": []
       }
     ]
+  },
+  {
+    "name": "实战 6 [R4]: top=[AsX] mid=[4cKc4d7d] bot=[9sJdJh] dealt[Ad X Ts] — 弃 Ad 避 AAA-trips foul (ypk-97780042-1, RnJokerWithHighOnTopBonus 删后)",
+    "round": 4,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": ["Ad", "X", "Ts"],
+    "state": {
+      "top": ["As", "X"],
+      "middle": ["4c", "Kc", "4d", "7d"],
+      "bottom": ["9s", "Jd", "Jh"],
+      "usedCards": ["9s", "4c", "Jd", "Jh", "As", "Qh", "Qc", "3h", "4h", "Kc", "4d", "2h", "5d", "8s", "Td", "5s", "X", "8h", "7d", "Kd", "9h", "Ah", "Ks"]
+    },
+    "expecteds": [
+      {
+        "top": ["Ts"],
+        "middle": [],
+        "bottom": ["X"]
+      },
+      {
+        "top": [],
+        "middle": [],
+        "bottom": ["Ad", "X"]
+      }
+    ],
+    "wrongs": [
+      {
+        "top": ["Ad"],
+        "middle": [],
+        "bottom": ["X"]
+      }
+    ]
+  },
+  {
+    "name": "实战 7 [R2]: top=[Ac] mid=[X] bot=[7d9d8d] dealt[Kc X 7s] — X+Kc 上头锁 AA fantasy (ypk-98042186-4, X 不该进中弃 7s)",
+    "round": 2,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": ["Kc", "X", "7s"],
+    "state": {
+      "top": ["Ac"],
+      "middle": ["X"],
+      "bottom": ["7d", "9d", "8d"],
+      "usedCards": ["7d", "9d", "Ac", "8d", "X", "5s", "4s", "9s", "Qs", "9c"]
+    },
+    "expecteds": [
+      {
+        "top": ["Kc", "X"],
+        "middle": [],
+        "bottom": []
+      },
+      {
+        "top": ["X"],
+        "middle": ["7s"],
+        "bottom": []
+      },
+      {
+        "top": ["X"],
+        "middle": ["Kc"],
+        "bottom": []
+      }
+    ],
+    "wrongs": [
+      {
+        "top": ["Kc"],
+        "middle": ["X"],
+        "bottom": []
+      }
+    ]
+  },
+  {
+    "name": "实战 8 [R2]: top=[] mid=[7h6d7c5c] bot=[X] dealt[X As 8h] — X+As 上头锁 AA fantasy (ypk-98042186-5, X 不该堆 bot)",
+    "round": 2,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": ["X", "As", "8h"],
+    "state": {
+      "top": [],
+      "middle": ["7h", "6d", "7c", "5c"],
+      "bottom": ["X"],
+      "usedCards": ["7h", "6d", "X", "7c", "5c", "Qs", "Qh", "9d", "5s"]
+    },
+    "expecteds": [
+      {
+        "top": ["X", "As"],
+        "middle": [],
+        "bottom": []
+      }
+    ],
+    "wrongs": [
+      {
+        "top": ["As"],
+        "middle": [],
+        "bottom": ["X"]
+      }
+    ]
   }
 ]
