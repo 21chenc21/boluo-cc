@@ -57,6 +57,33 @@ func TestFoulImminent_BotStraight_NoFoul(t *testing.T) {
 	}
 }
 
+func TestFoulImminent_MidJokerFlush_CapNoFoul(t *testing.T) {
+	// ypk-178127178-8 R4: mid = heart flush w/ joker [8h X 3h 7h 2h],
+	// bot = K-high club flush. joker 被 cap 到 ≤ bot → mid 至多 J-high flush < K-high → 不 foul.
+	// (修前: Evaluate5 把 joker 当 Ah → A-high flush > bot → 误判 +20)
+	gs := makeState(t,
+		[]string{"Qd"},
+		[]string{"8h", "X", "3h", "7h", "2h"},
+		[]string{"7c", "Qc", "3c", "Kc", "6c"},
+	)
+	if got := FoulImminentPenalty(gs); got != 0 {
+		t.Fatalf("mid joker-flush capped under bot flush: got %v, want 0", got)
+	}
+}
+
+func TestFoulImminent_MidJokerFlush_GenuineFoul(t *testing.T) {
+	// mid = heart flush w/ joker, bot = 仅 high-card (J 高) → 任何 flush 都 > bot → 真 foul.
+	// joker cap 也救不了 (mid 最低也是 flush, 必 > bot high-card) → 必 +20.
+	gs := makeState(t,
+		[]string{"Qd"},
+		[]string{"8h", "X", "3h", "7h", "2h"},
+		[]string{"Jc", "9s", "6d", "4c", "2s"},
+	)
+	if got := FoulImminentPenalty(gs); got != 20 {
+		t.Fatalf("mid flush vs bot high-card: got %v, want 20", got)
+	}
+}
+
 func TestFoulImminent_TopExceedsMid_Done(t *testing.T) {
 	// top = trips A A A, mid = pair K K → top trips > mid pair → foul
 	gs := makeState(t,

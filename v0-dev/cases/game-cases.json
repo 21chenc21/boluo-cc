@@ -233,6 +233,65 @@
     ]
   },
   {
+    "name": "实战 9 [R4]: bot 满梅花 + mid=[8h X 3h 7h] 红桃4花draw — 2h 必进中做成花(8royalty), Qd 上头 (ypk-178127178-8, FoulImminent cap-aware 修后)",
+    "round": 4,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": ["Qd", "Jd", "2h"],
+    "state": {
+      "top": [],
+      "middle": ["8h", "X", "3h", "7h"],
+      "bottom": ["7c", "Qc", "3c", "Kc", "6c"],
+      "usedCards": ["8h", "X", "7c", "Qc", "3c", "Ah", "8d", "Ad", "Th", "Kd", "9s", "Kc", "6c", "3d", "Ac", "4s", "3h", "7h", "2c", "Kh"]
+    },
+    "expecteds": [
+      {
+        "top": ["Qd"],
+        "middle": ["2h"],
+        "bottom": []
+      }
+    ],
+    "wrongs": [
+      {
+        "top": ["Qd", "2h"],
+        "middle": [],
+        "bottom": []
+      }
+    ]
+  },
+  {
+    "name": "实战 10 [R1]: [8h X 7c Qc 3c] 单鬼无 A — 鬼必上头(留范/灵活), 不埋中道配 88 (ypk-178127178-8, R1SingleJokerNoAOnTop +5)",
+    "round": 1,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": ["8h", "X", "7c", "Qc", "3c"],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "expecteds": [
+      {
+        "top": ["X"],
+        "middle": ["8h"],
+        "bottom": ["7c", "Qc", "3c"]
+      },
+      {
+        "top": ["X"],
+        "middle": ["7c", "3c"],
+        "bottom": ["8h", "Qc"]
+      }
+    ],
+    "wrongs": [
+      {
+        "top": [],
+        "middle": ["8h", "X"],
+        "bottom": ["7c", "Qc", "3c"]
+      }
+    ]
+  },
+  {
     "name": "fan-case 1 [范]: 16 张 dealt 含双 7 双 T 双 Q — TTT trips 锁范 + 双 flush (修 FindReFanAnchors slice bug 后)",
     "round": 99,
     "mode": "fantasy",

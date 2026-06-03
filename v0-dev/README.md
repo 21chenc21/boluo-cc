@@ -2,11 +2,17 @@
 
 主代码目录. 改动 → 这里. (`ofc-dev-v3/server-go/` 是废弃副本, 不维护)
 
-## 当前状态 (2026-06-01)
+## 当前状态 (2026-06-03)
 
 - **太子 ckpt**: `ofc-dev-v3/big-models/best.json` md5 `239f9a9b06f11034ecbe33889d456cb8` (V3 sp19 iter-3 r1)
 - **生产**: `34.92.248.175:8002`, pureMLP path, ~280ms/R1
-- **Bench**: std 63 = **61/2w/0f** (pureMLP), gamecase = **8/8**
+- **Bench**: std 63 = **61/2w/0f** (pureMLP), gamecase = **11/11**
+
+### 2026-06-03 改动 (ypk-178127178-8 找 bug)
+- **`analyticalEval5` flush-cap 打分 bug 修**: 中道 joker 花被 cap 到底道同级花时, 旧码只试 joker=最高 rank 超 cap 被拒 → 错降级成对子, 丢中道 flush royalty (`ScoreHand` 4→12) + 特征 dim38 爆 1782 毒化 value head. 改成枚举 joker 补位.
+- **`FoulImminentPenalty` case1+2 cap-aware**: 中道 joker 花 vs 底花用 `Evaluate5JokerCap(mid,&bot)`, 不再误判 foul.
+- **`R1SingleJokerNoAOnTopBonus` +5** (新软规则): R1 单鬼无 A → 鬼上头.
+- **dim130 固化清零**: N_disc "弃了 Q/K/A" 二元标志是净负特征 (value head 学到"弃高牌≈好局"伪相关), 清零修实战 9 (弃 J 留 Q 头) 且 std 63 零回退.
 
 ## 解算路径
 
@@ -23,7 +29,7 @@
 
 **R1 软**:
 - penalty: ConnectorSplit / FourInRow / IncoherentRow / TopNonAKX / JokerOnTopWithAA / **FoulImminent**
-- bonus: SameSuitInRow / JokerWithAOnTop / SingleAOnTop / FlushGroupOnBot
+- bonus: SameSuitInRow / JokerWithAOnTop / SingleAOnTop / FlushGroupOnBot / **SingleJokerNoAOnTop** (+5, 2026-06-03)
 
 **R2-R5 软**:
 - penalty: **FoulImminent** / RnKKOnMid / **RnJokersSameRow** (-10, 2026-06-01 加)

@@ -101,8 +101,9 @@ func (er *ExpertRollout) ExpertPlace5(state *GameState, cards []Card) {
 		//   - R1JokerWithAOnTopBonus +10 (替 r1RuleJokerWithA_OnTop)
 		//   - R1SingleAOnTopBonus +10 (替 r1RuleSingleA_OnTop)
 		//   - R1FlushGroupOnBotBonus +5 (替 r1RuleFlushGroup_OnBot, 无 TT 例外)
+		//   - R1SingleJokerNoAOnTopBonus +5 (2026-06-03: 单鬼无 A 留顶)
 		// FoulImminentPenalty 通用到所有 round (R1 这里 + R2-R5 prerank)
-		penalty := ConnectorSplitPenalty(p, cards) + R1FourInRowPenalty(p, cards) + R1IncoherentRowPenalty(p, cards) + R1TopNonAKXPenalty(p, cards, state) + R1JokerOnTopWithAAPenalty(p, cards) + FoulImminentPenalty(gs) - R1SameSuitInRowBonus(p, cards) - R1JokerWithAOnTopBonus(p, cards) - R1SingleAOnTopBonus(p, cards) - R1FlushGroupOnBotBonus(p, cards)
+		penalty := ConnectorSplitPenalty(p, cards) + R1FourInRowPenalty(p, cards) + R1IncoherentRowPenalty(p, cards) + R1TopNonAKXPenalty(p, cards, state) + R1JokerOnTopWithAAPenalty(p, cards) + FoulImminentPenalty(gs) - R1SameSuitInRowBonus(p, cards) - R1JokerWithAOnTopBonus(p, cards) - R1SingleAOnTopBonus(p, cards) - R1FlushGroupOnBotBonus(p, cards) - R1SingleJokerNoAOnTopBonus(p, cards)
 		score -= penalty
 		candidates = append(candidates, cand{p, score, gs, penalty, 0})
 	}

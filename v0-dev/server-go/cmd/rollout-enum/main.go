@@ -43,6 +43,7 @@ func main() {
 	K := flag.Int("k", 1000, "rollouts per candidate")
 	seed := flag.Int64("seed", 42, "")
 	topShow := flag.Int("top", 15, "show top N candidates")
+	jokers := flag.Int("jokers", 0, "deck jokers (for rollout deck reconstruction)")
 	foulCost := flag.Float64("foul-cost", 6, "")
 	fanQQ := flag.Float64("fan-bonus-qq", 20, "")
 	fanKK := flag.Float64("fan-bonus-kk", 40, "")
@@ -85,6 +86,7 @@ func main() {
 	state := &ofc.GameState{
 		UsedCards: map[string]bool{},
 		Round:     1,
+		NumJokers: *jokers,
 	}
 	for _, c := range dealt {
 		state.UsedCards[c.ID()] = true

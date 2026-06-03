@@ -93,6 +93,7 @@ func main() {
 		jokerAOnTopBon  float32
 		singleAOnTopBon float32
 		flushGroupBon   float32
+		sjkNoATopBon    float32
 		netPenalty      float32
 		// final
 		score      float32
@@ -131,10 +132,11 @@ func main() {
 		info.jokerAOnTopBon = ofc.R1JokerWithAOnTopBonus(p, dealt)
 		info.singleAOnTopBon = ofc.R1SingleAOnTopBonus(p, dealt)
 		info.flushGroupBon = ofc.R1FlushGroupOnBotBonus(p, dealt)
+		info.sjkNoATopBon = ofc.R1SingleJokerNoAOnTopBonus(p, dealt)
 
 		info.netPenalty = info.connector + info.fourInRow + info.incoherent +
 			info.topNonAKX + info.jokerOnTopAA + info.foulImminent -
-			info.sameSuitBonus - info.jokerAOnTopBon - info.singleAOnTopBon - info.flushGroupBon
+			info.sameSuitBonus - info.jokerAOnTopBon - info.singleAOnTopBon - info.flushGroupBon - info.sjkNoATopBon
 		info.score = info.te - info.netPenalty
 		info.hardRuleOK = true
 		uniq = append(uniq, info)
@@ -180,17 +182,17 @@ func main() {
 
 	// Detail breakdown for top 5
 	fmt.Printf("\n--- Penalty/Bonus breakdown for top 5 ---\n")
-	fmt.Printf("%4s  %8s %8s %8s %8s %8s %8s | %8s %8s %8s %8s | %8s\n",
+	fmt.Printf("%4s  %8s %8s %8s %8s %8s %8s | %8s %8s %8s %8s %8s | %8s\n",
 		"rk", "conn", "4row", "incoh", "topNAKX", "jOnTopAA", "FoulIM",
-		"sameSuit", "jAOnTop", "singleA", "flGroup", "NET")
+		"sameSuit", "jAOnTop", "singleA", "flGroup", "sjkNoA", "NET")
 	for i, u := range uniq {
 		if i >= 5 {
 			break
 		}
-		fmt.Printf("%4d  %+8.2f %+8.2f %+8.2f %+8.2f %+8.2f %+8.2f | %+8.2f %+8.2f %+8.2f %+8.2f | %+8.2f\n",
+		fmt.Printf("%4d  %+8.2f %+8.2f %+8.2f %+8.2f %+8.2f %+8.2f | %+8.2f %+8.2f %+8.2f %+8.2f %+8.2f | %+8.2f\n",
 			i+1, u.connector, u.fourInRow, u.incoherent, u.topNonAKX,
 			u.jokerOnTopAA, u.foulImminent,
-			u.sameSuitBonus, u.jokerAOnTopBon, u.singleAOnTopBon, u.flushGroupBon,
+			u.sameSuitBonus, u.jokerAOnTopBon, u.singleAOnTopBon, u.flushGroupBon, u.sjkNoATopBon,
 			u.netPenalty)
 	}
 

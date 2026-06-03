@@ -966,6 +966,30 @@ func R1SingleAOnTopBonus(p Placement, cards []Card) float32 {
 	return 0
 }
 
+// R1SingleJokerNoAOnTopBonus — dealt 恰好 1 张 joker 且无 A, joker 放顶 → +5
+// 用户 2026-06-03 (ypk-178127178-8 R1 [8h X 7c Qc 3c]): 单鬼无 A 时 NN 错把鬼埋中道配低张 (88),
+// 应把鬼留顶 (追范/保持灵活). 无 A 限定避开 "鬼+A 配 AA fantasy" (走 R1JokerWithAOnTopBonus).
+func R1SingleJokerNoAOnTopBonus(p Placement, cards []Card) float32 {
+	if dealtHasA(cards) {
+		return 0
+	}
+	jokers := 0
+	for _, c := range cards {
+		if c.IsJoker() {
+			jokers++
+		}
+	}
+	if jokers != 1 {
+		return 0
+	}
+	for i, c := range cards {
+		if c.IsJoker() && p[i] == RowTop {
+			return 5
+		}
+	}
+	return 0
+}
+
 // R1FlushGroupOnBotBonus — dealt ≥3 同色 (不含 joker, 不含 A) 全部在底 → +5
 // (替 r1RuleFlushGroup_OnBot; 去 TT+ 例外, 无条件加分)
 func R1FlushGroupOnBotBonus(p Placement, cards []Card) float32 {
@@ -1077,11 +1101,18 @@ func FoulImminentPenalty(state *GameState) float32 {
 	botFull := len(state.Bottom) == 5
 
 	// case 1+2: mid 满 + bot 满 → mid > bot ?
+	// 2026-06-03: cap-aware. mid 含 joker 时用 Evaluate5JokerCap(mid, &bot) 把 joker 限制到 ≤ bot,
+	// 避免 joker 被当最大值 (e.g. 中道 joker 补 heart flush 被算成 A-high flush > bot K-high flush) 误判 foul.
+	// (ypk-178127178-8 R4: 中道 [8h X 3h 7h 2h] heart flush 应 ≤ bot K-high club flush, 不 foul)
 	if midFull && botFull {
-		mid := Evaluate5(state.Middle)
-		bot := Evaluate5(state.Bottom)
-		if mid.Value > bot.Value {
+		bot := Evaluate5JokerCap(state.Bottom, nil)
+		mid := Evaluate5JokerCap(state.Middle, &bot)
+		if mid.Type < 0 {
+			// mid 无法降到 ≤ bot (无 joker 且超 cap, 或纯超) → 必 foul
 			return 20
+		}
+		if mid.Value > bot.Value {
+			return 20 // 防御, cap 已限制
 		}
 	}
 	// case 3+4: top 满 + mid 满 → top > mid ?

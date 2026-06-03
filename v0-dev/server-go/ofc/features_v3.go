@@ -102,6 +102,14 @@ func BuildFeaturesV3(gs *GameState) []float32 {
 	fillLockedAndDraws(f[137:145], gs)        // LR: 8 dim
 	fillDiscardExtra(f[145:147], gs)          // N2: 2 dim, 弃牌副信号
 
+	// 2026-06-03: dim130 (N_disc "本轮弃了 Q/K/A" 二元标志) 固化清零 — 净负特征.
+	// value head 训练时学到 "弃高牌≈好局面" 的伪相关, 在"弃 Q 留 J 做成中道花"类局面
+	// 反噬: 错把"弃 Qd 留 Jd"的 value 抬 ~1.5 分, 盖过 Qd 留顶追范优势 (ypk-178127178-8 R4 / 实战 9).
+	// 实测 mask dim130 → 实战 9 修正 (Qd 头) 且 std 63 零回退 (61/2w/0f).
+	// (注: 只清 dim130; dim129 弃牌 rank 连续值在别处有用, 一起清会掉 1 个 std case.)
+	// fanProb head 本就正确偏 Qd, 但 DefaultMultiHeadCfg.FanBoost=0 没接线, 救不了 value head —— 故从特征侧治本.
+	f[130] = 0
+
 	return f
 }
 

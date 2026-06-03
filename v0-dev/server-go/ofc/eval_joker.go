@@ -361,25 +361,50 @@ func analyticalEval5(real []Card, k int, cap *HandValue) HandValue {
 		if !ok || !allDistinct {
 			continue
 		}
-		if 5-len(real) > k {
+		nFill := 5 - len(real)
+		if nFill > k {
 			continue
 		}
-		// pick top 5 ranks (real + fill with high unused)
-		ranks := append([]int(nil), realRanks...)
-		for r := 12; r >= 0 && len(ranks) < 5; r-- {
-			if !realRankSet[r] {
-				ranks = append(ranks, r)
-			}
-		}
-		// sort desc
-		for i := 0; i < len(ranks); i++ {
-			for j := i + 1; j < len(ranks); j++ {
-				if ranks[i] < ranks[j] {
-					ranks[i], ranks[j] = ranks[j], ranks[i]
+		// 2026-06-03 fix: 枚举 joker 补位的所有 distinct unused-rank 组合 (不止贪心最高).
+		// 旧代码只试 joker=最高未用 rank, 当它超 cap (e.g. joker=A → A-high flush > cap K-high flush)
+		// 就整个 flush 候选被 update() 拒绝 → 错降级成 pair, 丢中道 flush royalty.
+		// 改成枚举所有补位, update() 会保留 ≤ cap 的最高 flush (joker=K → K8732 ≤ K-high club flush).
+		// (ypk-178127178-8 R4: 中道 joker 红桃 flush vs 底道 K-high 梅花 flush)
+		emit := func(fill []int) {
+			ranks := append([]int(nil), realRanks...)
+			ranks = append(ranks, fill...)
+			for i := 0; i < len(ranks); i++ {
+				for j := i + 1; j < len(ranks); j++ {
+					if ranks[i] < ranks[j] {
+						ranks[i], ranks[j] = ranks[j], ranks[i]
+					}
 				}
 			}
+			update(TypeFlush, makeValue(TypeFlush, ranks[0], ranks[1], ranks[2], ranks[3], ranks[4]))
 		}
-		update(TypeFlush, makeValue(TypeFlush, ranks[0], ranks[1], ranks[2], ranks[3], ranks[4]))
+		if nFill == 0 {
+			emit(nil)
+		} else {
+			unused := []int{}
+			for r := 12; r >= 0; r-- {
+				if !realRankSet[r] {
+					unused = append(unused, r)
+				}
+			}
+			comb := make([]int, nFill)
+			var rec func(start, idx int)
+			rec = func(start, idx int) {
+				if idx == nFill {
+					emit(comb)
+					return
+				}
+				for i := start; i < len(unused); i++ {
+					comb[idx] = unused[i]
+					rec(i+1, idx+1)
+				}
+			}
+			rec(0, 0)
+		}
 	}
 
 	// === Straight (type 4) ===
