@@ -108,10 +108,13 @@ func main() {
 	// Tally
 	w1, w2, draws := 0, 0, 0
 	totalDelta := float64(0)
+	sum1, sum2 := float64(0), float64(0)
 	for i := 0; i < *numGames; i++ {
 		s1 := scores1[i]
 		s2 := scores2[i]
 		totalDelta += float64(s1 - s2)
+		sum1 += float64(s1)
+		sum2 += float64(s2)
 		if s1 > s2 {
 			w1++
 		} else if s2 > s1 {
@@ -133,7 +136,8 @@ func main() {
 	fmt.Printf("%s wins: %d (%.1f%%)\n", shortName(*ckpt1), w1, rate1)
 	fmt.Printf("%s wins: %d (%.1f%%)\n", shortName(*ckpt2), w2, rate2)
 	fmt.Printf("Draws:   %d (%.1f%%)\n", draws, float64(draws)/float64(*numGames)*100)
-	fmt.Printf("Avg score Δ (ckpt1 - ckpt2): %+.2f\n", avgDelta)
+	fmt.Printf("Avg score: %s=%.2f  %s=%.2f  (Δ ckpt1-ckpt2=%+.2f)\n",
+		shortName(*ckpt1), sum1/float64(*numGames), shortName(*ckpt2), sum2/float64(*numGames), avgDelta)
 
 	// 范特西分档统计 (per side)
 	tally := func(tiers []string) (qq, kk, aa, trips, foul int) {
