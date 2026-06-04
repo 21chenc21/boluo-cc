@@ -276,6 +276,26 @@ func FindNonRefanAnchors(dealt []Card) []FantasyAnchor {
 		}
 		tryWindow([]int{12, 0, 1, 2, 3}, "mid-sf-wheel")
 	}
+	// 纯同花 anchor (mid-flush / bot-flush) — 2026-06-03 补.
+	// 之前漏了非 SF 的纯 flush: 它不 re-fan (re-fan 锚跳过), 也不在 quads/SF/top-pair/FH 列表里 →
+	// 两花局 (e.g. 无鬼 16 张, 5 方块 + 5 梅花 = 12 royalty) 被 QQ-top (9) 盖过. 见用户范手 case.
+	for _, suit := range suitOrder {
+		cs := bySuit[suit]
+		if len(cs)+J < 5 {
+			continue
+		}
+		hi := append([]Card{}, cs...)
+		sort.SliceStable(hi, func(i, j int) bool { return hi[i].Rank() > hi[j].Rank() })
+		realTake := min(5, len(hi))
+		need := 5 - realTake
+		if need > J {
+			continue
+		}
+		flushCards := append([]Card{}, hi[:realTake]...)
+		flushCards = append(flushCards, jokers[:need]...)
+		anchors = append(anchors, FantasyAnchor{Type: "mid-flush", Row: "mid", Cards: append([]Card{}, flushCards...)})
+		anchors = append(anchors, FantasyAnchor{Type: "bot-flush", Row: "bot5", Cards: append([]Card{}, flushCards...)})
+	}
 	// 顶 AA/KK/QQ — 注意按 ['A','K','Q'] 顺序 (rank 12, 11, 10)
 	for _, r := range []uint8{12, 11, 10} {
 		if cs, ok := byRank[r]; ok && len(cs)+J >= 2 {

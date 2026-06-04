@@ -319,5 +319,39 @@
         "bottom": ["8h", "2h", "9h", "X", "Qh"]
       }
     ]
+  },
+  {
+    "name": "fan-case 2 [范]: 16张无鬼, 5方块+5梅花双花 — 必出 royalty 12 (修 FindNonRefanAnchors 漏 flush anchor 后, 修前只 9)",
+    "round": 99,
+    "mode": "fantasy",
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": ["7d", "2s", "4h", "9d", "6c", "Qd", "4c", "6s", "Ac", "9s", "3c", "2d", "3h", "5d", "7s", "Qc"],
+    "discardCount": 3,
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "expecteds": [
+      {
+        "top": ["9d", "Qd", "9s"],
+        "middle": ["7d", "4h", "6s", "3h", "5d"],
+        "bottom": ["Ac", "Qc", "6c", "4c", "3c"]
+      },
+      {
+        "top": ["6s", "9s", "7s"],
+        "middle": ["2d", "5d", "7d", "9d", "Qd"],
+        "bottom": ["3c", "4c", "6c", "Ac", "Qc"]
+      }
+    ],
+    "wrongs": [
+      {
+        "top": ["Qd", "Qc", "Ac"],
+        "middle": ["7d", "9d", "6c", "9s", "7s"],
+        "bottom": ["2s", "4h", "6s", "3c", "5d"]
+      }
+    ]
   }
 ]
