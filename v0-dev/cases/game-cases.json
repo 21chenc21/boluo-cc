@@ -158,6 +158,11 @@
         "top": [],
         "middle": [],
         "bottom": ["Ad", "X"]
+      },
+      {
+        "top": [],
+        "middle": ["X"],
+        "bottom": ["Ts"]
       }
     ],
     "wrongs": [
