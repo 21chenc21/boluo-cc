@@ -21,13 +21,19 @@ echo "########## 0. build binary (v0-dev/server-go) ##########"
 MD5=$(md5sum "$LOCALBIN" | cut -d' ' -f1); echo "local binary md5 = $MD5"
 
 echo "########## 1. prod: backup + kill 旧 proc (避 ETXTBSY) ##########"
-$SSH $HOST "cd $PD && cp server-go-bin/ofc-dev-v3 server-go-bin/ofc-dev-v3.bak-\$(date +%Y%m%d-%H%M%S) && echo backed-up && pkill -f 'ofc-dev-v3.*8002'; sleep 2; echo killed" || { echo "❌ ssh/backup FAIL"; exit 1; }
+# ⚠️ kill 用 pkill -x ofc-dev-v3 (按进程名), 不能用 pkill -f 'ofc-dev-v3.*8002':
+#    -f 会匹配本 SSH 命令自己的 shell (命令串里含 ofc-dev-v3 + 8002) → 自杀 shell, SSH 掉线.
+$SSH $HOST "cd $PD && cp server-go-bin/ofc-dev-v3 server-go-bin/ofc-dev-v3.bak-\$(date +%Y%m%d-%H%M%S) && echo backed-up && pkill -x ofc-dev-v3 || true; sleep 2; echo killed" || { echo "❌ ssh/backup FAIL"; exit 1; }
 
 echo "########## 2. scp 新 binary (此时无运行进程) ##########"
 $SCP "$LOCALBIN" "$HOST:$PD/server-go-bin/ofc-dev-v3" || { echo "❌ SCP FAIL"; exit 1; }
 
-echo "########## 3. prod: 验 md5 + start + health ##########"
-$SSH $HOST "cd $PD && echo -n 'prod md5 = '; md5sum server-go-bin/ofc-dev-v3 | cut -d' ' -f1; chmod +x server-go-bin/ofc-dev-v3 && setsid nohup ./start.sh >/tmp/ofc-dev-v3-8002.log 2>&1 </dev/null & sleep 5; echo -n 'health: '; curl -s http://localhost:8002/api/health | head -c 90; echo"
+echo "########## 3. prod: start (完全 detach 否则 SSH 挂着不返回) ##########"
+# ( setsid ./start.sh & ) 子 shell 里后台 + setsid 脱离会话 → SSH 立刻返回, 不被 server fd 挂住.
+$SSH $HOST "cd $PD && chmod +x server-go-bin/ofc-dev-v3 && ( setsid ./start.sh >/tmp/ofc-dev-v3-8002.log 2>&1 </dev/null & ) && echo started"
+sleep 5
+echo "########## 3b. prod: 验 md5 + health (独立 SSH) ##########"
+$SSH $HOST "cd $PD && echo -n 'prod md5 = '; md5sum server-go-bin/ofc-dev-v3|cut -d' ' -f1; echo -n 'health: '; curl -s http://localhost:8002/api/health|head -c 90; echo"
 
 echo "########## 4. online_testcase (prod localhost:8002) ##########"
 $SCP online_testcase.py cases/all-tests-expanded.json cases/game-cases.json "$HOST:/tmp/" >/dev/null
