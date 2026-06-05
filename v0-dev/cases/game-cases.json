@@ -358,5 +358,42 @@
         "bottom": ["2s", "4h", "6s", "3c", "5d"]
       }
     ]
+  },
+  {
+    "name": "实战 11 [R1]: 三条 A [Ah Jd Ac 2s As] — AA 上顶锁范 + 第3张 A 拆去底, 不该 AAA 全上顶 foul trap (ypk-63963466-4)",
+    "round": 1,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": ["Ah", "Jd", "Ac", "2s", "As"],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "expecteds": [
+      {
+        "top": ["Ac", "As"],
+        "middle": ["2s"],
+        "bottom": ["Ah", "Jd"]
+      },
+      {
+        "top": ["Ah", "As"],
+        "middle": ["2s"],
+        "bottom": ["Jd", "Ac"]
+      },
+      {
+        "top": ["Ah", "Ac"],
+        "middle": ["2s"],
+        "bottom": ["Jd", "As"]
+      }
+    ],
+    "wrongs": [
+      {
+        "top": ["Ah", "Ac", "As"],
+        "middle": ["2s"],
+        "bottom": ["Jd"]
+      }
+    ]
   }
 ]

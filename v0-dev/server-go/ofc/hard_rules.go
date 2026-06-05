@@ -139,7 +139,12 @@ func r1RuleNoSplitDealtPair(p Placement, cards []Card) bool {
 	if len(pairs) == 0 {
 		return true
 	}
-	for rank := range pairs {
+	for rank, cnt := range pairs {
+		// 2026-06-05: trips+ (≥3 同 rank) 允许拆 — 一对锁范上顶, 多余的拆去 mid/bot.
+		// 否则三条 A 被强制同行 → AAA 上顶 foul trap (ypk-63963466-4). 只对 exactly-2 pair 强制不拆.
+		if cnt >= 3 {
+			continue
+		}
 		var firstRow Row
 		first := true
 		for i, c := range cards {
@@ -210,14 +215,20 @@ func r1RuleFlushGroup_OnBot(p Placement, cards []Card) bool {
 func r1RuleDealtBigPair_Top(p Placement, cards []Card) bool {
 	pairs := detectDealtPairs(cards)
 	if cnt, ok := pairs[RankA]; ok && cnt >= 2 {
-		// 所有 A 必须在 top
+		// 2026-06-05: 要求 ≥2 张 A 上顶 (一对锁 fantasy), 不是"所有 A 上顶".
+		// 三条 A 时旧逻辑强制全上顶 → AAA top foul trap (ypk-63963466-4).
+		// 改成只要一对上顶, 多余的 A 可放 mid/bot (NN 决定, TE 偏好拆牌).
+		acesOnTop := 0
 		for i, c := range cards {
 			if c.IsJoker() || c.Rank() != RankA {
 				continue
 			}
-			if p[i] != RowTop {
-				return false
+			if p[i] == RowTop {
+				acesOnTop++
 			}
+		}
+		if acesOnTop < 2 {
+			return false
 		}
 	}
 	return true
