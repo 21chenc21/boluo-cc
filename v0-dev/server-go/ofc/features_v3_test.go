@@ -384,7 +384,8 @@ func TestV3_N_NoDiscard(t *testing.T) {
 	}
 }
 
-// TestV3_N_DiscardPremium — 弃 Ah: rank=A → N0=1, premium (A) → N1=1
+// TestV3_N_DiscardPremium — 弃 Ah: rank=A → N0=1.
+// dim130(N1) 2026-06-03 固化清零 (净负特征, 见 BuildFeaturesV3 注释), 现恒 0.
 func TestV3_N_DiscardPremium(t *testing.T) {
 	gs := NewGameState(2)
 	gs.SetDiscard(mustParse("Ah"))
@@ -392,8 +393,8 @@ func TestV3_N_DiscardPremium(t *testing.T) {
 	if math.Abs(float64(f[129]-1.0)) > 0.01 {
 		t.Errorf("N0 discard rank=A: got %.3f, want 1.0", f[129])
 	}
-	if f[130] != 1.0 {
-		t.Errorf("N1 discard premium A: got %.3f, want 1.0", f[130])
+	if f[130] != 0 {
+		t.Errorf("N1(dim130) 已固化清零, got %.3f, want 0", f[130])
 	}
 }
 
@@ -410,13 +411,13 @@ func TestV3_N_DiscardLowRank(t *testing.T) {
 	}
 }
 
-// TestV3_N_DiscardJoker — 弃 joker: N0=1, N1=1 (joker 算 premium)
+// TestV3_N_DiscardJoker — 弃 joker: N0=1. dim130(N1) 固化清零 → 现 0.
 func TestV3_N_DiscardJoker(t *testing.T) {
 	gs := NewGameState(2)
 	gs.SetDiscard(MakeJoker())
 	f := BuildFeaturesV3(gs)
-	if f[129] != 1 || f[130] != 1 {
-		t.Errorf("N joker: N0=%.2f N1=%.2f, want 1/1", f[129], f[130])
+	if f[129] != 1 || f[130] != 0 {
+		t.Errorf("N joker: N0=%.2f N1=%.2f, want N0=1 N1=0(固化清零)", f[129], f[130])
 	}
 }
 

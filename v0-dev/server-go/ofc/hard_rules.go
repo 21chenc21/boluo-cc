@@ -1558,6 +1558,11 @@ func ConnectorSplitPenalty(p Placement, cards []Card) float32 {
 			if !ok1 || !ok2 {
 				continue
 			}
+			// 2026-06-05: 跳过成对/三条的 rank — 它是 made pair/trips, 不是顺子连张,
+			// 拆"三条J + 对Q"不是破顺子 (JJJ+QQ 被误罚 +30 → 避开 QQ追范/葫芦). ypk JcQcJdQdJs.
+			if len(v1) >= 2 || len(v2) >= 2 {
+				continue
+			}
 			for _, a := range v1 {
 				for _, b := range v2 {
 					if a == b {
@@ -1573,6 +1578,8 @@ func ConnectorSplitPenalty(p Placement, cards []Card) float32 {
 		}
 	}
 	// 每对 (mid, bot) mid > bot → +3 (违反 bot ≥ mid hierarchy, sp15: 5→3 减重)
+	// 注: 这里按 rank 比较 (不是牌型). 对"低对在底 + 高单在中"是真 foul 风险 (case 26),
+	// 保留. JJJ+QQ 的误罚主要在上面连张 split 部分, 已跳过成对/三条 → 这里残留 +18 不影响结果.
 	for _, mr := range midRanks {
 		for _, br := range botRanks {
 			if mr > br {

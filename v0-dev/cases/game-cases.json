@@ -395,5 +395,42 @@
         "bottom": ["Jd"]
       }
     ]
+  },
+  {
+    "name": "实战 12 [R1]: JJJ+QQ [Jc Qc Jd Qd Js] — 三条J+对Q 保持成型 (QQ中+JJJ底 或 葫芦底), 不该拆 JJJ (ConnectorSplit 误罚 trips+pair 修后)",
+    "round": 1,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": ["Jc", "Qc", "Jd", "Qd", "Js"],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "expecteds": [
+      {
+        "top": [],
+        "middle": ["Qc", "Qd"],
+        "bottom": ["Jc", "Jd", "Js"]
+      },
+      {
+        "top": [],
+        "middle": [],
+        "bottom": ["Jc", "Qc", "Jd", "Qd", "Js"]
+      },
+      {
+        "top": ["Qc", "Qd"],
+        "middle": [],
+        "bottom": ["Jc", "Jd", "Js"]
+      }
+    ],
+    "wrongs": [
+      {
+        "top": [],
+        "middle": ["Jc"],
+        "bottom": ["Qc", "Jd", "Qd", "Js"]
+      }
+    ]
   }
 ]
