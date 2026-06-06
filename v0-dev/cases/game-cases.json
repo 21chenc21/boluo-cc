@@ -432,5 +432,59 @@
         "bottom": ["Qc", "Jd", "Qd", "Js"]
       }
     ]
+  },
+  {
+    "name": "实战 13 [R1]: 四条 A [Ah Ac Ad As 2s] — AA顶锁范 + AA底, 不该 AAA 全上顶 (trips fix ypk-63963466-4 系列)",
+    "round": 1,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": ["Ah", "Ac", "Ad", "As", "2s"],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "expecteds": [
+      {
+        "top": ["Ah", "Ad"],
+        "middle": ["2s"],
+        "bottom": ["Ac", "As"]
+      }
+    ],
+    "wrongs": [
+      {
+        "top": ["Ah", "Ac", "Ad"],
+        "middle": ["2s"],
+        "bottom": ["As"]
+      }
+    ]
+  },
+  {
+    "name": "实战 14 [R1]: 三条A+2鬼 [Ah Ac As X X] — AA顶锁范 + 鬼拆中底(SplitDoubleJoker), 不该 AAA 全上顶",
+    "round": 1,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": ["Ah", "Ac", "As", "X", "X"],
+    "state": {
+      "top": [],
+      "middle": [],
+      "bottom": [],
+      "usedCards": []
+    },
+    "expecteds": [
+      {
+        "top": ["Ah", "As"],
+        "middle": ["Ac", "X"],
+        "bottom": ["X"]
+      }
+    ],
+    "wrongs": [
+      {
+        "top": ["Ah", "Ac", "As"],
+        "middle": ["X"],
+        "bottom": ["X"]
+      }
+    ]
   }
 ]
