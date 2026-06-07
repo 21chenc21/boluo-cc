@@ -109,7 +109,10 @@ func main() {
 		state.UsedCards[c.ID()] = true
 	}
 	for _, s := range req.Used {
-		state.UsedCards[parseCard(s).ID()] = true
+		// 2026-06-05: 用 raw "X" (不 canonical) 对齐 prod server (main.go:311) + 前端.
+		// 之前用 parseCard(s).ID() canonical → joker 不 double-count → 跟 prod 决策对不上
+		// (ypk-32571722-17: canonical 显示 ace→top, prod raw 是 AA→mid). prod/bench 才是真相.
+		state.UsedCards[s] = true
 	}
 
 	fmt.Printf("[round=%d, jokers=%d, dealt=%v]\n", req.Round, req.Jokers, req.Dealt)

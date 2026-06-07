@@ -65,14 +65,9 @@ func main() {
 
 	state := ofc.NewGameState(req.Jokers)
 	state.Round = 1
-	// 注入 used cards (phantom or opponent visible)
+	// 注入 used cards — 2026-06-05: 用 raw "X" (不 canonical) 对齐 prod server + 前端.
 	for _, s := range req.Used {
-		c, ok := ofc.ParseCard(s)
-		if !ok {
-			fmt.Fprintf(os.Stderr, "parse used %q failed\n", s)
-			os.Exit(1)
-		}
-		state.UsedCards[c.ID()] = true
+		state.UsedCards[s] = true
 	}
 	if len(req.Used) > 0 {
 		fmt.Printf("[used cards: %v]\n", req.Used)
