@@ -3,23 +3,47 @@
     "name": "实战 1 [R2]: 6s 6c mid trips lock, 8d 应进底留花",
     "round": 2,
     "jokerCount": 2,
-    "dealt": ["7h", "6d", "8d"],
+    "dealt": [
+      "7h",
+      "6d",
+      "8d"
+    ],
     "state": {
       "top": [],
-      "middle": ["5c", "6s", "6c"],
-      "bottom": ["X", "Jd"],
-      "usedCards": ["X", "5c", "6s", "6c", "Jd"]
+      "middle": [
+        "5c",
+        "6s",
+        "6c"
+      ],
+      "bottom": [
+        "X",
+        "Jd"
+      ],
+      "usedCards": [
+        "X",
+        "5c",
+        "6s",
+        "6c",
+        "Jd"
+      ]
     },
     "expecteds": [
       {
         "top": [],
-        "middle": ["6d"],
-        "bottom": ["8d"]
+        "middle": [
+          "6d"
+        ],
+        "bottom": [
+          "8d"
+        ]
       },
       {
         "top": [],
         "middle": [],
-        "bottom": ["6d", "8d"]
+        "bottom": [
+          "6d",
+          "8d"
+        ]
       }
     ]
   },
@@ -27,18 +51,45 @@
     "name": "实战 2 [R3]: 鬼上头 + KQ 选高 → K 上头, Q 弃 (KK > QQ fantasy)",
     "round": 3,
     "jokerCount": 2,
-    "dealt": ["Qc", "Kh", "Jc"],
+    "dealt": [
+      "Qc",
+      "Kh",
+      "Jc"
+    ],
     "state": {
-      "top": ["X"],
-      "middle": ["8c", "Tc", "2s"],
-      "bottom": ["X", "Jh", "9c"],
-      "usedCards": ["X", "8c", "Tc", "2s", "X", "Jh", "9c", "3d"]
+      "top": [
+        "X"
+      ],
+      "middle": [
+        "8c",
+        "Tc",
+        "2s"
+      ],
+      "bottom": [
+        "X",
+        "Jh",
+        "9c"
+      ],
+      "usedCards": [
+        "X",
+        "8c",
+        "Tc",
+        "2s",
+        "X",
+        "Jh",
+        "9c",
+        "3d"
+      ]
     },
     "expecteds": [
       {
-        "top": ["Kh"],
+        "top": [
+          "Kh"
+        ],
         "middle": [],
-        "bottom": ["Jc"]
+        "bottom": [
+          "Jc"
+        ]
       }
     ]
   },
@@ -47,28 +98,63 @@
     "round": 1,
     "jokerCount": 2,
     "pureMLP": true,
-    "dealt": ["2s", "4c", "7d", "Kd", "Qh"],
+    "dealt": [
+      "2s",
+      "4c",
+      "7d",
+      "Kd",
+      "Qh"
+    ],
     "state": {
       "top": [],
       "middle": [],
       "bottom": [],
-      "usedCards": ["Ac", "Ah", "5c", "Ts", "Ks"]
+      "usedCards": [
+        "Ac",
+        "Ah",
+        "5c",
+        "Ts",
+        "Ks"
+      ]
     },
     "expecteds": [
       {
         "top": [],
-        "middle": ["2s", "4c", "7d"],
-        "bottom": ["Kd", "Qh"]
+        "middle": [
+          "2s",
+          "4c",
+          "7d"
+        ],
+        "bottom": [
+          "Kd",
+          "Qh"
+        ]
       },
       {
-        "top": ["Kd"],
-        "middle": ["2s", "4c"],
-        "bottom": ["7d", "Qh"]
+        "top": [
+          "Kd"
+        ],
+        "middle": [
+          "2s",
+          "4c"
+        ],
+        "bottom": [
+          "7d",
+          "Qh"
+        ]
       },
       {
-        "top": ["Kd"],
-        "middle": ["2s", "4c", "7d"],
-        "bottom": ["Qh"]
+        "top": [
+          "Kd"
+        ],
+        "middle": [
+          "2s",
+          "4c",
+          "7d"
+        ],
+        "bottom": [
+          "Qh"
+        ]
       }
     ]
   },
@@ -77,28 +163,79 @@
     "round": 3,
     "jokerCount": 2,
     "pureMLP": true,
-    "dealt": ["X", "7d", "Ah"],
+    "dealt": [
+      "X",
+      "7d",
+      "Ah"
+    ],
     "state": {
-      "top": ["Ad"],
-      "middle": ["9h", "6c", "2d"],
-      "bottom": ["Qd", "Kc", "Qc"],
-      "usedCards": ["Ad", "Qd", "Kc", "9h", "6c", "5h", "5s", "3h", "8c", "Jc", "6s", "5c", "4s", "9d", "Jd", "Qc", "4c", "2d", "As", "Jh", "Ac", "6h", "X", "7d", "Ah"]
+      "top": [
+        "Ad"
+      ],
+      "middle": [
+        "9h",
+        "6c",
+        "2d"
+      ],
+      "bottom": [
+        "Qd",
+        "Kc",
+        "Qc"
+      ],
+      "usedCards": [
+        "Ad",
+        "Qd",
+        "Kc",
+        "9h",
+        "6c",
+        "5h",
+        "5s",
+        "3h",
+        "8c",
+        "Jc",
+        "6s",
+        "5c",
+        "4s",
+        "9d",
+        "Jd",
+        "Qc",
+        "4c",
+        "2d",
+        "As",
+        "Jh",
+        "Ac",
+        "6h",
+        "X",
+        "7d",
+        "Ah"
+      ]
     },
     "expecteds": [
       {
-        "top": ["Ah"],
-        "middle": ["X"],
+        "top": [
+          "Ah"
+        ],
+        "middle": [
+          "X"
+        ],
         "bottom": []
       },
       {
-        "top": ["Ah"],
+        "top": [
+          "Ah"
+        ],
         "middle": [],
-        "bottom": ["X"]
+        "bottom": [
+          "X"
+        ]
       }
     ],
     "wrongs": [
       {
-        "top": ["X", "Ah"],
+        "top": [
+          "X",
+          "Ah"
+        ],
         "middle": [],
         "bottom": []
       }
@@ -109,28 +246,78 @@
     "round": 5,
     "jokerCount": 2,
     "pureMLP": true,
-    "dealt": ["8c", "Jh", "Jc"],
+    "dealt": [
+      "8c",
+      "Jh",
+      "Jc"
+    ],
     "state": {
-      "top": ["Ah"],
-      "middle": ["6h", "7h", "5h", "5s", "Ks"],
-      "bottom": ["Tc", "Th", "3d", "8s", "9c"],
-      "usedCards": ["6h", "7h", "5h", "Ah", "Tc", "6s", "5c", "5s", "Th", "8d", "Kh", "Qc", "3d", "8s", "9d", "Jd", "Kc", "Ks", "9c", "4d", "Qd", "X"]
+      "top": [
+        "Ah"
+      ],
+      "middle": [
+        "6h",
+        "7h",
+        "5h",
+        "5s",
+        "Ks"
+      ],
+      "bottom": [
+        "Tc",
+        "Th",
+        "3d",
+        "8s",
+        "9c"
+      ],
+      "usedCards": [
+        "6h",
+        "7h",
+        "5h",
+        "Ah",
+        "Tc",
+        "6s",
+        "5c",
+        "5s",
+        "Th",
+        "8d",
+        "Kh",
+        "Qc",
+        "3d",
+        "8s",
+        "9d",
+        "Jd",
+        "Kc",
+        "Ks",
+        "9c",
+        "4d",
+        "Qd",
+        "X"
+      ]
     },
     "expecteds": [
       {
-        "top": ["8c", "Jc"],
+        "top": [
+          "8c",
+          "Jc"
+        ],
         "middle": [],
         "bottom": []
       },
       {
-        "top": ["8c", "Jh"],
+        "top": [
+          "8c",
+          "Jh"
+        ],
         "middle": [],
         "bottom": []
       }
     ],
     "wrongs": [
       {
-        "top": ["Jh", "Jc"],
+        "top": [
+          "Jh",
+          "Jc"
+        ],
         "middle": [],
         "bottom": []
       }
@@ -141,35 +328,90 @@
     "round": 4,
     "jokerCount": 2,
     "pureMLP": true,
-    "dealt": ["Ad", "X", "Ts"],
+    "dealt": [
+      "Ad",
+      "X",
+      "Ts"
+    ],
     "state": {
-      "top": ["As", "X"],
-      "middle": ["4c", "Kc", "4d", "7d"],
-      "bottom": ["9s", "Jd", "Jh"],
-      "usedCards": ["9s", "4c", "Jd", "Jh", "As", "Qh", "Qc", "3h", "4h", "Kc", "4d", "2h", "5d", "8s", "Td", "5s", "X", "8h", "7d", "Kd", "9h", "Ah", "Ks"]
+      "top": [
+        "As",
+        "X"
+      ],
+      "middle": [
+        "4c",
+        "Kc",
+        "4d",
+        "7d"
+      ],
+      "bottom": [
+        "9s",
+        "Jd",
+        "Jh"
+      ],
+      "usedCards": [
+        "9s",
+        "4c",
+        "Jd",
+        "Jh",
+        "As",
+        "Qh",
+        "Qc",
+        "3h",
+        "4h",
+        "Kc",
+        "4d",
+        "2h",
+        "5d",
+        "8s",
+        "Td",
+        "5s",
+        "X",
+        "8h",
+        "7d",
+        "Kd",
+        "9h",
+        "Ah",
+        "Ks"
+      ]
     },
     "expecteds": [
       {
-        "top": ["Ts"],
+        "top": [
+          "Ts"
+        ],
         "middle": [],
-        "bottom": ["X"]
+        "bottom": [
+          "X"
+        ]
       },
       {
         "top": [],
         "middle": [],
-        "bottom": ["Ad", "X"]
+        "bottom": [
+          "Ad",
+          "X"
+        ]
       },
       {
         "top": [],
-        "middle": ["X"],
-        "bottom": ["Ts"]
+        "middle": [
+          "X"
+        ],
+        "bottom": [
+          "Ts"
+        ]
       }
     ],
     "wrongs": [
       {
-        "top": ["Ad"],
+        "top": [
+          "Ad"
+        ],
         "middle": [],
-        "bottom": ["X"]
+        "bottom": [
+          "X"
+        ]
       }
     ]
   },
@@ -178,34 +420,72 @@
     "round": 2,
     "jokerCount": 2,
     "pureMLP": true,
-    "dealt": ["Kc", "X", "7s"],
+    "dealt": [
+      "Kc",
+      "X",
+      "7s"
+    ],
     "state": {
-      "top": ["Ac"],
-      "middle": ["X"],
-      "bottom": ["7d", "9d", "8d"],
-      "usedCards": ["7d", "9d", "Ac", "8d", "X", "5s", "4s", "9s", "Qs", "9c"]
+      "top": [
+        "Ac"
+      ],
+      "middle": [
+        "X"
+      ],
+      "bottom": [
+        "7d",
+        "9d",
+        "8d"
+      ],
+      "usedCards": [
+        "7d",
+        "9d",
+        "Ac",
+        "8d",
+        "X",
+        "5s",
+        "4s",
+        "9s",
+        "Qs",
+        "9c"
+      ]
     },
     "expecteds": [
       {
-        "top": ["Kc", "X"],
+        "top": [
+          "Kc",
+          "X"
+        ],
         "middle": [],
         "bottom": []
       },
       {
-        "top": ["X"],
-        "middle": ["7s"],
+        "top": [
+          "X"
+        ],
+        "middle": [
+          "7s"
+        ],
         "bottom": []
       },
       {
-        "top": ["X"],
-        "middle": ["Kc"],
+        "top": [
+          "X"
+        ],
+        "middle": [
+          "Kc"
+        ],
         "bottom": []
       }
     ],
     "wrongs": [
       {
-        "top": ["Kc"],
-        "middle": ["X"],
+        "top": [
+          "Kc"
+        ],
+        "middle": [
+          "X"
+        ],
         "bottom": []
       }
     ]
@@ -215,25 +495,53 @@
     "round": 2,
     "jokerCount": 2,
     "pureMLP": true,
-    "dealt": ["X", "As", "8h"],
+    "dealt": [
+      "X",
+      "As",
+      "8h"
+    ],
     "state": {
       "top": [],
-      "middle": ["7h", "6d", "7c", "5c"],
-      "bottom": ["X"],
-      "usedCards": ["7h", "6d", "X", "7c", "5c", "Qs", "Qh", "9d", "5s"]
+      "middle": [
+        "7h",
+        "6d",
+        "7c",
+        "5c"
+      ],
+      "bottom": [
+        "X"
+      ],
+      "usedCards": [
+        "7h",
+        "6d",
+        "X",
+        "7c",
+        "5c",
+        "Qs",
+        "Qh",
+        "9d",
+        "5s"
+      ]
     },
     "expecteds": [
       {
-        "top": ["X", "As"],
+        "top": [
+          "X",
+          "As"
+        ],
         "middle": [],
         "bottom": []
       }
     ],
     "wrongs": [
       {
-        "top": ["As"],
+        "top": [
+          "As"
+        ],
         "middle": [],
-        "bottom": ["X"]
+        "bottom": [
+          "X"
+        ]
       }
     ]
   },
@@ -242,23 +550,66 @@
     "round": 4,
     "jokerCount": 2,
     "pureMLP": true,
-    "dealt": ["Qd", "Jd", "2h"],
+    "dealt": [
+      "Qd",
+      "Jd",
+      "2h"
+    ],
     "state": {
       "top": [],
-      "middle": ["8h", "X", "3h", "7h"],
-      "bottom": ["7c", "Qc", "3c", "Kc", "6c"],
-      "usedCards": ["8h", "X", "7c", "Qc", "3c", "Ah", "8d", "Ad", "Th", "Kd", "9s", "Kc", "6c", "3d", "Ac", "4s", "3h", "7h", "2c", "Kh"]
+      "middle": [
+        "8h",
+        "X",
+        "3h",
+        "7h"
+      ],
+      "bottom": [
+        "7c",
+        "Qc",
+        "3c",
+        "Kc",
+        "6c"
+      ],
+      "usedCards": [
+        "8h",
+        "X",
+        "7c",
+        "Qc",
+        "3c",
+        "Ah",
+        "8d",
+        "Ad",
+        "Th",
+        "Kd",
+        "9s",
+        "Kc",
+        "6c",
+        "3d",
+        "Ac",
+        "4s",
+        "3h",
+        "7h",
+        "2c",
+        "Kh"
+      ]
     },
     "expecteds": [
       {
-        "top": ["Qd"],
-        "middle": ["2h"],
+        "top": [
+          "Qd"
+        ],
+        "middle": [
+          "2h"
+        ],
         "bottom": []
       }
     ],
     "wrongs": [
       {
-        "top": ["Qd", "2h"],
+        "top": [
+          "Qd",
+          "2h"
+        ],
         "middle": [],
         "bottom": []
       }
@@ -269,7 +620,13 @@
     "round": 1,
     "jokerCount": 2,
     "pureMLP": true,
-    "dealt": ["8h", "X", "7c", "Qc", "3c"],
+    "dealt": [
+      "8h",
+      "X",
+      "7c",
+      "Qc",
+      "3c"
+    ],
     "state": {
       "top": [],
       "middle": [],
@@ -278,21 +635,44 @@
     },
     "expecteds": [
       {
-        "top": ["X"],
-        "middle": ["8h"],
-        "bottom": ["7c", "Qc", "3c"]
+        "top": [
+          "X"
+        ],
+        "middle": [
+          "8h"
+        ],
+        "bottom": [
+          "7c",
+          "Qc",
+          "3c"
+        ]
       },
       {
-        "top": ["X"],
-        "middle": ["7c", "3c"],
-        "bottom": ["8h", "Qc"]
+        "top": [
+          "X"
+        ],
+        "middle": [
+          "7c",
+          "3c"
+        ],
+        "bottom": [
+          "8h",
+          "Qc"
+        ]
       }
     ],
     "wrongs": [
       {
         "top": [],
-        "middle": ["8h", "X"],
-        "bottom": ["7c", "Qc", "3c"]
+        "middle": [
+          "8h",
+          "X"
+        ],
+        "bottom": [
+          "7c",
+          "Qc",
+          "3c"
+        ]
       }
     ]
   },
@@ -302,7 +682,24 @@
     "mode": "fantasy",
     "jokerCount": 2,
     "pureMLP": true,
-    "dealt": ["8h", "6s", "2h", "7s", "Ah", "Js", "9h", "X", "Qd", "As", "Qh", "Kc", "Tc", "3c", "Ts", "4s"],
+    "dealt": [
+      "8h",
+      "6s",
+      "2h",
+      "7s",
+      "Ah",
+      "Js",
+      "9h",
+      "X",
+      "Qd",
+      "As",
+      "Qh",
+      "Kc",
+      "Tc",
+      "3c",
+      "Ts",
+      "4s"
+    ],
     "discardCount": 3,
     "state": {
       "top": [],
@@ -312,16 +709,48 @@
     },
     "expecteds": [
       {
-        "top": ["Tc", "Ts", "X"],
-        "middle": ["6s", "7s", "Js", "As", "4s"],
-        "bottom": ["8h", "2h", "Ah", "9h", "Qh"]
+        "top": [
+          "Tc",
+          "Ts",
+          "X"
+        ],
+        "middle": [
+          "6s",
+          "7s",
+          "Js",
+          "As",
+          "4s"
+        ],
+        "bottom": [
+          "8h",
+          "2h",
+          "Ah",
+          "9h",
+          "Qh"
+        ]
       }
     ],
     "wrongs": [
       {
-        "top": ["Ah", "As", "Kc"],
-        "middle": ["6s", "7s", "Js", "Ts", "4s"],
-        "bottom": ["8h", "2h", "9h", "X", "Qh"]
+        "top": [
+          "Ah",
+          "As",
+          "Kc"
+        ],
+        "middle": [
+          "6s",
+          "7s",
+          "Js",
+          "Ts",
+          "4s"
+        ],
+        "bottom": [
+          "8h",
+          "2h",
+          "9h",
+          "X",
+          "Qh"
+        ]
       }
     ]
   },
@@ -331,7 +760,24 @@
     "mode": "fantasy",
     "jokerCount": 2,
     "pureMLP": true,
-    "dealt": ["7d", "2s", "4h", "9d", "6c", "Qd", "4c", "6s", "Ac", "9s", "3c", "2d", "3h", "5d", "7s", "Qc"],
+    "dealt": [
+      "7d",
+      "2s",
+      "4h",
+      "9d",
+      "6c",
+      "Qd",
+      "4c",
+      "6s",
+      "Ac",
+      "9s",
+      "3c",
+      "2d",
+      "3h",
+      "5d",
+      "7s",
+      "Qc"
+    ],
     "discardCount": 3,
     "state": {
       "top": [],
@@ -341,21 +787,69 @@
     },
     "expecteds": [
       {
-        "top": ["9d", "Qd", "9s"],
-        "middle": ["7d", "4h", "6s", "3h", "5d"],
-        "bottom": ["Ac", "Qc", "6c", "4c", "3c"]
+        "top": [
+          "9d",
+          "Qd",
+          "9s"
+        ],
+        "middle": [
+          "7d",
+          "4h",
+          "6s",
+          "3h",
+          "5d"
+        ],
+        "bottom": [
+          "Ac",
+          "Qc",
+          "6c",
+          "4c",
+          "3c"
+        ]
       },
       {
-        "top": ["6s", "9s", "7s"],
-        "middle": ["2d", "5d", "7d", "9d", "Qd"],
-        "bottom": ["3c", "4c", "6c", "Ac", "Qc"]
+        "top": [
+          "6s",
+          "9s",
+          "7s"
+        ],
+        "middle": [
+          "2d",
+          "5d",
+          "7d",
+          "9d",
+          "Qd"
+        ],
+        "bottom": [
+          "3c",
+          "4c",
+          "6c",
+          "Ac",
+          "Qc"
+        ]
       }
     ],
     "wrongs": [
       {
-        "top": ["Qd", "Qc", "Ac"],
-        "middle": ["7d", "9d", "6c", "9s", "7s"],
-        "bottom": ["2s", "4h", "6s", "3c", "5d"]
+        "top": [
+          "Qd",
+          "Qc",
+          "Ac"
+        ],
+        "middle": [
+          "7d",
+          "9d",
+          "6c",
+          "9s",
+          "7s"
+        ],
+        "bottom": [
+          "2s",
+          "4h",
+          "6s",
+          "3c",
+          "5d"
+        ]
       }
     ]
   },
@@ -364,7 +858,13 @@
     "round": 1,
     "jokerCount": 2,
     "pureMLP": true,
-    "dealt": ["Ah", "Jd", "Ac", "2s", "As"],
+    "dealt": [
+      "Ah",
+      "Jd",
+      "Ac",
+      "2s",
+      "As"
+    ],
     "state": {
       "top": [],
       "middle": [],
@@ -373,26 +873,58 @@
     },
     "expecteds": [
       {
-        "top": ["Ac", "As"],
-        "middle": ["2s"],
-        "bottom": ["Ah", "Jd"]
+        "top": [
+          "Ac",
+          "As"
+        ],
+        "middle": [
+          "2s"
+        ],
+        "bottom": [
+          "Ah",
+          "Jd"
+        ]
       },
       {
-        "top": ["Ah", "As"],
-        "middle": ["2s"],
-        "bottom": ["Jd", "Ac"]
+        "top": [
+          "Ah",
+          "As"
+        ],
+        "middle": [
+          "2s"
+        ],
+        "bottom": [
+          "Jd",
+          "Ac"
+        ]
       },
       {
-        "top": ["Ah", "Ac"],
-        "middle": ["2s"],
-        "bottom": ["Jd", "As"]
+        "top": [
+          "Ah",
+          "Ac"
+        ],
+        "middle": [
+          "2s"
+        ],
+        "bottom": [
+          "Jd",
+          "As"
+        ]
       }
     ],
     "wrongs": [
       {
-        "top": ["Ah", "Ac", "As"],
-        "middle": ["2s"],
-        "bottom": ["Jd"]
+        "top": [
+          "Ah",
+          "Ac",
+          "As"
+        ],
+        "middle": [
+          "2s"
+        ],
+        "bottom": [
+          "Jd"
+        ]
       }
     ]
   },
@@ -401,7 +933,13 @@
     "round": 1,
     "jokerCount": 2,
     "pureMLP": true,
-    "dealt": ["Jc", "Qc", "Jd", "Qd", "Js"],
+    "dealt": [
+      "Jc",
+      "Qc",
+      "Jd",
+      "Qd",
+      "Js"
+    ],
     "state": {
       "top": [],
       "middle": [],
@@ -411,25 +949,52 @@
     "expecteds": [
       {
         "top": [],
-        "middle": ["Qc", "Qd"],
-        "bottom": ["Jc", "Jd", "Js"]
+        "middle": [
+          "Qc",
+          "Qd"
+        ],
+        "bottom": [
+          "Jc",
+          "Jd",
+          "Js"
+        ]
       },
       {
         "top": [],
         "middle": [],
-        "bottom": ["Jc", "Qc", "Jd", "Qd", "Js"]
+        "bottom": [
+          "Jc",
+          "Qc",
+          "Jd",
+          "Qd",
+          "Js"
+        ]
       },
       {
-        "top": ["Qc", "Qd"],
+        "top": [
+          "Qc",
+          "Qd"
+        ],
         "middle": [],
-        "bottom": ["Jc", "Jd", "Js"]
+        "bottom": [
+          "Jc",
+          "Jd",
+          "Js"
+        ]
       }
     ],
     "wrongs": [
       {
         "top": [],
-        "middle": ["Jc"],
-        "bottom": ["Qc", "Jd", "Qd", "Js"]
+        "middle": [
+          "Jc"
+        ],
+        "bottom": [
+          "Qc",
+          "Jd",
+          "Qd",
+          "Js"
+        ]
       }
     ]
   },
@@ -438,7 +1003,13 @@
     "round": 1,
     "jokerCount": 2,
     "pureMLP": true,
-    "dealt": ["Ah", "Ac", "Ad", "As", "2s"],
+    "dealt": [
+      "Ah",
+      "Ac",
+      "Ad",
+      "As",
+      "2s"
+    ],
     "state": {
       "top": [],
       "middle": [],
@@ -447,16 +1018,32 @@
     },
     "expecteds": [
       {
-        "top": ["Ah", "Ad"],
-        "middle": ["2s"],
-        "bottom": ["Ac", "As"]
+        "top": [
+          "Ah",
+          "Ad"
+        ],
+        "middle": [
+          "2s"
+        ],
+        "bottom": [
+          "Ac",
+          "As"
+        ]
       }
     ],
     "wrongs": [
       {
-        "top": ["Ah", "Ac", "Ad"],
-        "middle": ["2s"],
-        "bottom": ["As"]
+        "top": [
+          "Ah",
+          "Ac",
+          "Ad"
+        ],
+        "middle": [
+          "2s"
+        ],
+        "bottom": [
+          "As"
+        ]
       }
     ]
   },
@@ -465,7 +1052,13 @@
     "round": 1,
     "jokerCount": 2,
     "pureMLP": true,
-    "dealt": ["Ah", "Ac", "As", "X", "X"],
+    "dealt": [
+      "Ah",
+      "Ac",
+      "As",
+      "X",
+      "X"
+    ],
     "state": {
       "top": [],
       "middle": [],
@@ -474,16 +1067,32 @@
     },
     "expecteds": [
       {
-        "top": ["Ah", "As"],
-        "middle": ["Ac", "X"],
-        "bottom": ["X"]
+        "top": [
+          "Ah",
+          "As"
+        ],
+        "middle": [
+          "Ac",
+          "X"
+        ],
+        "bottom": [
+          "X"
+        ]
       }
     ],
     "wrongs": [
       {
-        "top": ["Ah", "Ac", "As"],
-        "middle": ["X"],
-        "bottom": ["X"]
+        "top": [
+          "Ah",
+          "Ac",
+          "As"
+        ],
+        "middle": [
+          "X"
+        ],
+        "bottom": [
+          "X"
+        ]
       }
     ]
   },
@@ -492,28 +1101,82 @@
     "round": 3,
     "jokerCount": 2,
     "pureMLP": true,
-    "dealt": ["As", "Ah", "Ac"],
+    "dealt": [
+      "As",
+      "Ah",
+      "Ac"
+    ],
     "state": {
-      "top": ["X"],
-      "middle": ["9s", "2h"],
-      "bottom": ["Th", "Tc", "Kh", "Ts"],
-      "usedCards": ["9s", "X", "Th", "Tc", "Kh", "3h", "4h", "4d", "6s", "Qd", "2h", "Ts", "Js", "6c", "Ks", "5c", "Jh", "6d", "9h", "Jd", "Td", "Kd", "3s", "Qh", "Ad", "7s", "8s", "7d", "8d"]
+      "top": [
+        "X"
+      ],
+      "middle": [
+        "9s",
+        "2h"
+      ],
+      "bottom": [
+        "Th",
+        "Tc",
+        "Kh",
+        "Ts"
+      ],
+      "usedCards": [
+        "9s",
+        "X",
+        "Th",
+        "Tc",
+        "Kh",
+        "3h",
+        "4h",
+        "4d",
+        "6s",
+        "Qd",
+        "2h",
+        "Ts",
+        "Js",
+        "6c",
+        "Ks",
+        "5c",
+        "Jh",
+        "6d",
+        "9h",
+        "Jd",
+        "Td",
+        "Kd",
+        "3s",
+        "Qh",
+        "Ad",
+        "7s",
+        "8s",
+        "7d",
+        "8d"
+      ]
     },
     "expecteds": [
       {
-        "top": ["As"],
+        "top": [
+          "As"
+        ],
         "middle": [],
-        "bottom": ["Ac"]
+        "bottom": [
+          "Ac"
+        ]
       }
     ],
     "wrongs": [
       {
         "top": [],
-        "middle": ["As", "Ah"],
+        "middle": [
+          "As",
+          "Ah"
+        ],
         "bottom": []
       },
       {
-        "top": ["Ah", "Ac"],
+        "top": [
+          "Ah",
+          "Ac"
+        ],
         "middle": [],
         "bottom": []
       }
@@ -524,25 +1187,256 @@
     "round": 3,
     "jokerCount": 2,
     "pureMLP": true,
-    "dealt": ["As", "Ah", "Ac"],
+    "dealt": [
+      "As",
+      "Ah",
+      "Ac"
+    ],
     "state": {
-      "top": ["X", "Qc"],
-      "middle": ["9s", "2h"],
-      "bottom": ["Th", "Tc", "Kh", "Ts"],
-      "usedCards": ["9s", "X", "Qc", "Th", "Tc", "Kh", "3h", "4h", "4d", "6s", "Qd", "2h", "Ts", "Js", "6c", "Ks", "5c", "Jh", "6d", "9h", "Jd", "Td", "Kd", "3s", "Qh", "Ad", "7s", "8s", "7d"]
+      "top": [
+        "X",
+        "Qc"
+      ],
+      "middle": [
+        "9s",
+        "2h"
+      ],
+      "bottom": [
+        "Th",
+        "Tc",
+        "Ts"
+      ],
+      "usedCards": [
+        "9s",
+        "X",
+        "Qc",
+        "Th",
+        "Tc",
+        "3h",
+        "4h",
+        "4d",
+        "6s",
+        "Qd",
+        "2h",
+        "Ts",
+        "Js",
+        "6c",
+        "Ks",
+        "5c",
+        "Jh",
+        "6d",
+        "9h",
+        "Jd",
+        "Td",
+        "Kd",
+        "3s",
+        "Qh",
+        "Ad",
+        "7s",
+        "8s",
+        "7d"
+      ]
     },
     "expecteds": [
       {
         "top": [],
-        "middle": ["Ah", "Ac"],
+        "middle": [
+          "Ah",
+          "Ac"
+        ],
+        "bottom": []
+      },
+      {
+        "top": [],
+        "middle": [
+          "As",
+          "Ac"
+        ],
+        "bottom": []
+      },
+      {
+        "top": [
+          "As"
+        ],
+        "middle": [],
+        "bottom": [
+          "Ac"
+        ]
+      }
+    ],
+    "wrongs": [
+      {
+        "top": [
+          "As"
+        ],
+        "middle": [
+          "Ac"
+        ],
+        "bottom": []
+      }
+    ]
+  },
+  {
+    "name": "实战 17 [R3]: 鬼+K在顶[X Kc](已可进QQ范)+发3A — 不该再单A上顶, AA进中 (RnSingleJokerTopChaseA 守卫: 已锁不追)",
+    "round": 3,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": [
+      "As",
+      "Ah",
+      "Ac"
+    ],
+    "state": {
+      "top": [
+        "X",
+        "Kc"
+      ],
+      "middle": [
+        "9s",
+        "2h"
+      ],
+      "bottom": [
+        "Th",
+        "Tc",
+        "Ts"
+      ],
+      "usedCards": [
+        "Kc",
+        "9s",
+        "X",
+        "Qc",
+        "Th",
+        "Tc",
+        "3h",
+        "4h",
+        "4d",
+        "6s",
+        "Qd",
+        "2h",
+        "Ts",
+        "Js",
+        "6c",
+        "Ks",
+        "5c",
+        "Jh",
+        "6d",
+        "9h",
+        "Jd",
+        "Td",
+        "Kd",
+        "3s",
+        "Qh",
+        "Ad",
+        "7s",
+        "8s",
+        "7d"
+      ]
+    },
+    "expecteds": [
+      {
+        "top": [],
+        "middle": [
+          "Ah",
+          "Ac"
+        ],
         "bottom": []
       }
     ],
     "wrongs": [
       {
-        "top": ["As"],
+        "top": [
+          "As"
+        ],
         "middle": [],
-        "bottom": ["Ac"]
+        "bottom": [
+          "Ac"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "实战 18 [R3]: 鬼+A在顶[X Ad]+ 发3A",
+    "round": 3,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": [
+      "As",
+      "Ah",
+      "Ac"
+    ],
+    "state": {
+      "top": [
+        "X",
+        "Ad"
+      ],
+      "middle": [
+        "9s",
+        "2h"
+      ],
+      "bottom": [
+        "Th",
+        "Tc",
+        "Ts"
+      ],
+      "usedCards": [
+        "Ad",
+        "9s",
+        "X",
+        "Qc",
+        "Th",
+        "Tc",
+        "3h",
+        "4h",
+        "4d",
+        "6s",
+        "Qd",
+        "2h",
+        "Ts",
+        "Js",
+        "6c",
+        "Ks",
+        "5c",
+        "Jh",
+        "6d",
+        "9h",
+        "Jd",
+        "Td",
+        "Kd",
+        "3s",
+        "Qh",
+        "Ad",
+        "7s",
+        "8s",
+        "7d"
+      ]
+    },
+    "expecteds": [
+      {
+        "top": [],
+        "middle": [
+          "Ah",
+          "Ac"
+        ],
+        "bottom": []
+      },
+      {
+        "top": [],
+        "middle": [
+          "As",
+          "Ac"
+        ],
+        "bottom": []
+      }
+    ],
+    "wrongs": [
+      {
+        "top": [
+          "As"
+        ],
+        "middle": [],
+        "bottom": [
+          "Ac"
+        ]
       }
     ]
   }

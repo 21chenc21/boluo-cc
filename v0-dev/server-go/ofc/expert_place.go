@@ -398,6 +398,8 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 		item.teScore -= RnJokersSameRowPenalty(item.action, item.gs)
 		// 2026-06-05 加: 孤鬼(或鬼+sub-Q)在顶 + 放 1 A 上顶追 AA 范 (废 A 放底) → +8
 		item.teScore += RnSingleJokerTopChaseABonus(item.gs, state)
+		// 2026-06-05 加: 鬼在顶 + 孤 A 进中 (死张堵两对) → -8 (废 A 应放底或双A成对)
+		item.teScore -= RnLoneAceMidJokerTopPenalty(item.gs, state)
 	}
 
 	sort.SliceStable(uniq, func(i, j int) bool { return uniq[i].teScore > uniq[j].teScore })

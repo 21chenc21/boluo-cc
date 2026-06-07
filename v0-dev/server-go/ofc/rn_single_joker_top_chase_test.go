@@ -71,6 +71,42 @@ func TestRnTopChase_Skip_AInMid(t *testing.T) {
 	}
 }
 
+func TestRnLoneAMid_Fire(t *testing.T) {
+	// 鬼+Q在顶 + 本轮孤 Ac 进中 (中道只1张A) → 罚 +8
+	pre := st([]string{"X", "Qc"}, []string{"9s", "2h"}, []string{"Th", "Tc", "Ts"})
+	post := st([]string{"X", "Qc", "As"}, []string{"9s", "2h", "Ac"}, []string{"Th", "Tc", "Ts"})
+	if got := RnLoneAceMidJokerTopPenalty(post, pre); got != 8 {
+		t.Fatalf("鬼顶+孤A进中 应罚 8, got %v", got)
+	}
+}
+
+func TestRnLoneAMid_Skip_AAPairMid(t *testing.T) {
+	// 双 A 进中成 AA对 (中道2张A) → 不罚 (强中道)
+	pre := st([]string{"X", "Qc"}, []string{"9s", "2h"}, []string{"Th", "Tc", "Ts"})
+	post := st([]string{"X", "Qc"}, []string{"9s", "2h", "As", "Ac"}, []string{"Th", "Tc", "Ts"})
+	if got := RnLoneAceMidJokerTopPenalty(post, pre); got != 0 {
+		t.Fatalf("双A进中成对 应不罚(0), got %v", got)
+	}
+}
+
+func TestRnLoneAMid_Skip_NoJokerTop(t *testing.T) {
+	// 非鬼顶 → 不归这条
+	pre := st([]string{"Kc", "Qc"}, []string{"9s", "2h"}, []string{"Th", "Tc", "Ts"})
+	post := st([]string{"Kc", "Qc", "As"}, []string{"9s", "2h", "Ac"}, []string{"Th", "Tc", "Ts"})
+	if got := RnLoneAceMidJokerTopPenalty(post, pre); got != 0 {
+		t.Fatalf("非鬼顶 应不罚(0), got %v", got)
+	}
+}
+
+func TestRnLoneAMid_Skip_AToBot(t *testing.T) {
+	// 废A放底 (中道没加A) → 不罚
+	pre := st([]string{"X", "Qc"}, []string{"9s", "2h"}, []string{"Th", "Tc", "Ts"})
+	post := st([]string{"X", "Qc", "As"}, []string{"9s", "2h"}, []string{"Th", "Tc", "Ts", "Ac"})
+	if got := RnLoneAceMidJokerTopPenalty(post, pre); got != 0 {
+		t.Fatalf("废A放底 应不罚(0), got %v", got)
+	}
+}
+
 func TestRnTopChase_Skip_AAATop(t *testing.T) {
 	// 2 张 A 上顶 = AAA 陷阱 → 不奖
 	pre := st([]string{"X"}, []string{"9s", "2h"}, []string{"Th", "Tc", "Kh", "Ts"})

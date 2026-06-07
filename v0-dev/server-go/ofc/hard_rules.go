@@ -1129,6 +1129,36 @@ func RnSingleJokerTopChaseABonus(postState, preState *GameState) float32 {
 	return 8
 }
 
+// RnLoneAceMidJokerTopPenalty — R2-R5 软罚 (+8 penalty): 鬼在顶 + 本轮往中道塞 1 张孤 A (中道最终恰 1 张A, 不成对).
+// 2026-06-05 (实战16): 鬼+Q在顶升AA时, 废A应放底(留中道干净凑两对托顶AA), 放中是死A高张
+// (没第2张A可配对) → 堵两对位 + 顶AA托不住. 正解: AA双进中成对(托顶) 或 A放头+废A放底.
+// 只罚"孤A进中"; 双A进中成 AA对 (post mid A==2) 不罚 (那是强中道).
+func RnLoneAceMidJokerTopPenalty(postState, preState *GameState) float32 {
+	jt := 0
+	for _, c := range preState.Top {
+		if c.IsJoker() {
+			jt++
+		}
+	}
+	if jt == 0 {
+		return 0 // 非鬼顶
+	}
+	midA := func(g *GameState) int {
+		n := 0
+		for _, c := range g.Middle {
+			if !c.IsJoker() && c.Rank() == RankA {
+				n++
+			}
+		}
+		return n
+	}
+	pre, post := midA(preState), midA(postState)
+	if post > pre && post == 1 {
+		return 8 // 本轮加 A 进中 且 中道最终只 1 张孤 A (死张) → 罚
+	}
+	return 0
+}
+
 // RnSingleAOnTopBonus — R2-R5 软 bonus (+10):
 // action 在 top 放置了 A (无 joker 在 top), 准备 AA fantasy (R3-R5 配 A 或 joker).
 // 类比 R1SingleAOnTopBonus. 覆盖 case 29: state.Top=[Kh] R2 加 A → top=[K, A] (高牌组合, 未来配对).
