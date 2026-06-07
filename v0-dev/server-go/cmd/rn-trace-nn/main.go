@@ -157,7 +157,7 @@ func main() {
 		c.kkOnMid = ofc.RnKKOnMidPenalty(a, dealt, state)
 		c.singleA = ofc.RnSingleAOnTopBonus(a, gs, c.foul)
 
-		c.score = c.te + ofc.PolicyBoost*c.plogit - c.foul - c.kkOnMid + c.singleA
+		c.score = c.te + ofc.PolicyBoost*c.plogit - c.foul - c.kkOnMid + c.singleA - ofc.RnJokersSameRowPenalty(a, gs) + ofc.RnSingleJokerTopChaseABonus(gs, state)
 		c.hardRuleOK = true
 		cands = append(cands, c)
 	}

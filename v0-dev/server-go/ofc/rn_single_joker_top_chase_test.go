@@ -1,0 +1,81 @@
+package ofc
+
+import "testing"
+
+// 2026-06-05: RnSingleJokerTopChaseABonus — 孤鬼(或鬼+sub-Q)在顶 + 1A上顶追AA范(废A放底) → +8.
+// ypk-32571722-17 R3.
+
+func st(top, mid, bot []string) *GameState {
+	g := NewGameState(2)
+	for _, s := range top {
+		g.Top = append(g.Top, mustParse(s))
+	}
+	for _, s := range mid {
+		g.Middle = append(g.Middle, mustParse(s))
+	}
+	for _, s := range bot {
+		g.Bottom = append(g.Bottom, mustParse(s))
+	}
+	return g
+}
+
+func TestRnTopChase_Fire_LoneJoker(t *testing.T) {
+	pre := st([]string{"X"}, []string{"9s", "2h"}, []string{"Th", "Tc", "Kh", "Ts"})
+	post := st([]string{"X", "As"}, []string{"9s", "2h"}, []string{"Th", "Tc", "Kh", "Ts", "Ac"})
+	if got := RnSingleJokerTopChaseABonus(post, pre); got != 8 {
+		t.Fatalf("孤鬼+A上顶+废A放底 应 +8, got %v", got)
+	}
+}
+
+func TestRnTopChase_Fire_JokerSubQ(t *testing.T) {
+	// 鬼+J (配对 JJ < QQ, 不能直接进范) → 加 A 升 AA → fire
+	pre := st([]string{"X", "Jd"}, []string{"9s", "2h"}, []string{"Th", "Tc", "Kh", "Ts"})
+	post := st([]string{"X", "Jd", "As"}, []string{"9s", "2h"}, []string{"Th", "Tc", "Kh", "Ts", "Ac"})
+	if got := RnSingleJokerTopChaseABonus(post, pre); got != 8 {
+		t.Fatalf("鬼+J(<QQ)+A上顶 应 +8, got %v", got)
+	}
+}
+
+func TestRnTopChase_Skip_JokerQ(t *testing.T) {
+	// 鬼+Q (已可进 QQ范) → skip
+	pre := st([]string{"X", "Qc"}, []string{"9s", "2h"}, []string{"Th", "Tc", "Kh", "Ts"})
+	post := st([]string{"X", "Qc", "As"}, []string{"9s", "2h"}, []string{"Th", "Tc", "Kh", "Ts", "Ac"})
+	if got := RnSingleJokerTopChaseABonus(post, pre); got != 0 {
+		t.Fatalf("鬼+Q(已锁QQ) 应 skip(0), got %v", got)
+	}
+}
+
+func TestRnTopChase_Skip_TwoJokers(t *testing.T) {
+	pre := st([]string{"X", "X"}, []string{"9s", "2h"}, []string{"Th", "Tc", "Kh", "Ts"})
+	post := st([]string{"X", "X", "As"}, []string{"9s", "2h"}, []string{"Th", "Tc", "Kh", "Ts", "Ac"})
+	if got := RnSingleJokerTopChaseABonus(post, pre); got != 0 {
+		t.Fatalf("双鬼(AA锁) 应 skip(0), got %v", got)
+	}
+}
+
+func TestRnTopChase_Skip_MidFullNotTwoPair(t *testing.T) {
+	// case 50: mid 满 KK (one pair < two-pair) → top AA 托不住 → skip
+	pre := st([]string{"X", "2c"}, []string{"Kh", "Kd", "3h", "4s", "5h"}, []string{"9d", "Th", "Jc", "Qd"})
+	post := st([]string{"X", "2c", "As"}, []string{"Kh", "Kd", "3h", "4s", "5h"}, []string{"9d", "Th", "Jc", "Qd", "8s"})
+	if got := RnSingleJokerTopChaseABonus(post, pre); got != 0 {
+		t.Fatalf("mid满KK(<两对) top AA托不住 应 skip(0), got %v", got)
+	}
+}
+
+func TestRnTopChase_Skip_AInMid(t *testing.T) {
+	// 另一张 A 进中道 (没放底) → 不奖 (强制废A放底)
+	pre := st([]string{"X"}, []string{"9s", "2h"}, []string{"Th", "Tc", "Kh", "Ts"})
+	post := st([]string{"X", "As"}, []string{"9s", "2h", "Ah"}, []string{"Th", "Tc", "Kh", "Ts"})
+	if got := RnSingleJokerTopChaseABonus(post, pre); got != 0 {
+		t.Fatalf("另一张A进中道 应不奖(0), got %v", got)
+	}
+}
+
+func TestRnTopChase_Skip_AAATop(t *testing.T) {
+	// 2 张 A 上顶 = AAA 陷阱 → 不奖
+	pre := st([]string{"X"}, []string{"9s", "2h"}, []string{"Th", "Tc", "Kh", "Ts"})
+	post := st([]string{"X", "As", "Ah"}, []string{"9s", "2h"}, []string{"Th", "Tc", "Kh", "Ts"})
+	if got := RnSingleJokerTopChaseABonus(post, pre); got != 0 {
+		t.Fatalf("AAA上顶 应不奖(0), got %v", got)
+	}
+}

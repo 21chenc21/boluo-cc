@@ -486,5 +486,64 @@
         "bottom": ["X"]
       }
     ]
+  },
+  {
+    "name": "实战 15 [R3]: 孤鬼在顶[X]+底TTT+发3A — 单A上顶追AA范 + 废A放底(不埋AA中) (ypk-32571722-17, RnSingleJokerTopChaseA)",
+    "round": 3,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": ["As", "Ah", "Ac"],
+    "state": {
+      "top": ["X"],
+      "middle": ["9s", "2h"],
+      "bottom": ["Th", "Tc", "Kh", "Ts"],
+      "usedCards": ["9s", "X", "Th", "Tc", "Kh", "3h", "4h", "4d", "6s", "Qd", "2h", "Ts", "Js", "6c", "Ks", "5c", "Jh", "6d", "9h", "Jd", "Td", "Kd", "3s", "Qh", "Ad", "7s", "8s", "7d", "8d"]
+    },
+    "expecteds": [
+      {
+        "top": ["As"],
+        "middle": [],
+        "bottom": ["Ac"]
+      }
+    ],
+    "wrongs": [
+      {
+        "top": [],
+        "middle": ["As", "Ah"],
+        "bottom": []
+      },
+      {
+        "top": ["Ah", "Ac"],
+        "middle": [],
+        "bottom": []
+      }
+    ]
+  },
+  {
+    "name": "实战 16 [R3]: 鬼+Q在顶[X Qc](已可进QQ范)+发3A — 不该再单A上顶, AA进中 (RnSingleJokerTopChaseA 守卫: 已锁不追)",
+    "round": 3,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": ["As", "Ah", "Ac"],
+    "state": {
+      "top": ["X", "Qc"],
+      "middle": ["9s", "2h"],
+      "bottom": ["Th", "Tc", "Kh", "Ts"],
+      "usedCards": ["9s", "X", "Qc", "Th", "Tc", "Kh", "3h", "4h", "4d", "6s", "Qd", "2h", "Ts", "Js", "6c", "Ks", "5c", "Jh", "6d", "9h", "Jd", "Td", "Kd", "3s", "Qh", "Ad", "7s", "8s", "7d"]
+    },
+    "expecteds": [
+      {
+        "top": [],
+        "middle": ["Ah", "Ac"],
+        "bottom": []
+      }
+    ],
+    "wrongs": [
+      {
+        "top": ["As"],
+        "middle": [],
+        "bottom": ["Ac"]
+      }
+    ]
   }
 ]

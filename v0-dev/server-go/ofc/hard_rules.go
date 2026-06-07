@@ -1064,6 +1064,71 @@ func RnJokersSameRowPenalty(a *RoundNAction, postState *GameState) float32 {
 	return 0
 }
 
+// RnSingleJokerTopChaseABonus — R2-R5 软 bonus (+8): 孤鬼(或鬼+sub-Q)在顶时, 放 1 张 A 上顶追 AA 范.
+// 2026-06-05 (ypk-32571722-17 R3: top=[X] 发 3A, NN 误埋 AA→中 而非单 A 上顶追范).
+// 触发:
+//   ① pre-top 有鬼, 且"鬼能配出的对子 < QQ" (孤鬼 / 鬼+J以下) —— 即还没法直接进范, 加 A 才升 AA.
+//      跳过 X+Q/X+K/XX/XA (鬼配对已 ≥QQ, 可直接进范, 不需 A; 你说的"已锁就不AA中").
+//   ② 本轮恰好 1 张真 A 上顶 (post-top realA==1, 不成 AAA foul陷阱).
+//   ③ 本轮没往中道加 A (废 A 放底, 不堵中道 —— A 进中变死高张, 挡顶道 AA 范 + 占两对位).
+// cap-chain 保护: 中道弱时鬼自动降级 → 不犯规, 纯上行追范.
+func RnSingleJokerTopChaseABonus(postState, preState *GameState) float32 {
+	// ① pre-top 鬼 + 配对 < QQ
+	jt, maxReal, preTopRealA := 0, -1, 0
+	for _, c := range preState.Top {
+		if c.IsJoker() {
+			jt++
+			continue
+		}
+		if int(c.Rank()) > maxReal {
+			maxReal = int(c.Rank())
+		}
+		if c.Rank() == RankA {
+			preTopRealA++
+		}
+	}
+	if jt == 0 {
+		return 0 // 非鬼顶, 不归这条
+	}
+	effPair := maxReal // 鬼配最高真牌
+	if jt >= 2 {
+		effPair = int(RankA) // 双鬼 = AA
+	}
+	if effPair >= int(RankQ) || preTopRealA > 0 {
+		return 0 // 已可直接进 QQ+ 范 (X+Q/K, XX, XA) → 不追加 A
+	}
+	// ② 本轮恰好 1 张真 A 上顶 (不成 AAA)
+	postTopRealA := 0
+	for _, c := range postState.Top {
+		if !c.IsJoker() && c.Rank() == RankA {
+			postTopRealA++
+		}
+	}
+	if postTopRealA != 1 {
+		return 0
+	}
+	// ②b foul-squeeze 防护: top AA 需 mid ≥ 两对才托得住 (AA 是最大对, mid 必须两对+).
+	// mid 已满且 < 两对 → top AA 实现不了 (cap-chain 降级成高牌, A 白废) → 不奖.
+	// (case 50 R5: mid=KK 满, top 放 As 被 cap 成 A高, 还弃了该留的 7h)
+	if len(postState.Middle) == 5 && Evaluate5JokerCap(postState.Middle, nil).Type < TypeTwoPair {
+		return 0
+	}
+	// ③ 本轮没往中道塞 A (废 A 必须放底)
+	midA := func(g *GameState) int {
+		n := 0
+		for _, c := range g.Middle {
+			if !c.IsJoker() && c.Rank() == RankA {
+				n++
+			}
+		}
+		return n
+	}
+	if midA(postState) > midA(preState) {
+		return 0
+	}
+	return 8
+}
+
 // RnSingleAOnTopBonus — R2-R5 软 bonus (+10):
 // action 在 top 放置了 A (无 joker 在 top), 准备 AA fantasy (R3-R5 配 A 或 joker).
 // 类比 R1SingleAOnTopBonus. 覆盖 case 29: state.Top=[Kh] R2 加 A → top=[K, A] (高牌组合, 未来配对).
