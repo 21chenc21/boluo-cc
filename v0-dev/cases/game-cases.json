@@ -1439,5 +1439,85 @@
         ]
       }
     ]
+  },
+  {
+    "name": "实战 19 [R4]: 鬼顶[X]+双三条板, 发[X Ts 3c] → top凑333三条(re-fan) 不是AA对",
+    "round": 4,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": [
+      "X",
+      "Ts",
+      "3c"
+    ],
+    "state": {
+      "top": [
+        "X"
+      ],
+      "middle": [
+        "8c",
+        "8d",
+        "7h",
+        "8h"
+      ],
+      "bottom": [
+        "Td",
+        "Jd",
+        "Tc",
+        "Th"
+      ],
+      "usedCards": [
+        "Td",
+        "8c",
+        "Jd",
+        "8d",
+        "Tc",
+        "2s",
+        "Kh",
+        "6h",
+        "5h",
+        "Jh",
+        "Kd",
+        "3s",
+        "5s",
+        "4c",
+        "9c",
+        "7h",
+        "8h",
+        "Qc",
+        "Qd",
+        "2d",
+        "9d",
+        "9h",
+        "Th",
+        "4s",
+        "X",
+        "Ad",
+        "3h",
+        "As",
+        "5c",
+        "6s"
+      ]
+    },
+    "expecteds": [
+      {
+        "top": [
+          "X",
+          "3c"
+        ],
+        "middle": [],
+        "bottom": []
+      }
+    ],
+    "wrongs": [
+      {
+        "top": [
+          "X",
+          "Ts"
+        ],
+        "middle": [],
+        "bottom": []
+      }
+    ]
   }
 ]

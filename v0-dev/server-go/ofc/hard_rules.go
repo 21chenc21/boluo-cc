@@ -1159,6 +1159,79 @@ func RnLoneAceMidJokerTopPenalty(postState, preState *GameState) float32 {
 	return 0
 }
 
+// RnTopTripsFantasyBonus — top 凑成 foul-safe 三条 (re-fan 锚 + 最高范 tier) → +bonus.
+// 2026-06-11 (ypk-102367562-12 R4): top=[X X 3c]=333三条 vs top=[X X Ts]=AA对(被 mid 888 cap 住).
+// NN value head 低估三条: te 158.26 (AA对) > 157.06 (333三条), 只差 1.2 → AI 选了 AA对弃了 3c.
+// 但三条 = 17张范 + re-fan 锚 (fantasy.go FindReFanAnchors), AA对 = 16张范且不 re-fan.
+// 用 mid cap 算 top 真实牌型 (X X Ts 被 cap 成 AA对不是 TTT, 故不奖; X X 3c 是 333 三条, 奖).
+// 仅 top 满 3 张时触发; top 未满或非三条 → 0. 加性 bonus 不罚其它候选.
+func RnTopTripsFantasyBonus(postState *GameState) float32 {
+	if len(postState.Top) != 3 {
+		return 0 // top 未满, 牌型未定
+	}
+	// top 能否确定成三条: 非鬼牌必须同 rank (鬼补齐). 跨 ≥2 rank 或全鬼 → 跳过.
+	jt, distinct, tripRank := 0, 0, -1
+	var seen [13]bool
+	for _, c := range postState.Top {
+		if c.IsJoker() {
+			jt++
+			continue
+		}
+		r := int(c.Rank())
+		if !seen[r] {
+			seen[r] = true
+			distinct++
+			tripRank = r
+		}
+	}
+	if distinct != 1 {
+		return 0 // 非鬼牌跨 ≥2 rank (顶其实是对/高张, X X Ts 被 mid cap 成 AA 对走这里) 或全鬼
+	}
+	// foul-safe: mid 现成牌型 ≥ 三条 of tripRank (行只增不减 → 当前 floor 即保证 ≤ mid final).
+	midType, midTrip := midMadeFloor(postState.Middle)
+	if midType > TypeThreeOfAKind || (midType == TypeThreeOfAKind && midTrip >= tripRank) {
+		return 5 // foul-safe top 三条 (17张范 + re-fan): 翻过 NN ~1.2 gap
+	}
+	return 0
+}
+
+// midMadeFloor — mid 当前已成牌型下界 (行只增不减, 作 foul-safe 保证). 鬼牌计入最高 count 的 rank.
+// 返回 (type, tripRank, 仅三条时有效). 只精确区分 ≥ 三条 (本规则只用这段); 弱于三条统一返回 (TypePair, -1).
+//   mid 满 5 张: 用真实 eval (认得 花/顺/葫芦/四条 这些 > 三条但无对子计数的牌型).
+//   mid 部分 (<5): 只能靠已落子的 count floor (花/顺 draw 未成, 不算保证) → pair/trips/quads via counts.
+func midMadeFloor(mid []Card) (int, int) {
+	if len(mid) == 5 {
+		me := Evaluate5JokerCap(mid, nil)
+		if me.Type == TypeThreeOfAKind {
+			return TypeThreeOfAKind, int((me.Value - 3000000) / 50625) // makeValue: trip rank 在 15^4 位
+		}
+		return me.Type, -1 // 非三条: 花/顺/葫芦/四条 > 三条; 两对/对/高张 < 三条 (caller 据 type 判)
+	}
+	var cnt [13]int
+	j := 0
+	for _, c := range mid {
+		if c.IsJoker() {
+			j++
+		} else {
+			cnt[c.Rank()]++
+		}
+	}
+	bestRank, bestCnt := -1, 0
+	for r := 12; r >= 0; r-- {
+		if cnt[r] > bestCnt {
+			bestCnt = cnt[r]
+			bestRank = r
+		}
+	}
+	if bestCnt+j >= 4 {
+		return TypeFourOfAKind, bestRank // 四条 (> 三条) — rank 无关
+	}
+	if bestCnt+j >= 3 {
+		return TypeThreeOfAKind, bestRank
+	}
+	return TypePair, -1 // < 三条, 不触发本规则
+}
+
 // RnSingleAOnTopBonus — R2-R5 软 bonus (+10):
 // action 在 top 放置了 A (无 joker 在 top), 准备 AA fantasy (R3-R5 配 A 或 joker).
 // 类比 R1SingleAOnTopBonus. 覆盖 case 29: state.Top=[Kh] R2 加 A → top=[K, A] (高牌组合, 未来配对).

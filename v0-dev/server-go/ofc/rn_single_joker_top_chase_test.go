@@ -115,3 +115,50 @@ func TestRnTopChase_Skip_AAATop(t *testing.T) {
 		t.Fatalf("AAA上顶 应不奖(0), got %v", got)
 	}
 }
+
+// 2026-06-11 RnTopTripsFantasyBonus — top foul-safe 三条 > top AA对 (ypk-102367562-12 R4)
+func TestRnTopTrips_Fire_333(t *testing.T) {
+	// top=[X X 3c] mid=888三条 → 333三条 (cap 下), foul-safe → +5
+	g := st([]string{"X", "X", "3c"}, []string{"8c", "8d", "7h", "8h"}, []string{"Td", "Jd", "Tc", "Th"})
+	if got := RnTopTripsFantasyBonus(g); got != 5 {
+		t.Fatalf("top 333三条 应 +5, got %v", got)
+	}
+}
+
+func TestRnTopTrips_Skip_AAPairCapped(t *testing.T) {
+	// top=[X X Ts] mid=888 → 被 cap 成 AA对 (TTT会犯规), 非三条 → 0
+	g := st([]string{"X", "X", "Ts"}, []string{"8c", "8d", "7h", "8h"}, []string{"Td", "Jd", "Tc", "Th"})
+	if got := RnTopTripsFantasyBonus(g); got != 0 {
+		t.Fatalf("top 被cap成AA对 应 0, got %v", got)
+	}
+}
+
+func TestRnTopTrips_Skip_Incomplete(t *testing.T) {
+	// top 未满 (2张) → 0
+	g := st([]string{"X", "X"}, []string{"8c", "8d", "7h", "8h"}, []string{"Td", "Jd", "Tc", "Th"})
+	if got := RnTopTripsFantasyBonus(g); got != 0 {
+		t.Fatalf("top 未满 应 0, got %v", got)
+	}
+}
+
+// 2026-06-11 边界: midMadeFloor 必须认得 mid 满时的 花/顺 (> 三条) + foul guard
+func TestRnTopTrips_MidFlushStraight(t *testing.T) {
+	cases := []struct {
+		name     string
+		top, mid []string
+		want     float32
+	}{
+		{"mid满花+top333三条", []string{"X", "X", "3c"}, []string{"2h", "5h", "8h", "Jh", "Kh"}, 5},
+		{"mid满顺+top333三条", []string{"X", "X", "3c"}, []string{"5h", "6c", "7d", "8h", "9s"}, 5},
+		{"mid两对+top333应犯规→0", []string{"X", "X", "3c"}, []string{"5h", "5c", "6h", "6c", "Kd"}, 0},
+		{"mid满888+topKKK犯规→0", []string{"X", "X", "Kc"}, []string{"8c", "8d", "8h", "2s", "3d"}, 0},
+		{"mid满888+top333foulsafe→5", []string{"X", "X", "3c"}, []string{"8c", "8d", "8h", "2s", "3d"}, 5},
+		{"mid部分高张+top444保守→0", []string{"X", "X", "4c"}, []string{"2h", "5c", "8d", "Jh"}, 0},
+	}
+	for _, c := range cases {
+		g := st(c.top, c.mid, nil)
+		if got := RnTopTripsFantasyBonus(g); got != c.want {
+			t.Errorf("%s: got %v want %v", c.name, got, c.want)
+		}
+	}
+}
