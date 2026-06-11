@@ -32,6 +32,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	mrand "math/rand"
 	"net"
@@ -836,6 +837,11 @@ func main() {
 	weightsFile := flag.String("weights", "", "override embedded weights with a JSON file (ckpt or server-go schema)")
 	flag.Parse()
 
+	// 观测日志: stdlib log 同时落进按日 dated 文件 (/tmp/ofc-8002-YYYY-MM-DD.log),
+	// 启动日志持久化 + 不被部署 redirect 覆盖 + 保留 7 天. 见 obslog.go.
+	log.SetOutput(io.MultiWriter(os.Stderr, obsLogWriter{}))
+	obsLogf("[boot] server starting (obslog enabled, retain=%dd)", obsLogRetainDays)
+
 	initRngFromEnv()
 	if envStr("DISABLE_HARD_RULES", "") != "" {
 		ofc.HardRulesDisabled = true
@@ -915,13 +921,14 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/solve", handleSolveRaw)
-	mux.HandleFunc("/health", handleHealth)
-	mux.HandleFunc("/cache/clear", handleCacheClear)
-	mux.HandleFunc("/api/solve", handleAPISolve)
-	mux.HandleFunc("/api/health", handleAPIHealth)
-	mux.HandleFunc("/api/games", gamesRouter)
-	mux.HandleFunc("/api/games/", gamesRouter)
+	// obsWrap: verbose=true (solve 类) 写 [recv]/[done] + 抓 no-response; 全部兜 panic.
+	mux.HandleFunc("/solve", obsWrap("solveRaw", true, handleSolveRaw))
+	mux.HandleFunc("/health", obsWrap("health", false, handleHealth))
+	mux.HandleFunc("/cache/clear", obsWrap("cacheClear", false, handleCacheClear))
+	mux.HandleFunc("/api/solve", obsWrap("apiSolve", true, handleAPISolve))
+	mux.HandleFunc("/api/health", obsWrap("apiHealth", false, handleAPIHealth))
+	mux.HandleFunc("/api/games", obsWrap("games", false, gamesRouter))
+	mux.HandleFunc("/api/games/", obsWrap("games", false, gamesRouter))
 	if staticPath != "" {
 		mux.Handle("/", http.FileServer(http.Dir(staticPath)))
 	}
