@@ -2752,7 +2752,7 @@
     "warn": true
   },
   {
-    "name": "46 [R4]: A 不弃",
+    "name": "46 [R4]: A 可弃可留 (KQ顶+A边际, 不强求保A)",
     "round": 4,
     "dealt": [
       "As",
@@ -2812,6 +2812,60 @@
         "top": [],
         "middle": [
           "As"
+        ],
+        "bottom": [
+          "2d"
+        ]
+      },
+      {
+        "top": [
+          "2d"
+        ],
+        "middle": [
+          "3d"
+        ],
+        "bottom": []
+      },
+      {
+        "top": [
+          "2d"
+        ],
+        "middle": [],
+        "bottom": [
+          "3d"
+        ]
+      },
+      {
+        "top": [
+          "3d"
+        ],
+        "middle": [
+          "2d"
+        ],
+        "bottom": []
+      },
+      {
+        "top": [],
+        "middle": [
+          "2d"
+        ],
+        "bottom": [
+          "3d"
+        ]
+      },
+      {
+        "top": [
+          "3d"
+        ],
+        "middle": [],
+        "bottom": [
+          "2d"
+        ]
+      },
+      {
+        "top": [],
+        "middle": [
+          "3d"
         ],
         "bottom": [
           "2d"

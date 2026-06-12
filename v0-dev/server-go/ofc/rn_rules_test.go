@@ -77,46 +77,5 @@ func applyRNAction(state *GameState, action *RoundNAction, dealt []Card) *GameSt
 	return post
 }
 
-// ============ RnSingleAOnTopBonus tests ============
-
-// TestRnSingleA_Case29 — case 29: state.Top=[Kh] (no joker), action 放 Ac → top=[Kh, Ac] → +10
-func TestRnSingleA_Case29(t *testing.T) {
-	gs := NewGameState(0)
-	gs.Round = 2
-	gs.Top = []Card{mustParse("Kh")}
-	dealt := []Card{mustParse("2s"), mustParse("7d"), mustParse("Ac")}
-	// Action: 弃 7d, Ac → top, 2s → mid
-	action := makeRNAction(1, []Card{dealt[2], dealt[0]}, Placement{RowTop, RowMiddle})
-	post := applyRNAction(gs, action, dealt)
-	if got := RnSingleAOnTopBonus(action, post, FoulImminentPenalty(post)); got != 10 {
-		t.Errorf("case 29 A on top (no joker): got %v, want 10", got)
-	}
-}
-
-// TestRnSingleA_StateHasJoker — state.Top 已有 joker → 0 (走 JokerWithHigh, 不重复)
-func TestRnSingleA_StateHasJoker(t *testing.T) {
-	gs := NewGameState(2)
-	gs.Round = 2
-	gs.Top = []Card{mustParse("X")} // 已有 joker
-	dealt := []Card{mustParse("4d"), mustParse("As"), mustParse("8h")}
-	action := makeRNAction(2, []Card{dealt[1], dealt[0]}, Placement{RowTop, RowMiddle})
-	post := applyRNAction(gs, action, dealt)
-	if got := RnSingleAOnTopBonus(action, post, FoulImminentPenalty(post)); got != 0 {
-		t.Errorf("state has joker on top: got %v, want 0 (走 JokerWithHigh)", got)
-	}
-}
-
-// TestRnSingleA_NoTop — A 不上 top → 0
-func TestRnSingleA_NoTop(t *testing.T) {
-	gs := NewGameState(0)
-	gs.Round = 2
-	gs.Top = []Card{mustParse("Kh")}
-	dealt := []Card{mustParse("2s"), mustParse("7d"), mustParse("Ac")}
-	// Action: 弃 7d, Ac → bot, 2s → mid
-	action := makeRNAction(1, []Card{dealt[2], dealt[0]}, Placement{RowBottom, RowMiddle})
-	post := applyRNAction(gs, action, dealt)
-	if got := RnSingleAOnTopBonus(action, post, FoulImminentPenalty(post)); got != 0 {
-		t.Errorf("A not on top: got %v, want 0", got)
-	}
-}
+// RnSingleAOnTopBonus tests 已删 (2026-06-13): 规则退休 (case 29 太子自学 / case 46 放宽 / 帮不到手2).
 

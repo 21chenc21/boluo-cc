@@ -389,11 +389,8 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 		item.teScore -= foul
 		// KK on mid penalty (替原 rnRuleKK_NotOnMid filter)
 		item.teScore -= RnKKOnMidPenalty(item.action, cards, state)
-		// 2026-05-20 sp15: Rn top fantasy lock 软推 (case 29 — NN R2-R5 低估 A 上 top)
-		// 2026-05-31 删 RnJokerWithHighOnTopBonus + RnTopCapBlockedFantasyPenalty:
-		//   cap-aware guard 漏了 Type<0 (over cap) 情况, top AAA over mid pair cap 时还 +10,
-		//   推翻 NN 真选 (NN 让 X 进 bot 凑 trips/Ad 进 bot), 致 ypk-97780042-1 R4 foul.
-		item.teScore += RnSingleAOnTopBonus(item.action, item.gs, foul)
+		// 2026-06-13 删 RnSingleAOnTopBonus(+10 A单上顶): case 29 太子已自学会(无它也过),
+		//   case 46 它在硬撑过严期望(用户判定弃A没问题, 已放宽), 且帮不到手2(排除鬼). 退休.
 		// 2026-06-01 加: 鬼同行罚 (mid/bot 任一行 ≥2 鬼) → -5
 		item.teScore -= RnJokersSameRowPenalty(item.action, item.gs)
 		// 2026-06-05 加: 孤鬼(或鬼+sub-Q)在顶 + 放 1 A 上顶追 AA 范 (废 A 放底) → +8
@@ -402,6 +399,8 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 		item.teScore -= RnLoneAceMidJokerTopPenalty(item.gs, state)
 		// 2026-06-11 加: top foul-safe 三条 (re-fan 锚, 17张范) > top AA对 (16张范) → +5
 		item.teScore += RnTopTripsFantasyBonus(item.gs)
+		// 2026-06-13 加: 顶把已锁 QQ+ 范对升成三条但中道托不住 → foul风险 -12 (ypk-70123850-2 R4 KKK)
+		item.teScore -= RnTopTripsOvercommitPenalty(item.gs, state)
 	}
 
 	sort.SliceStable(uniq, func(i, j int) bool { return uniq[i].teScore > uniq[j].teScore })

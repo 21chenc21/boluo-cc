@@ -1232,34 +1232,65 @@ func midMadeFloor(mid []Card) (int, int) {
 	return TypePair, -1 // < 三条, 不触发本规则
 }
 
-// RnSingleAOnTopBonus — R2-R5 软 bonus (+10):
-// action 在 top 放置了 A (无 joker 在 top), 准备 AA fantasy (R3-R5 配 A 或 joker).
-// 类比 R1SingleAOnTopBonus. 覆盖 case 29: state.Top=[Kh] R2 加 A → top=[K, A] (高牌组合, 未来配对).
-// 2026-05-22 perf: 收 postState + 已计算的 foulImminent, 跳内部 Clone.
-func RnSingleAOnTopBonus(a *RoundNAction, postState *GameState, foulImminent float32) float32 {
-	// action 必须放 A 上 top
-	placedAOnTop := false
-	for k, c := range a.Kept {
-		if a.Placement[k] == RowTop && !c.IsJoker() && c.Rank() == RankA {
-			placedAOnTop = true
+// RnTopTripsOvercommitPenalty — 顶把"已锁的 QQ+ 范对子"升成三条, 但中道现成牌型托不住该三条 → foul 风险, 罚.
+// 2026-06-13 (ypk-70123850-2 R4): pre-top KK (已锁 15张范, 且 KK 对 < mid 222 三条 = 安全) + 发 Kd → 凑 KKK,
+// KKK 三条 > mid 222 三条 → ~64% foul (mid 只剩 1 空, 要 2222/葫芦才托得住). 升级毫无意义还有害.
+// 仅: pre-top 是 QQ+ 对 (范已锁) + post-top 凑成三条 + mid 现成牌型 < 该三条 → 罚 12.
+// (注: 这是"风险"不是"必犯规", 故软罚而非 FoulImminentPenalty +20; mid 满且必犯规由 FoulImminent 兜.)
+func RnTopTripsOvercommitPenalty(postState, preState *GameState) float32 {
+	if len(preState.Top) != 2 || len(postState.Top) != 3 {
+		return 0 // 只管"2张顶(QQ+对)本轮加 1 张升 3张"
+	}
+	// pre-top: 已成 QQ+ 对 (范锁)
+	jt, reals := 0, []int{}
+	for _, c := range preState.Top {
+		if c.IsJoker() {
+			jt++
+		} else {
+			reals = append(reals, int(c.Rank()))
+		}
+	}
+	prePair := -1
+	switch {
+	case jt == 2:
+		prePair = int(RankA)
+	case jt == 1 && len(reals) == 1:
+		prePair = reals[0]
+	case jt == 0 && len(reals) == 2 && reals[0] == reals[1]:
+		prePair = reals[0]
+	}
+	if prePair < int(RankQ) {
+		return 0 // pre-top 不是 QQ+ 范锁 → 不归这条 (低对升三条可能是合理 re-fan)
+	}
+	// post-top: 凑成三条? 取三条 rank
+	var cnt [13]int
+	pj := 0
+	for _, c := range postState.Top {
+		if c.IsJoker() {
+			pj++
+		} else {
+			cnt[c.Rank()]++
+		}
+	}
+	topTrip := -1
+	for r := 12; r >= 0; r-- {
+		if cnt[r]+pj >= 3 {
+			topTrip = r
 			break
 		}
 	}
-	if !placedAOnTop {
-		return 0
+	if topTrip < 0 {
+		return 0 // post-top 还是对子/高张 (没升三条) → 不罚
 	}
-	// post-top 不能有 joker (joker+A 走另一个 bonus). postState.Top = pre.Top ∪ action 上 top 部分
-	for _, c := range postState.Top {
-		if c.IsJoker() {
-			return 0
-		}
+	// mid 现成牌型托得住 top 三条吗? (行只增不减 → 现状是下界)
+	midType, midTrip := midMadeFloor(postState.Middle)
+	if midType > TypeThreeOfAKind || (midType == TypeThreeOfAKind && midTrip >= topTrip) {
+		return 0 // mid 已 ≥ top 三条 → 安全, 升级是 free re-fan, 不罚
 	}
-	// 2026-05-20 sp15 fix: foul guard
-	if foulImminent > 0 {
-		return 0
-	}
-	return 10
+	return 12 // mid 托不住 → foul 风险 → 罚 (翻过 NN 对 KKK 升级的高估)
 }
+
+// RnSingleAOnTopBonus 已删 (2026-06-13): case 29 太子自学会 / case 46 过严期望已放宽 / 帮不到手2 鬼+A. 退休.
 
 // ============ FoulImminentPenalty (通用, R1-R5) ============
 // 2026-05-17: 老 R4FoulImminentPenalty 只覆 R4 mid+bot 满 + top 缺 1.

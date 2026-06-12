@@ -1706,5 +1706,89 @@
         "bottom": []
       }
     ]
+  },
+  {
+    "name": "实战 20 [R4]: top锁KK + mid222三条, 发[Kd 9c 6c] → 保KK不升KKK(KKK>222会犯规)",
+    "round": 4,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": [
+      "Kd",
+      "9c",
+      "6c"
+    ],
+    "state": {
+      "top": [
+        "Ks",
+        "Kh"
+      ],
+      "middle": [
+        "3d",
+        "2c",
+        "2d",
+        "2s"
+      ],
+      "bottom": [
+        "Ts",
+        "8h",
+        "Js"
+      ],
+      "usedCards": [
+        "Ts",
+        "3d",
+        "8h",
+        "Ks",
+        "2c",
+        "5h",
+        "Kh",
+        "2d",
+        "2s",
+        "4s",
+        "Js",
+        "8d",
+        "X",
+        "Jh"
+      ]
+    },
+    "expecteds": [
+      {
+        "top": [],
+        "middle": [
+          "Kd"
+        ],
+        "bottom": [
+          "9c"
+        ]
+      },
+      {
+        "top": [],
+        "middle": [
+          "Kd"
+        ],
+        "bottom": [
+          "6c"
+        ]
+      },
+      {
+        "top": [
+          "6c"
+        ],
+        "middle": [
+          "Kd"
+        ],
+        "bottom": []
+      }
+    ],
+    "wrongs": [
+      {
+        "top": [
+          "Kd"
+        ],
+        "middle": [],
+        "bottom": [
+          "9c"
+        ]
+      }
+    ]
   }
 ]

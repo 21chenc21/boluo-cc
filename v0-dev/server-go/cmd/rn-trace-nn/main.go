@@ -155,9 +155,9 @@ func main() {
 		}
 		c.foul = ofc.FoulImminentPenalty(gs)
 		c.kkOnMid = ofc.RnKKOnMidPenalty(a, dealt, state)
-		c.singleA = ofc.RnSingleAOnTopBonus(a, gs, c.foul)
+		// RnSingleAOnTopBonus 已删 (2026-06-13); c.singleA 恒 0 占位
 
-		c.score = c.te + ofc.PolicyBoost*c.plogit - c.foul - c.kkOnMid + c.singleA - ofc.RnJokersSameRowPenalty(a, gs) + ofc.RnSingleJokerTopChaseABonus(gs, state) - ofc.RnLoneAceMidJokerTopPenalty(gs, state) + ofc.RnTopTripsFantasyBonus(gs)
+		c.score = c.te + ofc.PolicyBoost*c.plogit - c.foul - c.kkOnMid + c.singleA - ofc.RnJokersSameRowPenalty(a, gs) + ofc.RnSingleJokerTopChaseABonus(gs, state) - ofc.RnLoneAceMidJokerTopPenalty(gs, state) + ofc.RnTopTripsFantasyBonus(gs) - ofc.RnTopTripsOvercommitPenalty(gs, state)
 		c.hardRuleOK = true
 		cands = append(cands, c)
 	}
