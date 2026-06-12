@@ -1790,5 +1790,76 @@
         ]
       }
     ]
+  },
+  {
+    "name": "实战 21 [R2]: top=[Kh] 发[Ah Jc X] → 鬼+A 上顶锁 AA 范 (不是 A单上顶/鬼撑底)",
+    "round": 2,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": [
+      "Ah",
+      "Jc",
+      "X"
+    ],
+    "state": {
+      "top": [
+        "Kh"
+      ],
+      "middle": [
+        "2s",
+        "3d"
+      ],
+      "bottom": [
+        "8c",
+        "Ts"
+      ],
+      "usedCards": [
+        "2s",
+        "8c",
+        "Ts",
+        "Kh",
+        "3d",
+        "9c",
+        "2h",
+        "Tc",
+        "5d",
+        "Qc",
+        "4d",
+        "7s",
+        "Ks",
+        "7c",
+        "6h"
+      ]
+    },
+    "expecteds": [
+      {
+        "top": [
+          "Ah",
+          "X"
+        ],
+        "middle": [],
+        "bottom": []
+      }
+    ],
+    "wrongs": [
+      {
+        "top": [
+          "Ah"
+        ],
+        "middle": [
+          "X"
+        ],
+        "bottom": []
+      },
+      {
+        "top": [
+          "Ah"
+        ],
+        "middle": [],
+        "bottom": [
+          "X"
+        ]
+      }
+    ]
   }
 ]

@@ -401,6 +401,8 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 		item.teScore += RnTopTripsFantasyBonus(item.gs)
 		// 2026-06-13 加: 顶把已锁 QQ+ 范对升成三条但中道托不住 → foul风险 -12 (ypk-70123850-2 R4 KKK)
 		item.teScore -= RnTopTripsOvercommitPenalty(item.gs, state)
+		// 2026-06-13 加: 鬼+A 上顶锁 AA 范 → +10 (NN 低估鬼锁顶范, ypk-70123850-10 R2)
+		item.teScore += RnJokerAOnTopBonus(item.action, item.gs)
 	}
 
 	sort.SliceStable(uniq, func(i, j int) bool { return uniq[i].teScore > uniq[j].teScore })

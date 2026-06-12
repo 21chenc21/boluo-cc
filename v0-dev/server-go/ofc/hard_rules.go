@@ -1292,6 +1292,42 @@ func RnTopTripsOvercommitPenalty(postState, preState *GameState) float32 {
 
 // RnSingleAOnTopBonus 已删 (2026-06-13): case 29 太子自学会 / case 46 过严期望已放宽 / 帮不到手2 鬼+A. 退休.
 
+// RnJokerAOnTopBonus — 本轮鬼+A 上顶锁 AA 范 → +10. 补 NN 对"鬼+A 锁顶范"的系统性低估.
+// 2026-06-13 (ypk-70123850-10 R2): top=[Kh]+发[Ah,X] → [Kh Ah X]=AA范锁, NN 排第3 (te 差 6.3).
+// 实验证实 NN 恒偏好"X 撑底/中" > "锁顶AA", 牌好牌坏都一样 (跟低估 top-三条/范锁同根).
+// 仅: 本轮往 top 加了鬼或A (有贡献) + post-top 恰 1鬼+1真A (=AA对范) + foul-squeeze guard.
+// (双鬼/AAA 走 RnTopTripsFantasyBonus 等; 不重复奖.)
+func RnJokerAOnTopBonus(a *RoundNAction, postState *GameState) float32 {
+	// 必须本轮把鬼"带上顶"(新建 AA 锁). 鬼若已在顶(如 [X Qc]=QQ 已锁), 再加 A 是"追"不是"锁",
+	// 该走 AA进中 (实战16/17/18) → 不奖. (孤鬼已在顶+加A 走 RnSingleJokerTopChaseABonus.)
+	jokerAddedTop := false
+	for k, c := range a.Kept {
+		if a.Placement[k] == RowTop && c.IsJoker() {
+			jokerAddedTop = true
+			break
+		}
+	}
+	if !jokerAddedTop {
+		return 0
+	}
+	jt, ra := 0, 0
+	for _, c := range postState.Top {
+		if c.IsJoker() {
+			jt++
+		} else if c.Rank() == RankA {
+			ra++
+		}
+	}
+	if jt != 1 || ra != 1 {
+		return 0 // 只奖 鬼+A=AA对 (1鬼1A); 双鬼/AAA 别处管
+	}
+	// foul-squeeze guard: mid 满且 < 两对 → top AA 托不住 (AA 是最大对, 需 mid 两对+) → 不奖
+	if len(postState.Middle) == 5 && Evaluate5JokerCap(postState.Middle, nil).Type < TypeTwoPair {
+		return 0
+	}
+	return 10
+}
+
 // ============ FoulImminentPenalty (通用, R1-R5) ============
 // 2026-05-17: 老 R4FoulImminentPenalty 只覆 R4 mid+bot 满 + top 缺 1.
 // 通用化: 任何 partial state 下检测 foul 必然 → +20 penalty.
