@@ -1293,6 +1293,10 @@ func RnTopTripsOvercommitPenalty(postState, preState *GameState) float32 {
 // RnSingleAOnTopBonus 已删 (2026-06-13): case 29 太子自学会 / case 46 过严期望已放宽 / 帮不到手2 鬼+A. 退休.
 
 // RnJokerAOnTopBonus — 本轮鬼+A 上顶锁 AA 范 → +10. 补 NN 对"鬼+A 锁顶范"的系统性低估.
+// ⚠️ 这类软规则是针对**当前太子 NN 的具体偏差**校准的 (magnitude/触发都依赖太子的 te).
+//    换模型 (尤其 sp24 激进版重奖 AA/范, NN 偏好会变) → 整套软硬规则可能需要**不同的配置**:
+//    有的冗余(NN 自纠, 如已删的 RnSingleAOnTopBonus)、有的过火、magnitude 要重调.
+//    promote 任何新 ckpt 前, 务必把这些规则 on/off + 重测 testcase/实战, 别假设沿用.
 // 2026-06-13 (ypk-70123850-10 R2): top=[Kh]+发[Ah,X] → [Kh Ah X]=AA范锁, NN 排第3 (te 差 6.3).
 // 实验证实 NN 恒偏好"X 撑底/中" > "锁顶AA", 牌好牌坏都一样 (跟低估 top-三条/范锁同根).
 // 仅: 本轮往 top 加了鬼或A (有贡献) + post-top 恰 1鬼+1真A (=AA对范) + foul-squeeze guard.
