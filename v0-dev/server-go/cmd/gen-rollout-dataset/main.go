@@ -51,8 +51,8 @@ var (
 	foulCost      = flag.Float64("foul-cost", 6, "")
 	fanBonusQQ    = flag.Float64("fan-bonus-qq", 20, "")
 	fanBonusKK    = flag.Float64("fan-bonus-kk", 40, "")
-	fanBonusAA    = flag.Float64("fan-bonus-aa", 80, "")
-	fanBonusTrips = flag.Float64("fan-bonus-trips", 90, "")
+	fanBonusAA    = flag.Float64("fan-bonus-aa", 100, "")
+	fanBonusTrips = flag.Float64("fan-bonus-trips", 120, "")
 )
 
 // Sample — 跟 train.go schema 兼容
@@ -559,6 +559,11 @@ func main() {
 	cfg.KKFanBonus = float32(*fanBonusKK)
 	cfg.AAFanBonus = float32(*fanBonusAA)
 	cfg.TripsFanBonus = float32(*fanBonusTrips)
+
+	// 2026-06-12: flag 同时驱动 feature dim-0 的 var (不只 label) → feature 与 label 对齐.
+	// 必须在 LoadWeightsFromFile 之后 (它按 ckpt 字段 reset var), flag 才是训练侧最终真相.
+	// 否则 best=太子(无字段) 未 promote 时 feature dim-0 全程回 100/120 而 label 是 flag → 错位 (sp21/sp23 坑).
+	ofc.SetFanBonusScale(fanBonusQQ, fanBonusKK, fanBonusAA, fanBonusTrips, foulCost)
 
 	log.Printf("[gen] config: jokers=%d games=%d rollouts-per-cand=%d", *numJokers, *numGames, *rolloutsPerCand)
 	log.Printf("[gen] knobs: foul-cost=%.0f QQ=%.0f KK=%.0f AA=%.0f trips=%.0f", *foulCost, *fanBonusQQ, *fanBonusKK, *fanBonusAA, *fanBonusTrips)

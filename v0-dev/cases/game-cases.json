@@ -1020,6 +1020,31 @@
       {
         "top": [
           "Ah",
+          "Ac"
+        ],
+        "middle": [
+          "2s"
+        ],
+        "bottom": [
+          "Ad",
+          "As"
+        ]
+      },
+      {
+        "top": [
+          "Ah",
+          "Ac"
+        ],
+        "middle": [
+          "Ad",
+          "As",
+          "2s"
+        ],
+        "bottom": []
+      },
+      {
+        "top": [
+          "Ah",
           "Ad"
         ],
         "middle": [
@@ -1029,6 +1054,118 @@
           "Ac",
           "As"
         ]
+      },
+      {
+        "top": [
+          "Ah",
+          "Ad"
+        ],
+        "middle": [
+          "Ac",
+          "As",
+          "2s"
+        ],
+        "bottom": []
+      },
+      {
+        "top": [
+          "Ah",
+          "As"
+        ],
+        "middle": [
+          "2s"
+        ],
+        "bottom": [
+          "Ac",
+          "Ad"
+        ]
+      },
+      {
+        "top": [
+          "Ah",
+          "As"
+        ],
+        "middle": [
+          "Ac",
+          "Ad",
+          "2s"
+        ],
+        "bottom": []
+      },
+      {
+        "top": [
+          "Ac",
+          "Ad"
+        ],
+        "middle": [
+          "2s"
+        ],
+        "bottom": [
+          "Ah",
+          "As"
+        ]
+      },
+      {
+        "top": [
+          "Ac",
+          "Ad"
+        ],
+        "middle": [
+          "Ah",
+          "As",
+          "2s"
+        ],
+        "bottom": []
+      },
+      {
+        "top": [
+          "Ac",
+          "As"
+        ],
+        "middle": [
+          "2s"
+        ],
+        "bottom": [
+          "Ah",
+          "Ad"
+        ]
+      },
+      {
+        "top": [
+          "Ac",
+          "As"
+        ],
+        "middle": [
+          "Ah",
+          "Ad",
+          "2s"
+        ],
+        "bottom": []
+      },
+      {
+        "top": [
+          "Ad",
+          "As"
+        ],
+        "middle": [
+          "2s"
+        ],
+        "bottom": [
+          "Ah",
+          "Ac"
+        ]
+      },
+      {
+        "top": [
+          "Ad",
+          "As"
+        ],
+        "middle": [
+          "Ah",
+          "Ac",
+          "2s"
+        ],
+        "bottom": []
       }
     ],
     "wrongs": [
@@ -1073,6 +1210,32 @@
         ],
         "middle": [
           "Ac",
+          "X"
+        ],
+        "bottom": [
+          "X"
+        ]
+      },
+      {
+        "top": [
+          "Ah",
+          "Ac"
+        ],
+        "middle": [
+          "As",
+          "X"
+        ],
+        "bottom": [
+          "X"
+        ]
+      },
+      {
+        "top": [
+          "Ac",
+          "As"
+        ],
+        "middle": [
+          "Ah",
           "X"
         ],
         "bottom": [
@@ -1340,6 +1503,22 @@
           "Ac"
         ],
         "bottom": []
+      },
+      {
+        "top": [],
+        "middle": [
+          "As",
+          "Ah"
+        ],
+        "bottom": []
+      },
+      {
+        "top": [],
+        "middle": [
+          "As",
+          "Ac"
+        ],
+        "bottom": []
       }
     ],
     "wrongs": [
@@ -1424,6 +1603,14 @@
         "middle": [
           "As",
           "Ac"
+        ],
+        "bottom": []
+      },
+      {
+        "top": [],
+        "middle": [
+          "As",
+          "Ah"
         ],
         "bottom": []
       }

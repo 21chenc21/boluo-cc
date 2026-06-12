@@ -85,10 +85,19 @@ func loadWeightsFromBytes(data []byte) error {
 		W4                                 [][]float64
 		B4                                 []float64
 		YStd, YMean                        float64
+		// 2026-06-12: 可选 fan-bonus scale (模型自带, 训练写入). 缺失 (如太子) → 回退 default.
+		// 指针类型: nil = ckpt 无此字段 → SetFanBonusScale 用 default (向后兼容).
+		FanBonusQQ    *float64 `json:"fanBonusQQ"`
+		FanBonusKK    *float64 `json:"fanBonusKK"`
+		FanBonusAA    *float64 `json:"fanBonusAA"`
+		FanBonusTrips *float64 `json:"fanBonusTrips"`
+		FoulCost      *float64 `json:"foulCost"`
 	}
 	if err := json.Unmarshal(data, &c); err != nil {
 		return fmt.Errorf("parse: %w", err)
 	}
+	// 每次加载全量设置 fan-bonus scale (有字段用之, 无字段回退 default — 防 scale 残留/错位).
+	SetFanBonusScale(c.FanBonusQQ, c.FanBonusKK, c.FanBonusAA, c.FanBonusTrips, c.FoulCost)
 	var w3 [][]float64
 	var w3m [][]float64
 	var w3v []float64

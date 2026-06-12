@@ -62,8 +62,8 @@ var (
 	foulCost      = flag.Float64("foul-cost", 6, "foul penalty in rollout label")
 	fanBonusQQ    = flag.Float64("fan-bonus-qq", 20, "QQ Fantasy bonus in rollout label")
 	fanBonusKK    = flag.Float64("fan-bonus-kk", 40, "KK Fantasy bonus in rollout label")
-	fanBonusAA    = flag.Float64("fan-bonus-aa", 80, "AA Fantasy bonus in rollout label")
-	fanBonusTrips = flag.Float64("fan-bonus-trips", 90, "Trips top Fantasy bonus in rollout label")
+	fanBonusAA    = flag.Float64("fan-bonus-aa", 100, "AA Fantasy bonus in rollout label")
+	fanBonusTrips = flag.Float64("fan-bonus-trips", 120, "Trips top Fantasy bonus in rollout label")
 
 	// Rollout ε-greedy 探索率 — 训练分布广度. 0=纯 MLP-greedy (推理默认), 0.1=10% 随机探索 (训练推荐).
 	// 让 rollout policy 不被 MLP 当前认知锁死, 让 KK→bot 等"当前 MLP 低估"路径有机会被采样.
@@ -909,6 +909,13 @@ type ckptOut struct {
 	GamesCnt   int         `json:"gamesPlayed"`
 	Timestamp  string      `json:"timestamp"`
 	PolicyVer  string      `json:"policyVersion"`
+	// 2026-06-12: 模型自带 fan-bonus scale → server/bench/duel 加载时自动对齐 (见 ofc.SetFanBonusScale).
+	// 必写: 否则 feature dim-0 在 train↔serve 错位 (sp21/sp23 那个坑).
+	FanBonusQQ    float64 `json:"fanBonusQQ"`
+	FanBonusKK    float64 `json:"fanBonusKK"`
+	FanBonusAA    float64 `json:"fanBonusAA"`
+	FanBonusTrips float64 `json:"fanBonusTrips"`
+	FoulCost      float64 `json:"foulCost"`
 }
 
 // LoadMLPFromCkpt — 解析 ckpt JSON 回到 MLP struct (warm-start 用).
@@ -961,6 +968,8 @@ func saveCkpt(m *MLP, path string, meta ckptOut) error {
 		Round: meta.Round, Accuracy: meta.Accuracy,
 		SamplesCnt: meta.SamplesCnt, GamesCnt: meta.GamesCnt,
 		Timestamp: meta.Timestamp, PolicyVer: meta.PolicyVer,
+		FanBonusQQ: meta.FanBonusQQ, FanBonusKK: meta.FanBonusKK, FanBonusAA: meta.FanBonusAA,
+		FanBonusTrips: meta.FanBonusTrips, FoulCost: meta.FoulCost,
 	}
 	b, err := json.Marshal(&out)
 	if err != nil {
@@ -1032,6 +1041,8 @@ func main() {
 	evalCfg.AAFanBonus = float32(*fanBonusAA)
 	evalCfg.TripsFanBonus = float32(*fanBonusTrips)
 	evalCfg.Epsilon = float32(*rolloutEpsilon)
+	// 2026-06-12: flag 驱动 feature dim-0 的 var (warm-start LoadMLPFromCkpt 不设 var → 否则 train 算 feature 用 default).
+	ofc.SetFanBonusScale(fanBonusQQ, fanBonusKK, fanBonusAA, fanBonusTrips, foulCost)
 
 	// MLP warm-start tracking: 每 round 后保 ckpt path, round+1 用作 init
 	var prevCkptPath string
@@ -1323,6 +1334,9 @@ func main() {
 			SamplesCnt: len(newSamples), GamesCnt: gamesCount,
 			Timestamp: time.Now().Format(time.RFC3339),
 			PolicyVer: *policyVer,
+			// 2026-06-12: 把训练用的 fan-bonus scale 写进 ckpt → serve 时自动对齐
+			FanBonusQQ: *fanBonusQQ, FanBonusKK: *fanBonusKK, FanBonusAA: *fanBonusAA,
+			FanBonusTrips: *fanBonusTrips, FoulCost: *foulCost,
 		})
 		if err != nil {
 			log.Printf("save ckpt failed: %v", err)

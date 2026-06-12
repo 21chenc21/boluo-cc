@@ -40,14 +40,42 @@ import (
 
 const FeatureDimV3 = 147
 
-// Fantasy bonus calibration (与训练 label 对齐, 见 design doc)
+// Fantasy bonus calibration (与训练 label 对齐, 见 design doc).
+// 2026-06-12: const → var, 可被 ckpt 里的 fanBonus* 字段覆盖 (见 SetFanBonusScale / loadWeightsFromBytes).
+// ⚠️ 这 5 个值进 feature dim-0 (fillSummary), 训练和推理都用 → 必须 train↔serve 对齐.
+// ckpt 无字段 (如太子) → 回退 default* → 行为与改前完全一致 (向后兼容).
 const (
-	V3FanBonusQQ    = 20.0
-	V3FanBonusKK    = 40.0
-	V3FanBonusAA    = 100.0 // 2026-05-20: 80 → 100 加 reward shaping (NN 实测 TE 给 AA-lock 低估 16-24)
-	V3FanBonusTrips = 120.0 // 2026-05-20: 90 → 120 (trips 更稀缺更值钱)
-	V3FoulCost      = 6.0   // 用户设计: foul-cost 低 = 鼓励 fan-chase, 不动
+	defaultV3FanBonusQQ    float32 = 20.0
+	defaultV3FanBonusKK    float32 = 40.0
+	defaultV3FanBonusAA    float32 = 100.0 // 2026-05-20: 80 → 100 reward shaping (太子 scale)
+	defaultV3FanBonusTrips float32 = 120.0 // 2026-05-20: 90 → 120
+	defaultV3FoulCost      float32 = 6.0   // 用户设计: foul-cost 低 = 鼓励 fan-chase
 )
+
+var (
+	V3FanBonusQQ    = defaultV3FanBonusQQ
+	V3FanBonusKK    = defaultV3FanBonusKK
+	V3FanBonusAA    = defaultV3FanBonusAA
+	V3FanBonusTrips = defaultV3FanBonusTrips
+	V3FoulCost      = defaultV3FoulCost
+)
+
+// SetFanBonusScale — 用 ckpt 里的值覆盖 fan-bonus scale. 每次加载全量设置:
+// 非 nil → 用 ckpt 值; nil (ckpt 无此字段) → 回退 default (防上一个 ckpt 的 scale 残留).
+func SetFanBonusScale(qq, kk, aa, trips, foulCost *float64) {
+	set := func(dst *float32, v *float64, def float32) {
+		if v != nil {
+			*dst = float32(*v)
+		} else {
+			*dst = def
+		}
+	}
+	set(&V3FanBonusQQ, qq, defaultV3FanBonusQQ)
+	set(&V3FanBonusKK, kk, defaultV3FanBonusKK)
+	set(&V3FanBonusAA, aa, defaultV3FanBonusAA)
+	set(&V3FanBonusTrips, trips, defaultV3FanBonusTrips)
+	set(&V3FoulCost, foulCost, defaultV3FoulCost)
+}
 
 // BuildFeaturesV3 — 主入口. 输入 post-placement state, 返回 131-d feature.
 func BuildFeaturesV3(gs *GameState) []float32 {
