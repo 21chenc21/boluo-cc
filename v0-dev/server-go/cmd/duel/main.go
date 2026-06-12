@@ -558,10 +558,24 @@ func phantomCountFor(round, slot, opponents int) int {
 }
 
 func shortName(p string) string {
-	// 取文件名
-	i := len(p)
-	for i > 0 && p[i-1] != '/' {
-		i--
+	// 取 父目录/文件名 (两个 best.json 不歧义: big-models/best.json vs sp18-sp24/best.json)
+	end := len(p)
+	slash1 := -1 // 文件名前的 /
+	for i := end - 1; i >= 0; i-- {
+		if p[i] == '/' {
+			slash1 = i
+			break
+		}
 	}
-	return p[i:]
+	if slash1 <= 0 {
+		return p
+	}
+	slash2 := -1 // 父目录前的 /
+	for i := slash1 - 1; i >= 0; i-- {
+		if p[i] == '/' {
+			slash2 = i
+			break
+		}
+	}
+	return p[slash2+1:]
 }
