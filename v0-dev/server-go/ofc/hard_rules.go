@@ -1025,6 +1025,116 @@ func R1FlushGroupOnBotBonus(p Placement, cards []Card) float32 {
 
 // RnKKOnMidPenalty — RN action 含 dealt KK pair 任一上中 → +15 penalty
 // (替 rnRuleKK_NotOnMid; 留 context 给 prerank/MCTS, 而非 prune)
+// botExactTwoPair — 底道恰好成"两对"(非葫芦/三条/四条). 满 5 张用真实 eval; 部分用对数+无三条潜力判.
+func botExactTwoPair(row []Card) bool {
+	if len(row) == 5 {
+		return Evaluate5JokerCap(row, nil).Type == TypeTwoPair
+	}
+	var cnt [13]int
+	j := 0
+	for _, c := range row {
+		if c.IsJoker() {
+			j++
+		} else {
+			cnt[c.Rank()]++
+		}
+	}
+	pairs, maxc := 0, 0
+	for _, n := range cnt {
+		if n >= 2 {
+			pairs++
+		}
+		if n > maxc {
+			maxc = n
+		}
+	}
+	if maxc+j >= 3 {
+		return false // 能成三条/葫芦 → 不算纯两对
+	}
+	return pairs >= 2
+}
+
+// botAtLeastTwoPair — 底道成牌 ≥ 两对 (两对/葫芦/三条+/…). pre-guard 用: 底已强就不是"本轮新做".
+func botAtLeastTwoPair(row []Card) bool {
+	if len(row) == 5 {
+		return Evaluate5JokerCap(row, nil).Type >= TypeTwoPair
+	}
+	var cnt [13]int
+	j := 0
+	for _, c := range row {
+		if c.IsJoker() {
+			j++
+		} else {
+			cnt[c.Rank()]++
+		}
+	}
+	pairs, maxc := 0, 0
+	for _, n := range cnt {
+		if n >= 2 {
+			pairs++
+		}
+		if n > maxc {
+			maxc = n
+		}
+	}
+	return maxc+j >= 3 || pairs >= 2 // 三条+ 或 两对
+}
+
+// RnBotMakeTwoPairBonus — 本轮把底道从 <两对 做成**恰两对** (如 QQ底 + 发KK → KKQQ) → +8.
+// 通用. 2026-06-13 (ypk-88080714-8 R2): KK 该放底凑 KKQQ 强底, 别去丢 K 保 AA 顶干净.
+// pre-guard: 底已 ≥两对(含三条/葫芦, 如实战16/17 底TTT)→ 不奖 (非本轮新做).
+// post 限**恰两对**(非葫芦)→ 实战16/17 AA→底=葫芦不奖(AA该进中); case44 底顺draw不触发.
+func RnBotMakeTwoPairBonus(postState, preState *GameState) float32 {
+	if botAtLeastTwoPair(preState.Bottom) {
+		return 0 // 底已 ≥两对, 非本轮新做
+	}
+	if botExactTwoPair(postState.Bottom) {
+		return 8
+	}
+	return 0
+}
+
+// RnMidExceedsBotPenalty — 候选造成"中道成牌 > 底道成牌"(违反 bot≥mid) → foul 倒置, 罚.
+// 通用. 2026-06-13 (ypk-88080714-8 R2): bot=QQ, AI 把 KK→中 → 中KK > 底QQ = 倒置必犯规结构.
+// 本质是"中比底大"(不依赖 top); KK 该放底跟 QQ 凑 KKQQ 两对. 只在中/底**都已成对+**时比,
+// 避免误伤"中先成对、底还在发展"的正常过程. 用 partialEval (joker-aware) 比.
+func RnMidExceedsBotPenalty(postState *GameState) float32 {
+	mid := partialEval(postState.Middle)
+	bot := partialEval(postState.Bottom)
+	if mid.Type < TypePair || bot.Type < TypePair {
+		return 0 // 至少都成对才算"对梯倒置"
+	}
+	if HandExceeds5(mid, bot) {
+		return 15 // 中 > 底 → 倒置, 罚
+	}
+	return 0
+}
+
+// RnQuadsJokerWastePenalty — 某行 4 张真同 rank (真四条) 且同行有鬼 → 鬼废成 kicker → 罚 (ypk-94634314-14).
+func RnQuadsJokerWastePenalty(postState *GameState) float32 {
+	var pen float32
+	for _, row := range [][]Card{postState.Top, postState.Middle, postState.Bottom} {
+		jokers := 0
+		var cnt [13]int
+		for _, c := range row {
+			if c.IsJoker() {
+				jokers++
+			} else {
+				cnt[c.Rank()]++
+			}
+		}
+		if jokers == 0 {
+			continue
+		}
+		for r := 0; r < 13; r++ {
+			if cnt[r] >= 4 { // 4 张真同 rank = 真四条, 同行的鬼纯属多余 kicker
+				pen += 15
+			}
+		}
+	}
+	return pen
+}
+
 func RnKKOnMidPenalty(a *RoundNAction, cards []Card, state *GameState) float32 {
 	pairs := detectDealtPairs(cards)
 	cnt, ok := pairs[RankK]

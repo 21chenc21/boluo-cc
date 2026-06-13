@@ -1861,5 +1861,160 @@
         ]
       }
     ]
+  },
+  {
+    "name": "实战 22 [R3]: bot已KKK(2真K+鬼) 发[Ks Kh 6d] → 别塞双K凑5王(废鬼), 1K上顶锁KK范",
+    "round": 3,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": [
+      "Ks",
+      "Kh",
+      "6d"
+    ],
+    "state": {
+      "top": [
+        "X"
+      ],
+      "middle": [
+        "2d",
+        "7s",
+        "7d"
+      ],
+      "bottom": [
+        "Kc",
+        "Kd",
+        "X"
+      ],
+      "usedCards": [
+        "2d",
+        "Kc",
+        "X",
+        "Kd",
+        "7s",
+        "Qc",
+        "4s",
+        "7d",
+        "Qs",
+        "X",
+        "5h",
+        "8s"
+      ]
+    },
+    "expecteds": [
+      {
+        "top": [
+          "Ks"
+        ],
+        "middle": [],
+        "bottom": [
+          "Kh"
+        ]
+      },
+      {
+        "top": [
+          "Kh"
+        ],
+        "middle": [],
+        "bottom": [
+          "Ks"
+        ]
+      },
+      {
+        "top": [],
+        "middle": [
+          "Ks",
+          "Kh"
+        ],
+        "bottom": []
+      }
+    ],
+    "wrongs": [
+      {
+        "top": [],
+        "middle": [],
+        "bottom": [
+          "Ks",
+          "Kh"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "实战 23 [R2]: AA顶(被迫)+QQ底, 发[Ks Kh 3h] → KK放底凑KKQQ两对(别KK中倒置/别丢K)",
+    "round": 2,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": [
+      "Ks",
+      "Kh",
+      "3h"
+    ],
+    "state": {
+      "top": [
+        "Ac",
+        "As"
+      ],
+      "middle": [],
+      "bottom": [
+        "Qh",
+        "Qc",
+        "6h"
+      ],
+      "usedCards": [
+        "Qh",
+        "Qc",
+        "6h",
+        "Ac",
+        "As",
+        "4h",
+        "Js",
+        "X",
+        "5s",
+        "Kd",
+        "Qs",
+        "Kc",
+        "4d",
+        "3s",
+        "Ah",
+        "7s",
+        "4c",
+        "9c"
+      ]
+    },
+    "expecteds": [
+      {
+        "top": [],
+        "middle": [],
+        "bottom": [
+          "Ks",
+          "Kh"
+        ]
+      }
+    ],
+    "wrongs": [
+      {
+        "top": [],
+        "middle": [
+          "Ks",
+          "Kh"
+        ],
+        "bottom": []
+      },
+      {
+        "top": [
+          "Ks"
+        ],
+        "middle": [],
+        "bottom": []
+      },
+      {
+        "top": [
+          "Kh"
+        ],
+        "middle": [],
+        "bottom": []
+      }
+    ]
   }
 ]

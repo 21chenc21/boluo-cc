@@ -403,6 +403,12 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 		item.teScore -= RnTopTripsOvercommitPenalty(item.gs, state)
 		// 2026-06-13 加: 鬼+A 上顶锁 AA 范 → +10 (NN 低估鬼锁顶范, ypk-70123850-10 R2)
 		item.teScore += RnJokerAOnTopBonus(item.action, item.gs)
+		// 2026-06-13 加: 某行真四条+鬼 (鬼废成kicker) → -15 通用 overstuff 罚 (ypk-94634314-14 R3)
+		item.teScore -= RnQuadsJokerWastePenalty(item.gs)
+		// 2026-06-13 加: 中道成牌 > 底道 (违反 bot≥mid 倒置) → -15 (ypk-88080714-8 R2 KK中>QQ底)
+		item.teScore -= RnMidExceedsBotPenalty(item.gs)
+		// 2026-06-13 加: 本轮把底做成 ≥两对 (KK→底凑KKQQ强底) → +8 (ypk-88080714-8 R2)
+		item.teScore += RnBotMakeTwoPairBonus(item.gs, state)
 	}
 
 	sort.SliceStable(uniq, func(i, j int) bool { return uniq[i].teScore > uniq[j].teScore })
