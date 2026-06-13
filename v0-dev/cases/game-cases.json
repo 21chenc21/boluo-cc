@@ -1166,6 +1166,84 @@
           "2s"
         ],
         "bottom": []
+      },
+      {
+        "top": [
+          "Ah",
+          "Ac"
+        ],
+        "middle": [
+          "Ad",
+          "As"
+        ],
+        "bottom": [
+          "2s"
+        ]
+      },
+      {
+        "top": [
+          "Ah",
+          "Ad"
+        ],
+        "middle": [
+          "Ac",
+          "As"
+        ],
+        "bottom": [
+          "2s"
+        ]
+      },
+      {
+        "top": [
+          "Ah",
+          "As"
+        ],
+        "middle": [
+          "Ac",
+          "Ad"
+        ],
+        "bottom": [
+          "2s"
+        ]
+      },
+      {
+        "top": [
+          "Ac",
+          "Ad"
+        ],
+        "middle": [
+          "Ah",
+          "As"
+        ],
+        "bottom": [
+          "2s"
+        ]
+      },
+      {
+        "top": [
+          "Ac",
+          "As"
+        ],
+        "middle": [
+          "Ah",
+          "Ad"
+        ],
+        "bottom": [
+          "2s"
+        ]
+      },
+      {
+        "top": [
+          "Ad",
+          "As"
+        ],
+        "middle": [
+          "Ah",
+          "Ac"
+        ],
+        "bottom": [
+          "2s"
+        ]
       }
     ],
     "wrongs": [
@@ -1324,9 +1402,7 @@
         "bottom": [
           "Ac"
         ]
-      }
-    ],
-    "wrongs": [
+      },
       {
         "top": [],
         "middle": [
@@ -1335,6 +1411,24 @@
         ],
         "bottom": []
       },
+      {
+        "top": [],
+        "middle": [
+          "As",
+          "Ac"
+        ],
+        "bottom": []
+      },
+      {
+        "top": [],
+        "middle": [
+          "Ah",
+          "Ac"
+        ],
+        "bottom": []
+      }
+    ],
+    "wrongs": [
       {
         "top": [
           "Ah",
