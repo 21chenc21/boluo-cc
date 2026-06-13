@@ -2385,5 +2385,73 @@
       }
     ],
     "wrongs": []
+  },
+  {
+    "name": "实战 28 [R2] 🎯sp25靶(当前failing): 底TT 中[6h 2h] 发[9s Jd 4c] → Jd放底(TTQJ强底+T-J-Q连)/4c放中(低牌安全)/弃9s. 当前NN反结构 Jd→中(JJ>TT foul险)+4c占底. 纯value-head判错(特征favor正解但组合错), 零规则干预. 待sp25 retrain修 (ypk-185336138-28)",
+    "round": 2,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": [
+      "9s",
+      "Jd",
+      "4c"
+    ],
+    "state": {
+      "top": [],
+      "middle": [
+        "6h",
+        "2h"
+      ],
+      "bottom": [
+        "Qh",
+        "Td",
+        "Th"
+      ],
+      "usedCards": [
+        "6h",
+        "Qh",
+        "Td",
+        "2h",
+        "Th",
+        "2d",
+        "Ac",
+        "Ad",
+        "X",
+        "7s",
+        "Qc",
+        "As",
+        "9d",
+        "5h",
+        "Qd",
+        "Tc",
+        "8c",
+        "4h",
+        "Ah",
+        "6d",
+        "Kh"
+      ]
+    },
+    "expecteds": [
+      {
+        "top": [],
+        "middle": [
+          "4c"
+        ],
+        "bottom": [
+          "Jd"
+        ]
+      }
+    ],
+    "wrongs": [
+      {
+        "top": [],
+        "middle": [
+          "Jd"
+        ],
+        "bottom": [
+          "4c"
+        ]
+      }
+    ]
   }
 ]
