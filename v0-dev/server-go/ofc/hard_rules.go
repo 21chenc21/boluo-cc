@@ -1064,9 +1064,76 @@ func RnBotMakeTwoPairBonus(postState, preState *GameState) float32 {
 	return 0
 }
 
-// RnMidMakeTwoPairBonus 已删 (2026-06-13): kkMid 删后冗余 — 实测禁用它实战22 照样 KK→中
-// (NN te 61.6 > Ks顶 54.7 自己就赢), std63/gamecase 零变化 = 这条没在翻任何 NN 的错.
-// 软规则只该"刚好够翻 NN + 小余量", 不留 do-nothing 的死规则.
+// RnMidMakeTwoPairBonus — 本轮把中道做成 ≥两对, 且底道 > 中道 (维持 bot>mid 不倒置) → +8.
+// 通用. 底已比中强时(底三条/顺/更高两对), 中凑两对是安全的强中. 用 partialEvalTP(两对感知).
+// 底 ≤ 中 不奖 → 防 case9(弃鬼凑中两对) / 防 mid>bot 倒置.
+// 2026-06-13 曾删(以为冗余, 只在实战22 验过 NN 自赢); 2026-06-14 恢复 — ypk-459082-16 R5:
+//   底=顺子, 发 Jh 该进中凑 JJ22 两对(底顺>中), AI 却弃 Jh 保 22 (gap 仅 0.10). 删早了.
+func RnMidMakeTwoPairBonus(postState, preState *GameState) float32 {
+	if botAtLeastTwoPair(preState.Middle) {
+		return 0 // 中已≥两对, 非本轮新做
+	}
+	if !botAtLeastTwoPair(postState.Middle) {
+		return 0 // 中没成两对
+	}
+	if HandExceeds5(partialEvalTP(postState.Bottom), partialEvalTP(postState.Middle)) {
+		return 8 // 底 > 中 → 安全的强中, 奖
+	}
+	return 0
+}
+
+// RnMidHighCardOverBotPenalty — 用户提案 (2026-06-14): 本轮往中道放的真牌 > 底道锚 且 底未成三条 → 罚.
+// 含义: 大于底锚的高牌该进底道(强行), 别浪费在中道. 底锚 = 底成对→最高对子rank; 底未成对→底max真牌.
+// ypk-459082-15 R2 (底99, Jd 进中) / ypk-459082-16 R2 (底6789draw, Jc进中).
+// ⚠️ 误伤风险: 中道有 draw/配对潜力时高牌进中可能合理. 先实测 std63/gamecase 误伤面.
+func RnMidHighCardOverBotPenalty(postState, preState *GameState) float32 {
+	bot := partialEvalTP(postState.Bottom)
+	if bot.Type >= TypeThreeOfAKind {
+		return 0 // 底已三条+ → 不管
+	}
+	if partialEvalTP(postState.Middle).Type >= TypeThreeOfAKind {
+		return 0 // 中已三条+ → 高牌只是无害 kicker, 不算浪费 (实战20: mid 222 + K)
+	}
+	var botCnt [13]int
+	botMax := -1
+	for _, c := range postState.Bottom {
+		if c.IsJoker() {
+			continue
+		}
+		botCnt[c.Rank()]++
+		if int(c.Rank()) > botMax {
+			botMax = int(c.Rank())
+		}
+	}
+	botAnchor := botMax
+	if bot.Type >= TypePair { // 底成对 → 锚 = 最高对子 rank
+		for r := 12; r >= 0; r-- {
+			if botCnt[r] >= 2 {
+				botAnchor = r
+				break
+			}
+		}
+	}
+	// 本轮新进中道的真牌最高 rank (multiset diff pre vs post)
+	preMid := map[string]int{}
+	for _, c := range preState.Middle {
+		preMid[c.ID()]++
+	}
+	maxAdded := -1
+	for _, c := range postState.Middle {
+		if preMid[c.ID()] > 0 {
+			preMid[c.ID()]--
+			continue
+		}
+		if !c.IsJoker() && int(c.Rank()) > maxAdded {
+			maxAdded = int(c.Rank())
+		}
+	}
+	if maxAdded > botAnchor {
+		return 5 // 高牌进中越过底锚 → 罚 (gap~0.7, 收到 5 减少误伤面)
+	}
+	return 0
+}
 
 // partialEvalTP — 两对感知的部分行评估 (中>底 倒置比较专用).
 // partialEval (features_v2.go) 只认 单对/三条: 遇两对 (如 [2s 2c Ks Kh]) 会
@@ -1473,6 +1540,32 @@ func RnJokerAOnTopBonus(a *RoundNAction, postState *GameState) float32 {
 		return 0
 	}
 	return 12 // 2026-06-13 +8→+12: ypk-174260554-28 R3 (顶[]+发[X As], 中22底KQJ) NN 偏好摊开 10.3, 用户判该锁 AA → 抬到能翻 (范率优先). 代价: 别的 foul-勉强局也会更倾向锁 AA.
+}
+
+// RnPreserveTopAAChaseBonus — top 恰 鬼+1真(QQ/KK, 已是范对)且留 1 空位 + deck 还有 A 或鬼
+// (可补上顶升 AA/KKK) → +2. 鼓励"K上头留空位等A 升 AA 范", 别用废 kicker 填满 top 锁死 KK.
+// 2026-06-14 (ypk-185336138-22 R2: top=[X] 发 Ks, AI 把 2h 也塞顶填满锁 KK + 弃 5s;
+//   该 Ks 上头留空, 另一张进中(凑顺draw撑中), 保留催 AA 范潜力). 含义: 保留 > 追 A 范潜力.
+func RnPreserveTopAAChaseBonus(postState *GameState) float32 {
+	if len(postState.Top) != 2 {
+		return 0 // 只奖"鬼+1真"两张(留1空位); 满3张已锁死无空位
+	}
+	jt, realRank := 0, -1
+	for _, c := range postState.Top {
+		if c.IsJoker() {
+			jt++
+		} else {
+			realRank = int(c.Rank())
+		}
+	}
+	if jt != 1 || realRank < int(RankQ) || realRank >= int(RankA) {
+		return 0 // 必须 鬼+1真 QQ/KK (已成范对, 留空位有意义升 AA; 已是 AA 无可升)
+	}
+	rankRem, _, jokerRem := computeDeckRemaining(postState)
+	if rankRem[RankA] < 1 && jokerRem < 1 {
+		return 0 // deck 无 A 也无鬼 → 升不了 AA, 锁现对即可, 不奖留空
+	}
+	return 2
 }
 
 // ============ FoulImminentPenalty (通用, R1-R5) ============

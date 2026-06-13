@@ -2453,5 +2453,317 @@
         ]
       }
     ]
+  },
+  {
+    "name": "实战 29 保留进 A+范 +2 ",
+    "round": 2,
+    "state": {
+      "top": [
+        "X"
+      ],
+      "middle": [
+        "4h",
+        "3c"
+      ],
+      "bottom": [
+        "Td",
+        "7s"
+      ],
+      "usedCards": [
+        "4h",
+        "Td",
+        "X",
+        "7s",
+        "3c",
+        "5d",
+        "4d",
+        "2d",
+        "7c",
+        "Qc",
+        "2c",
+        "5h",
+        "8c",
+        "Js",
+        "9c"
+      ]
+    },
+    "dealt": [
+      "5s",
+      "2h",
+      "Ks"
+    ],
+    "discardCount": 1,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "topK": 1,
+    "mode": "normal",
+    "game_id": "ypk-185336138-22",
+    "seat_number": 2,
+    "uid": "13618424",
+    "expecteds": [
+      {
+        "top": [
+          "Ks"
+        ],
+        "middle": [
+          "5s"
+        ],
+        "bottom": []
+      },
+      {
+        "top": [
+          "Ks"
+        ],
+        "middle": [
+          "2h"
+        ],
+        "bottom": []
+      }
+    ]
+  },
+  {
+    "name": "实战 29b [R2]: top=[X] 中[4h 3c] 底[Td 7s] 发[5s 2h Ks] → Ks上头留空(等A升AA范)+5s/2h进中凑顺draw, 别2h填顶锁死KK (ypk-185336138-22, RnPreserveTopAAChase)",
+    "round": 2,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": [
+      "5s",
+      "2h",
+      "Ks"
+    ],
+    "state": {
+      "top": [
+        "X"
+      ],
+      "middle": [
+        "4h",
+        "3c"
+      ],
+      "bottom": [
+        "Td",
+        "7s"
+      ],
+      "usedCards": [
+        "4h",
+        "Td",
+        "X",
+        "7s",
+        "3c",
+        "5d",
+        "4d",
+        "2d",
+        "7c",
+        "Qc",
+        "2c",
+        "5h",
+        "8c",
+        "Js",
+        "9c"
+      ]
+    },
+    "expecteds": [
+      {
+        "top": [
+          "Ks"
+        ],
+        "middle": [
+          "5s"
+        ],
+        "bottom": []
+      },
+      {
+        "top": [
+          "Ks"
+        ],
+        "middle": [
+          "2h"
+        ],
+        "bottom": []
+      }
+    ],
+    "wrongs": [
+      {
+        "top": [
+          "Ks",
+          "2h"
+        ],
+        "middle": [],
+        "bottom": []
+      }
+    ]
+  },
+  {
+    "name": "实战 30 [R5]: top=[6c 7s] 中[2d Jc 3s 2c]=22 底[顺] 发[Jh 5h 9d] → Jh进中凑JJ22两对(底顺>中), 别弃Jh保22 (ypk-459082-16, RnMidMakeTwoPair恢复)",
+    "round": 5,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": [
+      "Jh",
+      "5h",
+      "9d"
+    ],
+    "state": {
+      "top": [
+        "6c",
+        "7s"
+      ],
+      "middle": [
+        "2d",
+        "Jc",
+        "3s",
+        "2c"
+      ],
+      "bottom": [
+        "7c",
+        "8s",
+        "6h",
+        "9h",
+        "5d"
+      ],
+      "usedCards": [
+        "7c",
+        "2d",
+        "8s",
+        "6h",
+        "9h",
+        "X",
+        "2h",
+        "Ks",
+        "Kc",
+        "5c",
+        "3h",
+        "Jc",
+        "5d",
+        "Ac",
+        "X",
+        "3s",
+        "6c",
+        "7d",
+        "Jd",
+        "8h",
+        "7s",
+        "2c",
+        "4h",
+        "Ah",
+        "8c",
+        "Ts",
+        "8d",
+        "Th",
+        "Kh",
+        "As",
+        "3c",
+        "5s",
+        "4d",
+        "Tc"
+      ]
+    },
+    "expecteds": [
+      {
+        "top": [
+          "9d"
+        ],
+        "middle": [
+          "Jh"
+        ],
+        "bottom": []
+      },
+      {
+        "top": [
+          "5h"
+        ],
+        "middle": [
+          "Jh"
+        ],
+        "bottom": []
+      }
+    ],
+    "wrongs": [
+      {
+        "top": [
+          "9d"
+        ],
+        "middle": [
+          "5h"
+        ],
+        "bottom": []
+      }
+    ]
+  },
+  {
+    "name": "实战 31 [R2]: top=[Kd] 中[3s] 底[9c 7d 9h]=99 发[Jd 5d Qs] → 高牌(Q/J)进底当99kicker+5d进中, 别Jd进中浪费 (ypk-459082-15, RnMidHighCardOverBot)",
+    "round": 2,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": [
+      "Jd",
+      "5d",
+      "Qs"
+    ],
+    "state": {
+      "top": [
+        "Kd"
+      ],
+      "middle": [
+        "3s"
+      ],
+      "bottom": [
+        "9c",
+        "7d",
+        "9h"
+      ],
+      "usedCards": [
+        "3s",
+        "9c",
+        "Kd",
+        "7d",
+        "9h",
+        "Ah",
+        "6s",
+        "7s",
+        "Qd",
+        "9d",
+        "Qc",
+        "Tc",
+        "Ac",
+        "6d",
+        "Ad",
+        "4c",
+        "7c",
+        "Ts",
+        "9s",
+        "Jh",
+        "X"
+      ]
+    },
+    "expecteds": [
+      {
+        "top": [],
+        "middle": [
+          "5d"
+        ],
+        "bottom": [
+          "Qs"
+        ]
+      },
+      {
+        "top": [],
+        "middle": [
+          "5d"
+        ],
+        "bottom": [
+          "Jd"
+        ]
+      }
+    ],
+    "wrongs": [
+      {
+        "top": [],
+        "middle": [
+          "Jd",
+          "5d"
+        ],
+        "bottom": []
+      }
+    ]
   }
 ]
