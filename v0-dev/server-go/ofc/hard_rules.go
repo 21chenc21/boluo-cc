@@ -1068,13 +1068,84 @@ func RnBotMakeTwoPairBonus(postState, preState *GameState) float32 {
 // (NN te 61.6 > Ks顶 54.7 自己就赢), std63/gamecase 零变化 = 这条没在翻任何 NN 的错.
 // 软规则只该"刚好够翻 NN + 小余量", 不留 do-nothing 的死规则.
 
+// partialEvalTP — 两对感知的部分行评估 (中>底 倒置比较专用).
+// partialEval (features_v2.go) 只认 单对/三条: 遇两对 (如 [2s 2c Ks Kh]) 会
+//   ① 误判成单对; ② 更糟 — 从低位扫 rankCnt 先撞到小对, 报成"22对"漏掉 KK.
+// 导致"中两对 vs 底单对"倒置漏罚 (而三条倒置罚得到 = 不对称). 这里补两对.
+//   满 5 张: 用 Evaluate5JokerCap (认花/顺/葫芦/四条).
+//   <5 张: count-based, joker 优先补三条 (不做第二对), j==0 且 ≥2 真对子才算两对.
+func partialEvalTP(cards []Card) HandValue {
+	if len(cards) == 5 {
+		return Evaluate5JokerCap(cards, nil)
+	}
+	var cnt [13]int
+	j := 0
+	for _, c := range cards {
+		if c.IsJoker() {
+			j++
+		} else {
+			cnt[c.Rank()]++
+		}
+	}
+	topRank, topCnt := -1, 0
+	for r := 12; r >= 0; r-- { // 并列取高位 rank
+		if cnt[r] > topCnt {
+			topCnt = cnt[r]
+			topRank = r
+		}
+	}
+	if topCnt+j >= 3 { // 三条+ (joker 优先补三条, 不停在两对)
+		return HandValue{Type: TypeThreeOfAKind, Value: int64(3000000 + topRank*15)}
+	}
+	if j == 0 { // 两对只在 j==0 时可能 (j≥1 会去补三条)
+		var pairs []int
+		for r := 12; r >= 0; r-- {
+			if cnt[r] >= 2 {
+				pairs = append(pairs, r)
+			}
+		}
+		if len(pairs) >= 2 {
+			return HandValue{Type: TypeTwoPair, Value: int64(2000000 + pairs[0]*150 + pairs[1]*15)}
+		}
+	}
+	if topCnt+j >= 2 { // 单对 (真对 或 joker 配最高单张)
+		pairRank := topRank
+		if topCnt < 2 {
+			for r := 12; r >= 0; r-- {
+				if cnt[r] >= 1 {
+					pairRank = r
+					break
+				}
+			}
+		}
+		kicker := 0
+		for r := 12; r >= 0; r-- {
+			if cnt[r] >= 1 && r != pairRank {
+				kicker = r
+				break
+			}
+		}
+		return HandValue{Type: TypePair, Value: int64(1000000 + pairRank*15 + kicker)}
+	}
+	top := 0
+	for r := 12; r >= 0; r-- {
+		if cnt[r] >= 1 {
+			top = r
+			break
+		}
+	}
+	return HandValue{Type: TypeHighCard, Value: int64(top)}
+}
+
 // RnMidExceedsBotPenalty — 候选造成"中道成牌 > 底道成牌"(违反 bot≥mid) → foul 倒置, 罚.
 // 通用. 2026-06-13 (ypk-88080714-8 R2): bot=QQ, AI 把 KK→中 → 中KK > 底QQ = 倒置必犯规结构.
 // 本质是"中比底大"(不依赖 top); KK 该放底跟 QQ 凑 KKQQ 两对. 只在中/底**都已成对+**时比,
-// 避免误伤"中先成对、底还在发展"的正常过程. 用 partialEval (joker-aware) 比.
+// 避免误伤"中先成对、底还在发展"的正常过程.
+// 2026-06-13 用 partialEvalTP (两对感知) 替 partialEval: 修"中两对>底单对"倒置漏罚
+//   (编辑 case top=AA mid=2s2c bot=QhQc6h 发2dKsKh: KK→中成KK22两对压底QQ, 原漏罚).
 func RnMidExceedsBotPenalty(postState *GameState) float32 {
-	mid := partialEval(postState.Middle)
-	bot := partialEval(postState.Bottom)
+	mid := partialEvalTP(postState.Middle)
+	bot := partialEvalTP(postState.Bottom)
 	if mid.Type < TypePair || bot.Type < TypePair {
 		return 0 // 至少都成对才算"对梯倒置"
 	}

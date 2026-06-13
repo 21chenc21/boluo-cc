@@ -2016,5 +2016,63 @@
         "bottom": []
       }
     ]
+  },
+  {
+    "name": "实战 24 [R3]: 顶AA + 中[2s 2c]弱对 + 底QQ, 发[2d Ks Kh] → KK放底凑KKQQ (别KK→中成KK22两对压底QQ=倒置, 测两对盲区修复)",
+    "round": 3,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": [
+      "2d",
+      "Ks",
+      "Kh"
+    ],
+    "state": {
+      "top": [
+        "Ac",
+        "As"
+      ],
+      "middle": [
+        "2s",
+        "2c"
+      ],
+      "bottom": [
+        "Qh",
+        "Qc",
+        "6h"
+      ],
+      "usedCards": [
+        "Ac",
+        "As",
+        "2s",
+        "2c",
+        "Qh",
+        "Qc",
+        "6h",
+        "2d",
+        "Ks",
+        "Kh"
+      ]
+    },
+    "expecteds": [
+      {
+        "top": [],
+        "middle": [],
+        "bottom": [
+          "Ks",
+          "Kh"
+        ]
+      }
+    ],
+    "wrongs": [
+      {
+        "top": [],
+        "middle": [
+          "Ks",
+          "Kh"
+        ],
+        "bottom": []
+      }
+    ]
   }
 ]
