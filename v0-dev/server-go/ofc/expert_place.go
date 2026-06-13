@@ -407,8 +407,7 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 		item.teScore -= RnMidExceedsBotPenalty(item.gs)
 		// 2026-06-13 加: 本轮把底做成 ≥两对 (KK→底凑KKQQ强底) → +8 (ypk-88080714-8 R2)
 		item.teScore += RnBotMakeTwoPairBonus(item.gs, state)
-		// 2026-06-13 加: 中凑两对 + 底>中(不倒置)→ +8 (底已强时建强中, hand2 J版 JJ→中)
-		item.teScore += RnMidMakeTwoPairBonus(item.gs, state)
+		// 2026-06-13 RnMidMakeTwoPairBonus 已删 (冗余, NN 自己赢实战22)
 	}
 
 	sort.SliceStable(uniq, func(i, j int) bool { return uniq[i].teScore > uniq[j].teScore })

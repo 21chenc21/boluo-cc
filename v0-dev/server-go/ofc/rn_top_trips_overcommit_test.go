@@ -6,8 +6,8 @@ import "testing"
 func TestRnTopOvercommit_Fire_KKK_over222(t *testing.T) {
 	pre := st([]string{"Ks", "Kh"}, []string{"3d", "2c", "2d", "2s"}, []string{"Ts", "8h", "Js", "9c"})
 	post := st([]string{"Ks", "Kh", "Kd"}, []string{"3d", "2c", "2d", "2s"}, []string{"Ts", "8h", "Js", "9c"})
-	if got := RnTopTripsOvercommitPenalty(post, pre); got != 12 {
-		t.Fatalf("KKK over mid222 应罚 12, got %v", got)
+	if got := RnTopTripsOvercommitPenalty(post, pre); got != 10 {
+		t.Fatalf("KKK over mid222 应罚 10, got %v", got)
 	}
 }
 

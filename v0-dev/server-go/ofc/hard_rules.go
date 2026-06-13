@@ -1064,21 +1064,9 @@ func RnBotMakeTwoPairBonus(postState, preState *GameState) float32 {
 	return 0
 }
 
-// RnMidMakeTwoPairBonus — 本轮把中道做成 ≥两对, 且底道 > 中道 (维持 bot>mid 不倒置) → +8.
-// 通用. 2026-06-13: 底已比中强时(底三条/更高两对), 中凑两对是安全的强中 (hand2 J版 JJ→中JJ77, 底JJJ).
-// 底 ≤ 中 不奖 → 防 case9(弃鬼凑中两对) / 防 mid>bot 倒置. 用 partialEval 比底/中 (同 RnMidExceedsBot).
-func RnMidMakeTwoPairBonus(postState, preState *GameState) float32 {
-	if botAtLeastTwoPair(preState.Middle) {
-		return 0 // 中已≥两对, 非本轮新做
-	}
-	if !botAtLeastTwoPair(postState.Middle) {
-		return 0 // 中没成两对
-	}
-	if HandExceeds5(partialEval(postState.Bottom), partialEval(postState.Middle)) {
-		return 8 // 底 > 中 → 安全的强中, 奖
-	}
-	return 0
-}
+// RnMidMakeTwoPairBonus 已删 (2026-06-13): kkMid 删后冗余 — 实测禁用它实战22 照样 KK→中
+// (NN te 61.6 > Ks顶 54.7 自己就赢), std63/gamecase 零变化 = 这条没在翻任何 NN 的错.
+// 软规则只该"刚好够翻 NN + 小余量", 不留 do-nothing 的死规则.
 
 // RnMidExceedsBotPenalty — 候选造成"中道成牌 > 底道成牌"(违反 bot≥mid) → foul 倒置, 罚.
 // 通用. 2026-06-13 (ypk-88080714-8 R2): bot=QQ, AI 把 KK→中 → 中KK > 底QQ = 倒置必犯规结构.
@@ -1371,7 +1359,7 @@ func RnTopTripsOvercommitPenalty(postState, preState *GameState) float32 {
 	if midType > TypeThreeOfAKind || (midType == TypeThreeOfAKind && midTrip >= topTrip) {
 		return 0 // mid 已 ≥ top 三条 → 安全, 升级是 free re-fan, 不罚
 	}
-	return 12 // mid 托不住 → foul 风险 → 罚 (翻过 NN 对 KKK 升级的高估)
+	return 10 // mid 托不住 → foul 风险 → 罚 (翻过 NN 对 KKK 升级的高估). 2026-06-13 -12→-10: 余量 ~4.7→~2.7
 }
 
 // RnSingleAOnTopBonus 已删 (2026-06-13): case 29 太子自学会 / case 46 过严期望已放宽 / 帮不到手2 鬼+A. 退休.
@@ -1413,7 +1401,7 @@ func RnJokerAOnTopBonus(a *RoundNAction, postState *GameState) float32 {
 	if len(postState.Middle) == 5 && Evaluate5JokerCap(postState.Middle, nil).Type < TypeTwoPair {
 		return 0
 	}
-	return 10
+	return 8 // 2026-06-13 +10→+8: 余量从 ~3.7 收到 ~2 (跟其它条一致, 防边缘局误压 NN)
 }
 
 // ============ FoulImminentPenalty (通用, R1-R5) ============

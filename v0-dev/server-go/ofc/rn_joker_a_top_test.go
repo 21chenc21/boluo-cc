@@ -7,8 +7,8 @@ func TestRnJokerATop_Fire(t *testing.T) {
 	// 顶[Kh] 本轮加 Ah+X → [Kh Ah X]=AA范锁
 	g := st([]string{"Kh", "Ah", "X"}, []string{"2s", "3d"}, []string{"8c", "Ts"})
 	a := &RoundNAction{Kept: []Card{mustParse("Ah"), mustParse("X")}, Placement: []Row{RowTop, RowTop}}
-	if got := RnJokerAOnTopBonus(a, g); got != 10 {
-		t.Fatalf("鬼+A 锁 AA 应 +10, got %v", got)
+	if got := RnJokerAOnTopBonus(a, g); got != 8 {
+		t.Fatalf("鬼+A 锁 AA 应 +8, got %v", got)
 	}
 }
 
