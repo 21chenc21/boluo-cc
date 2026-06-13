@@ -1472,7 +1472,7 @@ func RnJokerAOnTopBonus(a *RoundNAction, postState *GameState) float32 {
 	if len(postState.Middle) == 5 && Evaluate5JokerCap(postState.Middle, nil).Type < TypeTwoPair {
 		return 0
 	}
-	return 8 // 2026-06-13 +10→+8: 余量从 ~3.7 收到 ~2 (跟其它条一致, 防边缘局误压 NN)
+	return 12 // 2026-06-13 +8→+12: ypk-174260554-28 R3 (顶[]+发[X As], 中22底KQJ) NN 偏好摊开 10.3, 用户判该锁 AA → 抬到能翻 (范率优先). 代价: 别的 foul-勉强局也会更倾向锁 AA.
 }
 
 // ============ FoulImminentPenalty (通用, R1-R5) ============

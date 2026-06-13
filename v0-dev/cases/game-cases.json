@@ -2181,5 +2181,69 @@
         "bottom": []
       }
     ]
+  },
+  {
+    "name": "实战 26 [R3]: 顶[] 中[3d4h2c2h]=22 底[Qd Kd Jc] 发[7s X As] → X+As上顶锁AA范 (ypk-174260554-28, JokerATop+12; NN本偏摊开10.3, 范率优先翻)",
+    "round": 3,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": [
+      "7s",
+      "X",
+      "As"
+    ],
+    "state": {
+      "top": [],
+      "middle": [
+        "3d",
+        "4h",
+        "2c",
+        "2h"
+      ],
+      "bottom": [
+        "Qd",
+        "Kd",
+        "Jc"
+      ],
+      "usedCards": [
+        "Qd",
+        "Kd",
+        "3d",
+        "4h",
+        "Jc",
+        "3h",
+        "6c",
+        "9c",
+        "Qs",
+        "8s",
+        "2c",
+        "6h",
+        "2h",
+        "8d",
+        "8h",
+        "Qh"
+      ]
+    },
+    "expecteds": [
+      {
+        "top": [
+          "X",
+          "As"
+        ],
+        "middle": [],
+        "bottom": []
+      }
+    ],
+    "wrongs": [
+      {
+        "top": [
+          "As"
+        ],
+        "middle": [],
+        "bottom": [
+          "X"
+        ]
+      }
+    ]
   }
 ]
