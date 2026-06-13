@@ -387,8 +387,6 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 		// FoulImminent — apply 后 partial state foul 必然 → 大 penalty (R2-R5 都生效, 2026-05-17 通用化)
 		foul := FoulImminentPenalty(item.gs)
 		item.teScore -= foul
-		// KK on mid penalty (替原 rnRuleKK_NotOnMid filter)
-		item.teScore -= RnKKOnMidPenalty(item.action, cards, state)
 		// 2026-06-13 删 RnSingleAOnTopBonus(+10 A单上顶): case 29 太子已自学会(无它也过),
 		//   case 46 它在硬撑过严期望(用户判定弃A没问题, 已放宽), 且帮不到手2(排除鬼). 退休.
 		// 2026-06-01 加: 鬼同行罚 (mid/bot 任一行 ≥2 鬼) → -5
@@ -409,6 +407,8 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 		item.teScore -= RnMidExceedsBotPenalty(item.gs)
 		// 2026-06-13 加: 本轮把底做成 ≥两对 (KK→底凑KKQQ强底) → +8 (ypk-88080714-8 R2)
 		item.teScore += RnBotMakeTwoPairBonus(item.gs, state)
+		// 2026-06-13 加: 中凑两对 + 底>中(不倒置)→ +8 (底已强时建强中, hand2 J版 JJ→中)
+		item.teScore += RnMidMakeTwoPairBonus(item.gs, state)
 	}
 
 	sort.SliceStable(uniq, func(i, j int) bool { return uniq[i].teScore > uniq[j].teScore })

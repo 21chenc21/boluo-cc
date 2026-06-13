@@ -1023,37 +1023,6 @@ func R1FlushGroupOnBotBonus(p Placement, cards []Card) float32 {
 
 // ============ RN soft penalty (替原硬 filter) ============
 
-// RnKKOnMidPenalty — RN action 含 dealt KK pair 任一上中 → +15 penalty
-// (替 rnRuleKK_NotOnMid; 留 context 给 prerank/MCTS, 而非 prune)
-// botExactTwoPair — 底道恰好成"两对"(非葫芦/三条/四条). 满 5 张用真实 eval; 部分用对数+无三条潜力判.
-func botExactTwoPair(row []Card) bool {
-	if len(row) == 5 {
-		return Evaluate5JokerCap(row, nil).Type == TypeTwoPair
-	}
-	var cnt [13]int
-	j := 0
-	for _, c := range row {
-		if c.IsJoker() {
-			j++
-		} else {
-			cnt[c.Rank()]++
-		}
-	}
-	pairs, maxc := 0, 0
-	for _, n := range cnt {
-		if n >= 2 {
-			pairs++
-		}
-		if n > maxc {
-			maxc = n
-		}
-	}
-	if maxc+j >= 3 {
-		return false // 能成三条/葫芦 → 不算纯两对
-	}
-	return pairs >= 2
-}
-
 // botAtLeastTwoPair — 底道成牌 ≥ 两对 (两对/葫芦/三条+/…). pre-guard 用: 底已强就不是"本轮新做".
 func botAtLeastTwoPair(row []Card) bool {
 	if len(row) == 5 {
@@ -1080,16 +1049,33 @@ func botAtLeastTwoPair(row []Card) bool {
 	return maxc+j >= 3 || pairs >= 2 // 三条+ 或 两对
 }
 
-// RnBotMakeTwoPairBonus — 本轮把底道从 <两对 做成**恰两对** (如 QQ底 + 发KK → KKQQ) → +8.
+// RnBotMakeTwoPairBonus — 本轮把底道从 <两对 做成 **≥两对** (如 QQ底 + 发KK → KKQQ) → +8.
 // 通用. 2026-06-13 (ypk-88080714-8 R2): KK 该放底凑 KKQQ 强底, 别去丢 K 保 AA 顶干净.
-// pre-guard: 底已 ≥两对(含三条/葫芦, 如实战16/17 底TTT)→ 不奖 (非本轮新做).
-// post 限**恰两对**(非葫芦)→ 实战16/17 AA→底=葫芦不奖(AA该进中); case44 底顺draw不触发.
+// 关键全靠 pre-guard: 底已 ≥两对(含三条/葫芦, 如实战16/17 底TTT)→ 不奖 (非本轮新做).
+//   → 实战16/17 底TTT 被 pre-guard 挡(到不了 post); case44 底顺draw无对不触发.
+// post 用 ≥两对 (不限恰两对): 否则奖两对、不奖葫芦/金刚 = 不对称, 可能把更强的成葫芦摆法比下去.
 func RnBotMakeTwoPairBonus(postState, preState *GameState) float32 {
 	if botAtLeastTwoPair(preState.Bottom) {
 		return 0 // 底已 ≥两对, 非本轮新做
 	}
-	if botExactTwoPair(postState.Bottom) {
+	if botAtLeastTwoPair(postState.Bottom) {
 		return 8
+	}
+	return 0
+}
+
+// RnMidMakeTwoPairBonus — 本轮把中道做成 ≥两对, 且底道 > 中道 (维持 bot>mid 不倒置) → +8.
+// 通用. 2026-06-13: 底已比中强时(底三条/更高两对), 中凑两对是安全的强中 (hand2 J版 JJ→中JJ77, 底JJJ).
+// 底 ≤ 中 不奖 → 防 case9(弃鬼凑中两对) / 防 mid>bot 倒置. 用 partialEval 比底/中 (同 RnMidExceedsBot).
+func RnMidMakeTwoPairBonus(postState, preState *GameState) float32 {
+	if botAtLeastTwoPair(preState.Middle) {
+		return 0 // 中已≥两对, 非本轮新做
+	}
+	if !botAtLeastTwoPair(postState.Middle) {
+		return 0 // 中没成两对
+	}
+	if HandExceeds5(partialEval(postState.Bottom), partialEval(postState.Middle)) {
+		return 8 // 底 > 中 → 安全的强中, 奖
 	}
 	return 0
 }
@@ -1105,7 +1091,7 @@ func RnMidExceedsBotPenalty(postState *GameState) float32 {
 		return 0 // 至少都成对才算"对梯倒置"
 	}
 	if HandExceeds5(mid, bot) {
-		return 15 // 中 > 底 → 倒置, 罚
+		return 18 // 中 > 底 → 倒置, 罚 (接管 kkMid 删后的 hand1)
 	}
 	return 0
 }
@@ -1135,21 +1121,9 @@ func RnQuadsJokerWastePenalty(postState *GameState) float32 {
 	return pen
 }
 
-func RnKKOnMidPenalty(a *RoundNAction, cards []Card, state *GameState) float32 {
-	pairs := detectDealtPairs(cards)
-	cnt, ok := pairs[RankK]
-	if !ok || cnt < 2 {
-		return 0
-	}
-	for i, c := range a.Kept {
-		if !c.IsJoker() && c.Rank() == RankK {
-			if a.Placement[i] == RowMiddle {
-				return 15
-			}
-		}
-	}
-	return 0
-}
+// RnKKOnMidPenalty 已删 (2026-06-13): 粗暴"dealt KK 别上中" context-blind —
+// hand1 KK→中(倒置)该罚, 但实战22 KK→中(凑KK77两对,底KKK>中)是好棋它误罚.
+// 由 RnMidExceedsBotPenalty (中>底, 治本倒置, 升 -18) 接管. (detectDealtPairs 随之无用.)
 
 // RnJokersSameRowPenalty — R2-R5 软 penalty (+10):
 // post-action mid 或 bot 任一行含 ≥2 鬼牌 → 罚 10.

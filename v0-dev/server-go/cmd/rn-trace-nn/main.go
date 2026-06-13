@@ -154,10 +154,10 @@ func main() {
 			c.hasPol = true
 		}
 		c.foul = ofc.FoulImminentPenalty(gs)
-		c.kkOnMid = ofc.RnKKOnMidPenalty(a, dealt, state)
+		// RnKKOnMidPenalty 已删 (2026-06-13); c.kkOnMid 恒 0
 		// RnSingleAOnTopBonus 已删 (2026-06-13); c.singleA 恒 0 占位
 
-		c.score = c.te + ofc.PolicyBoost*c.plogit - c.foul - c.kkOnMid + c.singleA - ofc.RnJokersSameRowPenalty(a, gs) + ofc.RnSingleJokerTopChaseABonus(gs, state) - ofc.RnLoneAceMidJokerTopPenalty(gs, state) + ofc.RnTopTripsFantasyBonus(gs) - ofc.RnTopTripsOvercommitPenalty(gs, state) + ofc.RnJokerAOnTopBonus(a, gs) - ofc.RnQuadsJokerWastePenalty(gs) - ofc.RnMidExceedsBotPenalty(gs) + ofc.RnBotMakeTwoPairBonus(gs, state)
+		c.score = c.te + ofc.PolicyBoost*c.plogit - c.foul - c.kkOnMid + c.singleA - ofc.RnJokersSameRowPenalty(a, gs) + ofc.RnSingleJokerTopChaseABonus(gs, state) - ofc.RnLoneAceMidJokerTopPenalty(gs, state) + ofc.RnTopTripsFantasyBonus(gs) - ofc.RnTopTripsOvercommitPenalty(gs, state) + ofc.RnJokerAOnTopBonus(a, gs) - ofc.RnQuadsJokerWastePenalty(gs) - ofc.RnMidExceedsBotPenalty(gs) + ofc.RnBotMakeTwoPairBonus(gs, state) + ofc.RnMidMakeTwoPairBonus(gs, state)
 		c.hardRuleOK = true
 		cands = append(cands, c)
 	}
