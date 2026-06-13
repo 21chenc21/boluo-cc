@@ -2245,5 +2245,51 @@
         ]
       }
     ]
+  },
+  {
+    "name": "实战 27 [R2] ⚠️待定: 中[3h6h6s]=66 底[8d Qs] 发[2c 6d 7d] → AI 6d7d→中凑666三条(满). 两难: 底8Q留3空要≥666三条(~65-75% foul) vs 保守; 6d7d进底反挤死底(剩1空凑不出花/顺). RnMidExceedsBot 盲区(底未成对skip). 待定是否加\"中三条托不住底\"guard类比RnTopTripsOvercommit (ypk-174260554-25)",
+    "round": 2,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": [
+      "2c",
+      "6d",
+      "7d"
+    ],
+    "state": {
+      "top": [],
+      "middle": [
+        "3h",
+        "6h",
+        "6s"
+      ],
+      "bottom": [
+        "8d",
+        "Qs"
+      ],
+      "usedCards": [
+        "3h",
+        "6h",
+        "6s",
+        "8d",
+        "Qs",
+        "Ah",
+        "X",
+        "4s",
+        "8h",
+        "9c"
+      ]
+    },
+    "expecteds": [
+      {
+        "top": [],
+        "middle": [
+          "6d",
+          "7d"
+        ],
+        "bottom": []
+      }
+    ],
+    "wrongs": []
   }
 ]
