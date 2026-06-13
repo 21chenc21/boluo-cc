@@ -1085,7 +1085,9 @@ func RnMidMakeTwoPairBonus(postState, preState *GameState) float32 {
 // RnMidHighCardOverBotPenalty — 用户提案 (2026-06-14): 本轮往中道放的真牌 > 底道锚 且 底未成三条 → 罚.
 // 含义: 大于底锚的高牌该进底道(强行), 别浪费在中道. 底锚 = 底成对→最高对子rank; 底未成对→底max真牌.
 // ypk-459082-15 R2 (底99, Jd 进中) / ypk-459082-16 R2 (底6789draw, Jc进中).
-// ⚠️ 误伤风险: 中道有 draw/配对潜力时高牌进中可能合理. 先实测 std63/gamecase 误伤面.
+// 2026-06-14 验证(bot-333): "中道高牌 > 底锚" 其实 ≈ "中道draw成形会超底 → foul苗头", 罚是对的,
+//   不是瞎压高牌. 底弱时中高牌draw成形必犯规(中顺>底低顺); 底≥三条 guard 放过底真强局
+//   (底333能升葫芦撑住中顺, 实测 NN 自选 Qh→中 score==te 不罚). 残留误伤窄(中既不超底、底又发展更高).
 func RnMidHighCardOverBotPenalty(postState, preState *GameState) float32 {
 	bot := partialEvalTP(postState.Bottom)
 	if bot.Type >= TypeThreeOfAKind {
