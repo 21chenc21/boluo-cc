@@ -2074,5 +2074,112 @@
         "bottom": []
       }
     ]
+  },
+  {
+    "name": "实战 25 [R4]: 顶AA + 中[2s 2c 3s 4c] + 底QQ, 发[2d 8s 9h] → 中道不塞 (别2d→222三条压底QQ倒置), 摊开让中底各凑两对",
+    "round": 4,
+    "jokerCount": 2,
+    "pureMLP": true,
+    "dealt": [
+      "2d",
+      "8s",
+      "9h"
+    ],
+    "state": {
+      "top": [
+        "Ac",
+        "As"
+      ],
+      "middle": [
+        "2s",
+        "2c",
+        "3s",
+        "4c"
+      ],
+      "bottom": [
+        "Qh",
+        "Qc",
+        "6h"
+      ],
+      "usedCards": [
+        "Ac",
+        "As",
+        "2s",
+        "2c",
+        "3s",
+        "4c",
+        "Qh",
+        "Qc",
+        "6h",
+        "2d",
+        "8s",
+        "9h"
+      ]
+    },
+    "expecteds": [
+      {
+        "top": [
+          "8s"
+        ],
+        "middle": [],
+        "bottom": [
+          "9h"
+        ]
+      },
+      {
+        "top": [
+          "9h"
+        ],
+        "middle": [],
+        "bottom": [
+          "8s"
+        ]
+      },
+      {
+        "top": [
+          "9h"
+        ],
+        "middle": [],
+        "bottom": [
+          "2d"
+        ]
+      },
+      {
+        "top": [
+          "8s"
+        ],
+        "middle": [],
+        "bottom": [
+          "2d"
+        ]
+      },
+      {
+        "top": [
+          "2d"
+        ],
+        "middle": [],
+        "bottom": [
+          "9h"
+        ]
+      },
+      {
+        "top": [
+          "2d"
+        ],
+        "middle": [],
+        "bottom": [
+          "8s"
+        ]
+      }
+    ],
+    "wrongs": [
+      {
+        "top": [],
+        "middle": [
+          "2d"
+        ],
+        "bottom": []
+      }
+    ]
   }
 ]
