@@ -1,2769 +1,2945 @@
 [
-  {
-    "name": "实战 1 [R2]: 6s 6c mid trips lock, 8d 应进底留花",
-    "round": 2,
-    "jokerCount": 2,
-    "dealt": [
-      "7h",
-      "6d",
-      "8d"
-    ],
-    "state": {
-      "top": [],
-      "middle": [
-        "5c",
-        "6s",
-        "6c"
-      ],
-      "bottom": [
-        "X",
-        "Jd"
-      ],
-      "usedCards": [
-        "X",
-        "5c",
-        "6s",
-        "6c",
-        "Jd"
-      ]
-    },
-    "expecteds": [
-      {
-        "top": [],
-        "middle": [
-          "6d"
-        ],
-        "bottom": [
-          "8d"
-        ]
-      },
-      {
-        "top": [],
-        "middle": [],
-        "bottom": [
-          "6d",
-          "8d"
-        ]
-      }
-    ]
+ {
+  "name": "实战 1 [R2]: 6s 6c mid trips lock, 8d 应进底留花",
+  "round": 2,
+  "jokerCount": 2,
+  "dealt": [
+   "7h",
+   "6d",
+   "8d"
+  ],
+  "state": {
+   "top": [],
+   "middle": [
+    "5c",
+    "6s",
+    "6c"
+   ],
+   "bottom": [
+    "X",
+    "Jd"
+   ],
+   "usedCards": [
+    "X",
+    "5c",
+    "6s",
+    "6c",
+    "Jd"
+   ]
   },
-  {
-    "name": "实战 2 [R3]: 鬼上头 + KQ 选高 → K 上头, Q 弃 (KK > QQ fantasy)",
-    "round": 3,
-    "jokerCount": 2,
-    "dealt": [
-      "Qc",
-      "Kh",
-      "Jc"
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "6d"
     ],
-    "state": {
-      "top": [
-        "X"
-      ],
-      "middle": [
-        "8c",
-        "Tc",
-        "2s"
-      ],
-      "bottom": [
-        "X",
-        "Jh",
-        "9c"
-      ],
-      "usedCards": [
-        "X",
-        "8c",
-        "Tc",
-        "2s",
-        "X",
-        "Jh",
-        "9c",
-        "3d"
-      ]
-    },
-    "expecteds": [
-      {
-        "top": [
-          "Kh"
-        ],
-        "middle": [],
-        "bottom": [
-          "Jc"
-        ]
-      }
+    "bottom": [
+     "8d"
     ]
-  },
-  {
-    "name": "实战 3 [R1]: 2鬼局+2A used, KQ不该上头 (等A或下底)",
-    "round": 1,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "2s",
-      "4c",
-      "7d",
-      "Kd",
-      "Qh"
-    ],
-    "state": {
-      "top": [],
-      "middle": [],
-      "bottom": [],
-      "usedCards": [
-        "Ac",
-        "Ah",
-        "5c",
-        "Ts",
-        "Ks"
-      ]
-    },
-    "expecteds": [
-      {
-        "top": [],
-        "middle": [
-          "2s",
-          "4c",
-          "7d"
-        ],
-        "bottom": [
-          "Kd",
-          "Qh"
-        ]
-      },
-      {
-        "top": [
-          "Kd"
-        ],
-        "middle": [
-          "2s",
-          "4c"
-        ],
-        "bottom": [
-          "7d",
-          "Qh"
-        ]
-      },
-      {
-        "top": [
-          "Kd"
-        ],
-        "middle": [
-          "2s",
-          "4c",
-          "7d"
-        ],
-        "bottom": [
-          "Qh"
-        ]
-      }
+   },
+   {
+    "top": [],
+    "middle": [],
+    "bottom": [
+     "6d",
+     "8d"
     ]
+   }
+  ]
+ },
+ {
+  "name": "实战 2 [R3]: 鬼上头 + KQ 选高 → K 上头, Q 弃 (KK > QQ fantasy)",
+  "round": 3,
+  "jokerCount": 2,
+  "dealt": [
+   "Qc",
+   "Kh",
+   "Jc"
+  ],
+  "state": {
+   "top": [
+    "X"
+   ],
+   "middle": [
+    "8c",
+    "Tc",
+    "2s"
+   ],
+   "bottom": [
+    "X",
+    "Jh",
+    "9c"
+   ],
+   "usedCards": [
+    "X",
+    "8c",
+    "Tc",
+    "2s",
+    "X",
+    "Jh",
+    "9c",
+    "3d"
+   ]
   },
-  {
-    "name": "实战 4 [R3]: state.top 已有 Ad + dealt joker+A — joker 应救 mid trips, 不强迫 X+A 都上头 (cap chain foul)",
-    "round": 3,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "X",
-      "7d",
-      "Ah"
+  "expecteds": [
+   {
+    "top": [
+     "Kh"
     ],
-    "state": {
-      "top": [
-        "Ad"
-      ],
-      "middle": [
-        "9h",
-        "6c",
-        "2d"
-      ],
-      "bottom": [
-        "Qd",
-        "Kc",
-        "Qc"
-      ],
-      "usedCards": [
-        "Ad",
-        "Qd",
-        "Kc",
-        "9h",
-        "6c",
-        "5h",
-        "5s",
-        "3h",
-        "8c",
-        "Jc",
-        "6s",
-        "5c",
-        "4s",
-        "9d",
-        "Jd",
-        "Qc",
-        "4c",
-        "2d",
-        "As",
-        "Jh",
-        "Ac",
-        "6h",
-        "X",
-        "7d",
-        "Ah"
-      ]
-    },
-    "expecteds": [
-      {
-        "top": [
-          "Ah"
-        ],
-        "middle": [
-          "X"
-        ],
-        "bottom": []
-      },
-      {
-        "top": [
-          "Ah"
-        ],
-        "middle": [],
-        "bottom": [
-          "X"
-        ]
-      }
-    ],
-    "wrongs": [
-      {
-        "top": [
-          "X",
-          "Ah"
-        ],
-        "middle": [],
-        "bottom": []
-      }
+    "middle": [],
+    "bottom": [
+     "Jc"
     ]
+   }
+  ]
+ },
+ {
+  "name": "实战 3 [R1]: 2鬼局+2A used, KQ不该上头 (等A或下底)",
+  "round": 1,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "2s",
+   "4c",
+   "7d",
+   "Kd",
+   "Qh"
+  ],
+  "state": {
+   "top": [],
+   "middle": [],
+   "bottom": [],
+   "usedCards": [
+    "Ac",
+    "Ah",
+    "5c",
+    "Ts",
+    "Ks"
+   ]
   },
-  {
-    "name": "实战 5 [R5]: mid/bot 满 + dealt 含 JJ — 必弃 Jh/Jc 一张避 top JJ-A foul (rnRuleNoDiscardPairMember 删后)",
-    "round": 5,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "8c",
-      "Jh",
-      "Jc"
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "2s",
+     "4c",
+     "7d"
     ],
-    "state": {
-      "top": [
-        "Ah"
-      ],
-      "middle": [
-        "6h",
-        "7h",
-        "5h",
-        "5s",
-        "Ks"
-      ],
-      "bottom": [
-        "Tc",
-        "Th",
-        "3d",
-        "8s",
-        "9c"
-      ],
-      "usedCards": [
-        "6h",
-        "7h",
-        "5h",
-        "Ah",
-        "Tc",
-        "6s",
-        "5c",
-        "5s",
-        "Th",
-        "8d",
-        "Kh",
-        "Qc",
-        "3d",
-        "8s",
-        "9d",
-        "Jd",
-        "Kc",
-        "Ks",
-        "9c",
-        "4d",
-        "Qd",
-        "X"
-      ]
-    },
-    "expecteds": [
-      {
-        "top": [
-          "8c",
-          "Jc"
-        ],
-        "middle": [],
-        "bottom": []
-      },
-      {
-        "top": [
-          "8c",
-          "Jh"
-        ],
-        "middle": [],
-        "bottom": []
-      }
-    ],
-    "wrongs": [
-      {
-        "top": [
-          "Jh",
-          "Jc"
-        ],
-        "middle": [],
-        "bottom": []
-      }
+    "bottom": [
+     "Kd",
+     "Qh"
     ]
-  },
-  {
-    "name": "实战 6 [R4]: top=[AsX] mid=[4cKc4d7d] bot=[9sJdJh] dealt[Ad X Ts] — 弃 Ad 避 AAA-trips foul (ypk-97780042-1, RnJokerWithHighOnTopBonus 删后)",
-    "round": 4,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "Ad",
-      "X",
-      "Ts"
+   },
+   {
+    "top": [
+     "Kd"
     ],
-    "state": {
-      "top": [
-        "As",
-        "X"
-      ],
-      "middle": [
-        "4c",
-        "Kc",
-        "4d",
-        "7d"
-      ],
-      "bottom": [
-        "9s",
-        "Jd",
-        "Jh"
-      ],
-      "usedCards": [
-        "9s",
-        "4c",
-        "Jd",
-        "Jh",
-        "As",
-        "Qh",
-        "Qc",
-        "3h",
-        "4h",
-        "Kc",
-        "4d",
-        "2h",
-        "5d",
-        "8s",
-        "Td",
-        "5s",
-        "X",
-        "8h",
-        "7d",
-        "Kd",
-        "9h",
-        "Ah",
-        "Ks"
-      ]
-    },
-    "expecteds": [
-      {
-        "top": [
-          "Ts"
-        ],
-        "middle": [],
-        "bottom": [
-          "X"
-        ]
-      },
-      {
-        "top": [],
-        "middle": [],
-        "bottom": [
-          "Ad",
-          "X"
-        ]
-      },
-      {
-        "top": [],
-        "middle": [
-          "X"
-        ],
-        "bottom": [
-          "Ts"
-        ]
-      }
+    "middle": [
+     "2s",
+     "4c"
     ],
-    "wrongs": [
-      {
-        "top": [
-          "Ad"
-        ],
-        "middle": [],
-        "bottom": [
-          "X"
-        ]
-      }
+    "bottom": [
+     "7d",
+     "Qh"
     ]
-  },
-  {
-    "name": "实战 7 [R2]: top=[Ac] mid=[X] bot=[7d9d8d] dealt[Kc X 7s] — X+Kc 上头锁 AA fantasy (ypk-98042186-4, X 不该进中弃 7s)",
-    "round": 2,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "Kc",
-      "X",
-      "7s"
+   },
+   {
+    "top": [
+     "Kd"
     ],
-    "state": {
-      "top": [
-        "Ac"
-      ],
-      "middle": [
-        "X"
-      ],
-      "bottom": [
-        "7d",
-        "9d",
-        "8d"
-      ],
-      "usedCards": [
-        "7d",
-        "9d",
-        "Ac",
-        "8d",
-        "X",
-        "5s",
-        "4s",
-        "9s",
-        "Qs",
-        "9c"
-      ]
-    },
-    "expecteds": [
-      {
-        "top": [
-          "Kc",
-          "X"
-        ],
-        "middle": [],
-        "bottom": []
-      },
-      {
-        "top": [
-          "X"
-        ],
-        "middle": [
-          "7s"
-        ],
-        "bottom": []
-      },
-      {
-        "top": [
-          "X"
-        ],
-        "middle": [
-          "Kc"
-        ],
-        "bottom": []
-      }
+    "middle": [
+     "2s",
+     "4c",
+     "7d"
     ],
-    "wrongs": [
-      {
-        "top": [
-          "Kc"
-        ],
-        "middle": [
-          "X"
-        ],
-        "bottom": []
-      }
+    "bottom": [
+     "Qh"
     ]
+   }
+  ]
+ },
+ {
+  "name": "实战 4 [R3]: state.top 已有 Ad + dealt joker+A — joker 应救 mid trips, 不强迫 X+A 都上头 (cap chain foul)",
+  "round": 3,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "X",
+   "7d",
+   "Ah"
+  ],
+  "state": {
+   "top": [
+    "Ad"
+   ],
+   "middle": [
+    "9h",
+    "6c",
+    "2d"
+   ],
+   "bottom": [
+    "Qd",
+    "Kc",
+    "Qc"
+   ],
+   "usedCards": [
+    "Ad",
+    "Qd",
+    "Kc",
+    "9h",
+    "6c",
+    "5h",
+    "5s",
+    "3h",
+    "8c",
+    "Jc",
+    "6s",
+    "5c",
+    "4s",
+    "9d",
+    "Jd",
+    "Qc",
+    "4c",
+    "2d",
+    "As",
+    "Jh",
+    "Ac",
+    "6h",
+    "X",
+    "7d",
+    "Ah"
+   ]
   },
-  {
-    "name": "实战 8 [R2]: top=[] mid=[7h6d7c5c] bot=[X] dealt[X As 8h] — X+As 上头锁 AA fantasy (ypk-98042186-5, X 不该堆 bot)",
-    "round": 2,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "X",
-      "As",
-      "8h"
+  "expecteds": [
+   {
+    "top": [
+     "Ah"
     ],
-    "state": {
-      "top": [],
-      "middle": [
-        "7h",
-        "6d",
-        "7c",
-        "5c"
-      ],
-      "bottom": [
-        "X"
-      ],
-      "usedCards": [
-        "7h",
-        "6d",
-        "X",
-        "7c",
-        "5c",
-        "Qs",
-        "Qh",
-        "9d",
-        "5s"
-      ]
-    },
-    "expecteds": [
-      {
-        "top": [
-          "X",
-          "As"
-        ],
-        "middle": [],
-        "bottom": []
-      }
+    "middle": [
+     "X"
     ],
-    "wrongs": [
-      {
-        "top": [
-          "As"
-        ],
-        "middle": [],
-        "bottom": [
-          "X"
-        ]
-      }
+    "bottom": []
+   },
+   {
+    "top": [
+     "Ah"
+    ],
+    "middle": [],
+    "bottom": [
+     "X"
     ]
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "X",
+     "Ah"
+    ],
+    "middle": [],
+    "bottom": []
+   }
+  ]
+ },
+ {
+  "name": "实战 5 [R5]: mid/bot 满 + dealt 含 JJ — 必弃 Jh/Jc 一张避 top JJ-A foul (rnRuleNoDiscardPairMember 删后)",
+  "round": 5,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "8c",
+   "Jh",
+   "Jc"
+  ],
+  "state": {
+   "top": [
+    "Ah"
+   ],
+   "middle": [
+    "6h",
+    "7h",
+    "5h",
+    "5s",
+    "Ks"
+   ],
+   "bottom": [
+    "Tc",
+    "Th",
+    "3d",
+    "8s",
+    "9c"
+   ],
+   "usedCards": [
+    "6h",
+    "7h",
+    "5h",
+    "Ah",
+    "Tc",
+    "6s",
+    "5c",
+    "5s",
+    "Th",
+    "8d",
+    "Kh",
+    "Qc",
+    "3d",
+    "8s",
+    "9d",
+    "Jd",
+    "Kc",
+    "Ks",
+    "9c",
+    "4d",
+    "Qd",
+    "X"
+   ]
   },
-  {
-    "name": "实战 9 [R4]: bot 满梅花 + mid=[8h X 3h 7h] 红桃4花draw — 2h 必进中做成花(8royalty), Qd 上头 (ypk-178127178-8, FoulImminent cap-aware 修后)",
-    "round": 4,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "Qd",
-      "Jd",
-      "2h"
+  "expecteds": [
+   {
+    "top": [
+     "8c",
+     "Jc"
     ],
-    "state": {
-      "top": [],
-      "middle": [
-        "8h",
-        "X",
-        "3h",
-        "7h"
-      ],
-      "bottom": [
-        "7c",
-        "Qc",
-        "3c",
-        "Kc",
-        "6c"
-      ],
-      "usedCards": [
-        "8h",
-        "X",
-        "7c",
-        "Qc",
-        "3c",
-        "Ah",
-        "8d",
-        "Ad",
-        "Th",
-        "Kd",
-        "9s",
-        "Kc",
-        "6c",
-        "3d",
-        "Ac",
-        "4s",
-        "3h",
-        "7h",
-        "2c",
-        "Kh"
-      ]
-    },
-    "expecteds": [
-      {
-        "top": [
-          "Qd"
-        ],
-        "middle": [
-          "2h"
-        ],
-        "bottom": []
-      }
+    "middle": [],
+    "bottom": []
+   },
+   {
+    "top": [
+     "8c",
+     "Jh"
     ],
-    "wrongs": [
-      {
-        "top": [
-          "Qd",
-          "2h"
-        ],
-        "middle": [],
-        "bottom": []
-      }
+    "middle": [],
+    "bottom": []
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "Jh",
+     "Jc"
+    ],
+    "middle": [],
+    "bottom": []
+   }
+  ]
+ },
+ {
+  "name": "实战 6 [R4]: top=[AsX] mid=[4cKc4d7d] bot=[9sJdJh] dealt[Ad X Ts] — 弃 Ad 避 AAA-trips foul (ypk-97780042-1, RnJokerWithHighOnTopBonus 删后)",
+  "round": 4,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "Ad",
+   "X",
+   "Ts"
+  ],
+  "state": {
+   "top": [
+    "As",
+    "X"
+   ],
+   "middle": [
+    "4c",
+    "Kc",
+    "4d",
+    "7d"
+   ],
+   "bottom": [
+    "9s",
+    "Jd",
+    "Jh"
+   ],
+   "usedCards": [
+    "9s",
+    "4c",
+    "Jd",
+    "Jh",
+    "As",
+    "Qh",
+    "Qc",
+    "3h",
+    "4h",
+    "Kc",
+    "4d",
+    "2h",
+    "5d",
+    "8s",
+    "Td",
+    "5s",
+    "X",
+    "8h",
+    "7d",
+    "Kd",
+    "9h",
+    "Ah",
+    "Ks"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "Ts"
+    ],
+    "middle": [],
+    "bottom": [
+     "X"
     ]
-  },
-  {
-    "name": "实战 10 [R1]: [8h X 7c Qc 3c] 单鬼无 A — 鬼必上头(留范/灵活), 不埋中道配 88 (ypk-178127178-8, R1SingleJokerNoAOnTop +5)",
-    "round": 1,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "8h",
-      "X",
-      "7c",
-      "Qc",
-      "3c"
-    ],
-    "state": {
-      "top": [],
-      "middle": [],
-      "bottom": [],
-      "usedCards": []
-    },
-    "expecteds": [
-      {
-        "top": [
-          "X"
-        ],
-        "middle": [
-          "8h"
-        ],
-        "bottom": [
-          "7c",
-          "Qc",
-          "3c"
-        ]
-      },
-      {
-        "top": [
-          "X"
-        ],
-        "middle": [
-          "7c",
-          "3c"
-        ],
-        "bottom": [
-          "8h",
-          "Qc"
-        ]
-      }
-    ],
-    "wrongs": [
-      {
-        "top": [],
-        "middle": [
-          "8h",
-          "X"
-        ],
-        "bottom": [
-          "7c",
-          "Qc",
-          "3c"
-        ]
-      }
+   },
+   {
+    "top": [],
+    "middle": [],
+    "bottom": [
+     "Ad",
+     "X"
     ]
-  },
-  {
-    "name": "fan-case 1 [范]: 16 张 dealt 含双 7 双 T 双 Q — TTT trips 锁范 + 双 flush (修 FindReFanAnchors slice bug 后)",
-    "round": 99,
-    "mode": "fantasy",
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "8h",
-      "6s",
-      "2h",
-      "7s",
-      "Ah",
-      "Js",
-      "9h",
-      "X",
-      "Qd",
-      "As",
-      "Qh",
-      "Kc",
-      "Tc",
-      "3c",
-      "Ts",
-      "4s"
+   },
+   {
+    "top": [],
+    "middle": [
+     "X"
     ],
-    "discardCount": 3,
-    "state": {
-      "top": [],
-      "middle": [],
-      "bottom": [],
-      "usedCards": []
-    },
-    "expecteds": [
-      {
-        "top": [
-          "Tc",
-          "Ts",
-          "X"
-        ],
-        "middle": [
-          "6s",
-          "7s",
-          "Js",
-          "As",
-          "4s"
-        ],
-        "bottom": [
-          "8h",
-          "2h",
-          "Ah",
-          "9h",
-          "Qh"
-        ]
-      }
-    ],
-    "wrongs": [
-      {
-        "top": [
-          "Ah",
-          "As",
-          "Kc"
-        ],
-        "middle": [
-          "6s",
-          "7s",
-          "Js",
-          "Ts",
-          "4s"
-        ],
-        "bottom": [
-          "8h",
-          "2h",
-          "9h",
-          "X",
-          "Qh"
-        ]
-      }
+    "bottom": [
+     "Ts"
     ]
-  },
-  {
-    "name": "fan-case 2 [范]: 16张无鬼, 5方块+5梅花双花 — 必出 royalty 12 (修 FindNonRefanAnchors 漏 flush anchor 后, 修前只 9)",
-    "round": 99,
-    "mode": "fantasy",
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "7d",
-      "2s",
-      "4h",
-      "9d",
-      "6c",
-      "Qd",
-      "4c",
-      "6s",
-      "Ac",
-      "9s",
-      "3c",
-      "2d",
-      "3h",
-      "5d",
-      "7s",
-      "Qc"
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "Ad"
     ],
-    "discardCount": 3,
-    "state": {
-      "top": [],
-      "middle": [],
-      "bottom": [],
-      "usedCards": []
-    },
-    "expecteds": [
-      {
-        "top": [
-          "9d",
-          "Qd",
-          "9s"
-        ],
-        "middle": [
-          "7d",
-          "4h",
-          "6s",
-          "3h",
-          "5d"
-        ],
-        "bottom": [
-          "Ac",
-          "Qc",
-          "6c",
-          "4c",
-          "3c"
-        ]
-      },
-      {
-        "top": [
-          "6s",
-          "9s",
-          "7s"
-        ],
-        "middle": [
-          "2d",
-          "5d",
-          "7d",
-          "9d",
-          "Qd"
-        ],
-        "bottom": [
-          "3c",
-          "4c",
-          "6c",
-          "Ac",
-          "Qc"
-        ]
-      }
-    ],
-    "wrongs": [
-      {
-        "top": [
-          "Qd",
-          "Qc",
-          "Ac"
-        ],
-        "middle": [
-          "7d",
-          "9d",
-          "6c",
-          "9s",
-          "7s"
-        ],
-        "bottom": [
-          "2s",
-          "4h",
-          "6s",
-          "3c",
-          "5d"
-        ]
-      }
+    "middle": [],
+    "bottom": [
+     "X"
     ]
+   }
+  ]
+ },
+ {
+  "name": "实战 7 [R2]: top=[Ac] mid=[X] bot=[7d9d8d] dealt[Kc X 7s] — X+Kc 上头锁 AA fantasy (ypk-98042186-4, X 不该进中弃 7s)",
+  "round": 2,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "Kc",
+   "X",
+   "7s"
+  ],
+  "state": {
+   "top": [
+    "Ac"
+   ],
+   "middle": [
+    "X"
+   ],
+   "bottom": [
+    "7d",
+    "9d",
+    "8d"
+   ],
+   "usedCards": [
+    "7d",
+    "9d",
+    "Ac",
+    "8d",
+    "X",
+    "5s",
+    "4s",
+    "9s",
+    "Qs",
+    "9c"
+   ]
   },
-  {
-    "name": "实战 11 [R1]: 三条 A [Ah Jd Ac 2s As] — AA 上顶锁范 + 第3张 A 拆去底, 不该 AAA 全上顶 foul trap (ypk-63963466-4)",
-    "round": 1,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "Ah",
-      "Jd",
-      "Ac",
-      "2s",
-      "As"
+  "expecteds": [
+   {
+    "top": [
+     "Kc",
+     "X"
     ],
-    "state": {
-      "top": [],
-      "middle": [],
-      "bottom": [],
-      "usedCards": []
-    },
-    "expecteds": [
-      {
-        "top": [
-          "Ac",
-          "As"
-        ],
-        "middle": [
-          "2s"
-        ],
-        "bottom": [
-          "Ah",
-          "Jd"
-        ]
-      },
-      {
-        "top": [
-          "Ah",
-          "As"
-        ],
-        "middle": [
-          "2s"
-        ],
-        "bottom": [
-          "Jd",
-          "Ac"
-        ]
-      },
-      {
-        "top": [
-          "Ah",
-          "Ac"
-        ],
-        "middle": [
-          "2s"
-        ],
-        "bottom": [
-          "Jd",
-          "As"
-        ]
-      }
+    "middle": [],
+    "bottom": []
+   },
+   {
+    "top": [
+     "X"
     ],
-    "wrongs": [
-      {
-        "top": [
-          "Ah",
-          "Ac",
-          "As"
-        ],
-        "middle": [
-          "2s"
-        ],
-        "bottom": [
-          "Jd"
-        ]
-      }
+    "middle": [
+     "7s"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "X"
+    ],
+    "middle": [
+     "Kc"
+    ],
+    "bottom": []
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "Kc"
+    ],
+    "middle": [
+     "X"
+    ],
+    "bottom": []
+   }
+  ]
+ },
+ {
+  "name": "实战 8 [R2]: top=[] mid=[7h6d7c5c] bot=[X] dealt[X As 8h] — X+As 上头锁 AA fantasy (ypk-98042186-5, X 不该堆 bot)",
+  "round": 2,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "X",
+   "As",
+   "8h"
+  ],
+  "state": {
+   "top": [],
+   "middle": [
+    "7h",
+    "6d",
+    "7c",
+    "5c"
+   ],
+   "bottom": [
+    "X"
+   ],
+   "usedCards": [
+    "7h",
+    "6d",
+    "X",
+    "7c",
+    "5c",
+    "Qs",
+    "Qh",
+    "9d",
+    "5s"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "X",
+     "As"
+    ],
+    "middle": [],
+    "bottom": []
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "As"
+    ],
+    "middle": [],
+    "bottom": [
+     "X"
     ]
+   }
+  ]
+ },
+ {
+  "name": "实战 9 [R4]: bot 满梅花 + mid=[8h X 3h 7h] 红桃4花draw — 2h 必进中做成花(8royalty), Qd 上头 (ypk-178127178-8, FoulImminent cap-aware 修后)",
+  "round": 4,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "Qd",
+   "Jd",
+   "2h"
+  ],
+  "state": {
+   "top": [],
+   "middle": [
+    "8h",
+    "X",
+    "3h",
+    "7h"
+   ],
+   "bottom": [
+    "7c",
+    "Qc",
+    "3c",
+    "Kc",
+    "6c"
+   ],
+   "usedCards": [
+    "8h",
+    "X",
+    "7c",
+    "Qc",
+    "3c",
+    "Ah",
+    "8d",
+    "Ad",
+    "Th",
+    "Kd",
+    "9s",
+    "Kc",
+    "6c",
+    "3d",
+    "Ac",
+    "4s",
+    "3h",
+    "7h",
+    "2c",
+    "Kh"
+   ]
   },
-  {
-    "name": "实战 12 [R1]: JJJ+QQ [Jc Qc Jd Qd Js] — 三条J+对Q 保持成型 (QQ中+JJJ底 或 葫芦底), 不该拆 JJJ (ConnectorSplit 误罚 trips+pair 修后)",
-    "round": 1,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "Jc",
-      "Qc",
-      "Jd",
-      "Qd",
-      "Js"
+  "expecteds": [
+   {
+    "top": [
+     "Qd"
     ],
-    "state": {
-      "top": [],
-      "middle": [],
-      "bottom": [],
-      "usedCards": []
-    },
-    "expecteds": [
-      {
-        "top": [],
-        "middle": [
-          "Qc",
-          "Qd"
-        ],
-        "bottom": [
-          "Jc",
-          "Jd",
-          "Js"
-        ]
-      },
-      {
-        "top": [],
-        "middle": [],
-        "bottom": [
-          "Jc",
-          "Qc",
-          "Jd",
-          "Qd",
-          "Js"
-        ]
-      },
-      {
-        "top": [
-          "Qc",
-          "Qd"
-        ],
-        "middle": [],
-        "bottom": [
-          "Jc",
-          "Jd",
-          "Js"
-        ]
-      }
+    "middle": [
+     "2h"
     ],
-    "wrongs": [
-      {
-        "top": [],
-        "middle": [
-          "Jc"
-        ],
-        "bottom": [
-          "Qc",
-          "Jd",
-          "Qd",
-          "Js"
-        ]
-      }
+    "bottom": []
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "Qd",
+     "2h"
+    ],
+    "middle": [],
+    "bottom": []
+   }
+  ]
+ },
+ {
+  "name": "实战 10 [R1]: [8h X 7c Qc 3c] 单鬼无 A — 鬼必上头(留范/灵活), 不埋中道配 88 (ypk-178127178-8, R1SingleJokerNoAOnTop +5)",
+  "round": 1,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "8h",
+   "X",
+   "7c",
+   "Qc",
+   "3c"
+  ],
+  "state": {
+   "top": [],
+   "middle": [],
+   "bottom": [],
+   "usedCards": []
+  },
+  "expecteds": [
+   {
+    "top": [
+     "X"
+    ],
+    "middle": [
+     "8h"
+    ],
+    "bottom": [
+     "7c",
+     "Qc",
+     "3c"
     ]
-  },
-  {
-    "name": "实战 13 [R1]: 四条 A [Ah Ac Ad As 2s] — AA顶锁范 + AA底, 不该 AAA 全上顶 (trips fix ypk-63963466-4 系列)",
-    "round": 1,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "Ah",
-      "Ac",
-      "Ad",
-      "As",
-      "2s"
+   },
+   {
+    "top": [
+     "X"
     ],
-    "state": {
-      "top": [],
-      "middle": [],
-      "bottom": [],
-      "usedCards": []
-    },
-    "expecteds": [
-      {
-        "top": [
-          "Ah",
-          "Ac"
-        ],
-        "middle": [
-          "2s"
-        ],
-        "bottom": [
-          "Ad",
-          "As"
-        ]
-      },
-      {
-        "top": [
-          "Ah",
-          "Ac"
-        ],
-        "middle": [
-          "Ad",
-          "As",
-          "2s"
-        ],
-        "bottom": []
-      },
-      {
-        "top": [
-          "Ah",
-          "Ad"
-        ],
-        "middle": [
-          "2s"
-        ],
-        "bottom": [
-          "Ac",
-          "As"
-        ]
-      },
-      {
-        "top": [
-          "Ah",
-          "Ad"
-        ],
-        "middle": [
-          "Ac",
-          "As",
-          "2s"
-        ],
-        "bottom": []
-      },
-      {
-        "top": [
-          "Ah",
-          "As"
-        ],
-        "middle": [
-          "2s"
-        ],
-        "bottom": [
-          "Ac",
-          "Ad"
-        ]
-      },
-      {
-        "top": [
-          "Ah",
-          "As"
-        ],
-        "middle": [
-          "Ac",
-          "Ad",
-          "2s"
-        ],
-        "bottom": []
-      },
-      {
-        "top": [
-          "Ac",
-          "Ad"
-        ],
-        "middle": [
-          "2s"
-        ],
-        "bottom": [
-          "Ah",
-          "As"
-        ]
-      },
-      {
-        "top": [
-          "Ac",
-          "Ad"
-        ],
-        "middle": [
-          "Ah",
-          "As",
-          "2s"
-        ],
-        "bottom": []
-      },
-      {
-        "top": [
-          "Ac",
-          "As"
-        ],
-        "middle": [
-          "2s"
-        ],
-        "bottom": [
-          "Ah",
-          "Ad"
-        ]
-      },
-      {
-        "top": [
-          "Ac",
-          "As"
-        ],
-        "middle": [
-          "Ah",
-          "Ad",
-          "2s"
-        ],
-        "bottom": []
-      },
-      {
-        "top": [
-          "Ad",
-          "As"
-        ],
-        "middle": [
-          "2s"
-        ],
-        "bottom": [
-          "Ah",
-          "Ac"
-        ]
-      },
-      {
-        "top": [
-          "Ad",
-          "As"
-        ],
-        "middle": [
-          "Ah",
-          "Ac",
-          "2s"
-        ],
-        "bottom": []
-      },
-      {
-        "top": [
-          "Ah",
-          "Ac"
-        ],
-        "middle": [
-          "Ad",
-          "As"
-        ],
-        "bottom": [
-          "2s"
-        ]
-      },
-      {
-        "top": [
-          "Ah",
-          "Ad"
-        ],
-        "middle": [
-          "Ac",
-          "As"
-        ],
-        "bottom": [
-          "2s"
-        ]
-      },
-      {
-        "top": [
-          "Ah",
-          "As"
-        ],
-        "middle": [
-          "Ac",
-          "Ad"
-        ],
-        "bottom": [
-          "2s"
-        ]
-      },
-      {
-        "top": [
-          "Ac",
-          "Ad"
-        ],
-        "middle": [
-          "Ah",
-          "As"
-        ],
-        "bottom": [
-          "2s"
-        ]
-      },
-      {
-        "top": [
-          "Ac",
-          "As"
-        ],
-        "middle": [
-          "Ah",
-          "Ad"
-        ],
-        "bottom": [
-          "2s"
-        ]
-      },
-      {
-        "top": [
-          "Ad",
-          "As"
-        ],
-        "middle": [
-          "Ah",
-          "Ac"
-        ],
-        "bottom": [
-          "2s"
-        ]
-      }
+    "middle": [
+     "7c",
+     "3c"
     ],
-    "wrongs": [
-      {
-        "top": [
-          "Ah",
-          "Ac",
-          "Ad"
-        ],
-        "middle": [
-          "2s"
-        ],
-        "bottom": [
-          "As"
-        ]
-      }
+    "bottom": [
+     "8h",
+     "Qc"
     ]
-  },
-  {
-    "name": "实战 14 [R1]: 三条A+2鬼 [Ah Ac As X X] — AA顶锁范 + 鬼拆中底(SplitDoubleJoker), 不该 AAA 全上顶",
-    "round": 1,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "Ah",
-      "Ac",
-      "As",
-      "X",
-      "X"
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [],
+    "middle": [
+     "8h",
+     "X"
     ],
-    "state": {
-      "top": [],
-      "middle": [],
-      "bottom": [],
-      "usedCards": []
-    },
-    "expecteds": [
-      {
-        "top": [
-          "Ah",
-          "As"
-        ],
-        "middle": [
-          "Ac",
-          "X"
-        ],
-        "bottom": [
-          "X"
-        ]
-      },
-      {
-        "top": [
-          "Ah",
-          "Ac"
-        ],
-        "middle": [
-          "As",
-          "X"
-        ],
-        "bottom": [
-          "X"
-        ]
-      },
-      {
-        "top": [
-          "Ac",
-          "As"
-        ],
-        "middle": [
-          "Ah",
-          "X"
-        ],
-        "bottom": [
-          "X"
-        ]
-      }
-    ],
-    "wrongs": [
-      {
-        "top": [
-          "Ah",
-          "Ac",
-          "As"
-        ],
-        "middle": [
-          "X"
-        ],
-        "bottom": [
-          "X"
-        ]
-      }
+    "bottom": [
+     "7c",
+     "Qc",
+     "3c"
     ]
+   }
+  ]
+ },
+ {
+  "name": "fan-case 1 [范]: 16 张 dealt 含双 7 双 T 双 Q — TTT trips 锁范 + 双 flush (修 FindReFanAnchors slice bug 后)",
+  "round": 99,
+  "mode": "fantasy",
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "8h",
+   "6s",
+   "2h",
+   "7s",
+   "Ah",
+   "Js",
+   "9h",
+   "X",
+   "Qd",
+   "As",
+   "Qh",
+   "Kc",
+   "Tc",
+   "3c",
+   "Ts",
+   "4s"
+  ],
+  "discardCount": 3,
+  "state": {
+   "top": [],
+   "middle": [],
+   "bottom": [],
+   "usedCards": []
   },
-  {
-    "name": "实战 15 [R3]: 孤鬼在顶[X]+底TTT+发3A — 单A上顶追AA范 + 废A放底(不埋AA中) (ypk-32571722-17, RnSingleJokerTopChaseA)",
-    "round": 3,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "As",
-      "Ah",
-      "Ac"
+  "expecteds": [
+   {
+    "top": [
+     "Tc",
+     "Ts",
+     "X"
     ],
-    "state": {
-      "top": [
-        "X"
-      ],
-      "middle": [
-        "9s",
-        "2h"
-      ],
-      "bottom": [
-        "Th",
-        "Tc",
-        "Kh",
-        "Ts"
-      ],
-      "usedCards": [
-        "9s",
-        "X",
-        "Th",
-        "Tc",
-        "Kh",
-        "3h",
-        "4h",
-        "4d",
-        "6s",
-        "Qd",
-        "2h",
-        "Ts",
-        "Js",
-        "6c",
-        "Ks",
-        "5c",
-        "Jh",
-        "6d",
-        "9h",
-        "Jd",
-        "Td",
-        "Kd",
-        "3s",
-        "Qh",
-        "Ad",
-        "7s",
-        "8s",
-        "7d",
-        "8d"
-      ]
-    },
-    "expecteds": [
-      {
-        "top": [
-          "As"
-        ],
-        "middle": [],
-        "bottom": [
-          "Ac"
-        ]
-      },
-      {
-        "top": [],
-        "middle": [
-          "As",
-          "Ah"
-        ],
-        "bottom": []
-      },
-      {
-        "top": [],
-        "middle": [
-          "As",
-          "Ac"
-        ],
-        "bottom": []
-      },
-      {
-        "top": [],
-        "middle": [
-          "Ah",
-          "Ac"
-        ],
-        "bottom": []
-      }
+    "middle": [
+     "6s",
+     "7s",
+     "Js",
+     "As",
+     "4s"
     ],
-    "wrongs": [
-      {
-        "top": [
-          "Ah",
-          "Ac"
-        ],
-        "middle": [],
-        "bottom": []
-      }
+    "bottom": [
+     "8h",
+     "2h",
+     "Ah",
+     "9h",
+     "Qh"
     ]
-  },
-  {
-    "name": "实战 16 [R3]: 鬼+Q在顶[X Qc](已可进QQ范)+发3A — 不该再单A上顶, AA进中 (RnSingleJokerTopChaseA 守卫: 已锁不追)",
-    "round": 3,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "As",
-      "Ah",
-      "Ac"
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "Ah",
+     "As",
+     "Kc"
     ],
-    "state": {
-      "top": [
-        "X",
-        "Qc"
-      ],
-      "middle": [
-        "9s",
-        "2h"
-      ],
-      "bottom": [
-        "Th",
-        "Tc",
-        "Ts"
-      ],
-      "usedCards": [
-        "9s",
-        "X",
-        "Qc",
-        "Th",
-        "Tc",
-        "3h",
-        "4h",
-        "4d",
-        "6s",
-        "Qd",
-        "2h",
-        "Ts",
-        "Js",
-        "6c",
-        "Ks",
-        "5c",
-        "Jh",
-        "6d",
-        "9h",
-        "Jd",
-        "Td",
-        "Kd",
-        "3s",
-        "Qh",
-        "Ad",
-        "7s",
-        "8s",
-        "7d"
-      ]
-    },
-    "expecteds": [
-      {
-        "top": [],
-        "middle": [
-          "Ah",
-          "Ac"
-        ],
-        "bottom": []
-      },
-      {
-        "top": [],
-        "middle": [
-          "As",
-          "Ac"
-        ],
-        "bottom": []
-      },
-      {
-        "top": [
-          "As"
-        ],
-        "middle": [],
-        "bottom": [
-          "Ac"
-        ]
-      }
+    "middle": [
+     "6s",
+     "7s",
+     "Js",
+     "Ts",
+     "4s"
     ],
-    "wrongs": [
-      {
-        "top": [
-          "As"
-        ],
-        "middle": [
-          "Ac"
-        ],
-        "bottom": []
-      }
+    "bottom": [
+     "8h",
+     "2h",
+     "9h",
+     "X",
+     "Qh"
     ]
+   }
+  ]
+ },
+ {
+  "name": "fan-case 2 [范]: 16张无鬼, 5方块+5梅花双花 — 必出 royalty 12 (修 FindNonRefanAnchors 漏 flush anchor 后, 修前只 9)",
+  "round": 99,
+  "mode": "fantasy",
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "7d",
+   "2s",
+   "4h",
+   "9d",
+   "6c",
+   "Qd",
+   "4c",
+   "6s",
+   "Ac",
+   "9s",
+   "3c",
+   "2d",
+   "3h",
+   "5d",
+   "7s",
+   "Qc"
+  ],
+  "discardCount": 3,
+  "state": {
+   "top": [],
+   "middle": [],
+   "bottom": [],
+   "usedCards": []
   },
-  {
-    "name": "实战 17 [R3]: 鬼+K在顶[X Kc](已可进QQ范)+发3A — 不该再单A上顶, AA进中 (RnSingleJokerTopChaseA 守卫: 已锁不追)",
-    "round": 3,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "As",
-      "Ah",
-      "Ac"
+  "expecteds": [
+   {
+    "top": [
+     "9d",
+     "Qd",
+     "9s"
     ],
-    "state": {
-      "top": [
-        "X",
-        "Kc"
-      ],
-      "middle": [
-        "9s",
-        "2h"
-      ],
-      "bottom": [
-        "Th",
-        "Tc",
-        "Ts"
-      ],
-      "usedCards": [
-        "Kc",
-        "9s",
-        "X",
-        "Qc",
-        "Th",
-        "Tc",
-        "3h",
-        "4h",
-        "4d",
-        "6s",
-        "Qd",
-        "2h",
-        "Ts",
-        "Js",
-        "6c",
-        "Ks",
-        "5c",
-        "Jh",
-        "6d",
-        "9h",
-        "Jd",
-        "Td",
-        "Kd",
-        "3s",
-        "Qh",
-        "Ad",
-        "7s",
-        "8s",
-        "7d"
-      ]
-    },
-    "expecteds": [
-      {
-        "top": [],
-        "middle": [
-          "Ah",
-          "Ac"
-        ],
-        "bottom": []
-      },
-      {
-        "top": [],
-        "middle": [
-          "As",
-          "Ah"
-        ],
-        "bottom": []
-      },
-      {
-        "top": [],
-        "middle": [
-          "As",
-          "Ac"
-        ],
-        "bottom": []
-      }
+    "middle": [
+     "7d",
+     "4h",
+     "6s",
+     "3h",
+     "5d"
     ],
-    "wrongs": [
-      {
-        "top": [
-          "As"
-        ],
-        "middle": [],
-        "bottom": [
-          "Ac"
-        ]
-      }
+    "bottom": [
+     "Ac",
+     "Qc",
+     "6c",
+     "4c",
+     "3c"
     ]
-  },
-  {
-    "name": "实战 18 [R3]: 鬼+A在顶[X Ad]+ 发3A",
-    "round": 3,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "As",
-      "Ah",
-      "Ac"
+   },
+   {
+    "top": [
+     "6s",
+     "9s",
+     "7s"
     ],
-    "state": {
-      "top": [
-        "X",
-        "Ad"
-      ],
-      "middle": [
-        "9s",
-        "2h"
-      ],
-      "bottom": [
-        "Th",
-        "Tc",
-        "Ts"
-      ],
-      "usedCards": [
-        "Ad",
-        "9s",
-        "X",
-        "Qc",
-        "Th",
-        "Tc",
-        "3h",
-        "4h",
-        "4d",
-        "6s",
-        "Qd",
-        "2h",
-        "Ts",
-        "Js",
-        "6c",
-        "Ks",
-        "5c",
-        "Jh",
-        "6d",
-        "9h",
-        "Jd",
-        "Td",
-        "Kd",
-        "3s",
-        "Qh",
-        "Ad",
-        "7s",
-        "8s",
-        "7d"
-      ]
-    },
-    "expecteds": [
-      {
-        "top": [],
-        "middle": [
-          "Ah",
-          "Ac"
-        ],
-        "bottom": []
-      },
-      {
-        "top": [],
-        "middle": [
-          "As",
-          "Ac"
-        ],
-        "bottom": []
-      },
-      {
-        "top": [],
-        "middle": [
-          "As",
-          "Ah"
-        ],
-        "bottom": []
-      }
+    "middle": [
+     "2d",
+     "5d",
+     "7d",
+     "9d",
+     "Qd"
     ],
-    "wrongs": [
-      {
-        "top": [
-          "As"
-        ],
-        "middle": [],
-        "bottom": [
-          "Ac"
-        ]
-      }
+    "bottom": [
+     "3c",
+     "4c",
+     "6c",
+     "Ac",
+     "Qc"
     ]
-  },
-  {
-    "name": "实战 19 [R4]: 鬼顶[X]+双三条板, 发[X Ts 3c] → top凑333三条(re-fan) 不是AA对",
-    "round": 4,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "X",
-      "Ts",
-      "3c"
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "Qd",
+     "Qc",
+     "Ac"
     ],
-    "state": {
-      "top": [
-        "X"
-      ],
-      "middle": [
-        "8c",
-        "8d",
-        "7h",
-        "8h"
-      ],
-      "bottom": [
-        "Td",
-        "Jd",
-        "Tc",
-        "Th"
-      ],
-      "usedCards": [
-        "Td",
-        "8c",
-        "Jd",
-        "8d",
-        "Tc",
-        "2s",
-        "Kh",
-        "6h",
-        "5h",
-        "Jh",
-        "Kd",
-        "3s",
-        "5s",
-        "4c",
-        "9c",
-        "7h",
-        "8h",
-        "Qc",
-        "Qd",
-        "2d",
-        "9d",
-        "9h",
-        "Th",
-        "4s",
-        "X",
-        "Ad",
-        "3h",
-        "As",
-        "5c",
-        "6s"
-      ]
-    },
-    "expecteds": [
-      {
-        "top": [
-          "X",
-          "3c"
-        ],
-        "middle": [],
-        "bottom": []
-      }
+    "middle": [
+     "7d",
+     "9d",
+     "6c",
+     "9s",
+     "7s"
     ],
-    "wrongs": [
-      {
-        "top": [
-          "X",
-          "Ts"
-        ],
-        "middle": [],
-        "bottom": []
-      }
+    "bottom": [
+     "2s",
+     "4h",
+     "6s",
+     "3c",
+     "5d"
     ]
+   }
+  ]
+ },
+ {
+  "name": "实战 11 [R1]: 三条 A [Ah Jd Ac 2s As] — AA 上顶锁范 + 第3张 A 拆去底, 不该 AAA 全上顶 foul trap (ypk-63963466-4)",
+  "round": 1,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "Ah",
+   "Jd",
+   "Ac",
+   "2s",
+   "As"
+  ],
+  "state": {
+   "top": [],
+   "middle": [],
+   "bottom": [],
+   "usedCards": []
   },
-  {
-    "name": "实战 20 [R4]: top锁KK + mid222三条, 发[Kd 9c 6c] → 保KK不升KKK(KKK>222会犯规)",
-    "round": 4,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "Kd",
-      "9c",
-      "6c"
+  "expecteds": [
+   {
+    "top": [
+     "Ac",
+     "As"
     ],
-    "state": {
-      "top": [
-        "Ks",
-        "Kh"
-      ],
-      "middle": [
-        "3d",
-        "2c",
-        "2d",
-        "2s"
-      ],
-      "bottom": [
-        "Ts",
-        "8h",
-        "Js"
-      ],
-      "usedCards": [
-        "Ts",
-        "3d",
-        "8h",
-        "Ks",
-        "2c",
-        "5h",
-        "Kh",
-        "2d",
-        "2s",
-        "4s",
-        "Js",
-        "8d",
-        "X",
-        "Jh"
-      ]
-    },
-    "expecteds": [
-      {
-        "top": [],
-        "middle": [
-          "Kd"
-        ],
-        "bottom": [
-          "9c"
-        ]
-      },
-      {
-        "top": [],
-        "middle": [
-          "Kd"
-        ],
-        "bottom": [
-          "6c"
-        ]
-      },
-      {
-        "top": [
-          "6c"
-        ],
-        "middle": [
-          "Kd"
-        ],
-        "bottom": []
-      }
+    "middle": [
+     "2s"
     ],
-    "wrongs": [
-      {
-        "top": [
-          "Kd"
-        ],
-        "middle": [],
-        "bottom": [
-          "9c"
-        ]
-      }
+    "bottom": [
+     "Ah",
+     "Jd"
     ]
-  },
-  {
-    "name": "实战 21 [R2]: top=[Kh] 发[Ah Jc X] → 鬼+A 上顶锁 AA 范 (不是 A单上顶/鬼撑底)",
-    "round": 2,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "Ah",
-      "Jc",
-      "X"
+   },
+   {
+    "top": [
+     "Ah",
+     "As"
     ],
-    "state": {
-      "top": [
-        "Kh"
-      ],
-      "middle": [
-        "2s",
-        "3d"
-      ],
-      "bottom": [
-        "8c",
-        "Ts"
-      ],
-      "usedCards": [
-        "2s",
-        "8c",
-        "Ts",
-        "Kh",
-        "3d",
-        "9c",
-        "2h",
-        "Tc",
-        "5d",
-        "Qc",
-        "4d",
-        "7s",
-        "Ks",
-        "7c",
-        "6h"
-      ]
-    },
-    "expecteds": [
-      {
-        "top": [
-          "Ah",
-          "X"
-        ],
-        "middle": [],
-        "bottom": []
-      }
+    "middle": [
+     "2s"
     ],
-    "wrongs": [
-      {
-        "top": [
-          "Ah"
-        ],
-        "middle": [
-          "X"
-        ],
-        "bottom": []
-      },
-      {
-        "top": [
-          "Ah"
-        ],
-        "middle": [],
-        "bottom": [
-          "X"
-        ]
-      }
+    "bottom": [
+     "Jd",
+     "Ac"
     ]
-  },
-  {
-    "name": "实战 22 [R3]: bot已KKK(2真K+鬼) 发[Ks Kh 6d] → 别塞双K凑5王(废鬼), 1K上顶锁KK范",
-    "round": 3,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "Ks",
-      "Kh",
-      "6d"
+   },
+   {
+    "top": [
+     "Ah",
+     "Ac"
     ],
-    "state": {
-      "top": [
-        "X"
-      ],
-      "middle": [
-        "2d",
-        "7s",
-        "7d"
-      ],
-      "bottom": [
-        "Kc",
-        "Kd",
-        "X"
-      ],
-      "usedCards": [
-        "2d",
-        "Kc",
-        "X",
-        "Kd",
-        "7s",
-        "Qc",
-        "4s",
-        "7d",
-        "Qs",
-        "X",
-        "5h",
-        "8s"
-      ]
-    },
-    "expecteds": [
-      {
-        "top": [
-          "Ks"
-        ],
-        "middle": [],
-        "bottom": [
-          "Kh"
-        ]
-      },
-      {
-        "top": [
-          "Kh"
-        ],
-        "middle": [],
-        "bottom": [
-          "Ks"
-        ]
-      },
-      {
-        "top": [],
-        "middle": [
-          "Ks",
-          "Kh"
-        ],
-        "bottom": []
-      }
+    "middle": [
+     "2s"
     ],
-    "wrongs": [
-      {
-        "top": [],
-        "middle": [],
-        "bottom": [
-          "Ks",
-          "Kh"
-        ]
-      }
+    "bottom": [
+     "Jd",
+     "As"
     ]
-  },
-  {
-    "name": "实战 23 [R2]: AA顶(被迫)+QQ底, 发[Ks Kh 3h] → KK放底凑KKQQ两对(别KK中倒置/别丢K)",
-    "round": 2,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "Ks",
-      "Kh",
-      "3h"
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "Ah",
+     "Ac",
+     "As"
     ],
-    "state": {
-      "top": [
-        "Ac",
-        "As"
-      ],
-      "middle": [],
-      "bottom": [
-        "Qh",
-        "Qc",
-        "6h"
-      ],
-      "usedCards": [
-        "Qh",
-        "Qc",
-        "6h",
-        "Ac",
-        "As",
-        "4h",
-        "Js",
-        "X",
-        "5s",
-        "Kd",
-        "Qs",
-        "Kc",
-        "4d",
-        "3s",
-        "Ah",
-        "7s",
-        "4c",
-        "9c"
-      ]
-    },
-    "expecteds": [
-      {
-        "top": [],
-        "middle": [],
-        "bottom": [
-          "Ks",
-          "Kh"
-        ]
-      }
+    "middle": [
+     "2s"
     ],
-    "wrongs": [
-      {
-        "top": [],
-        "middle": [
-          "Ks",
-          "Kh"
-        ],
-        "bottom": []
-      },
-      {
-        "top": [
-          "Ks"
-        ],
-        "middle": [],
-        "bottom": []
-      },
-      {
-        "top": [
-          "Kh"
-        ],
-        "middle": [],
-        "bottom": []
-      }
+    "bottom": [
+     "Jd"
     ]
+   }
+  ]
+ },
+ {
+  "name": "实战 12 [R1]: JJJ+QQ [Jc Qc Jd Qd Js] — 三条J+对Q 保持成型 (QQ中+JJJ底 或 葫芦底), 不该拆 JJJ (ConnectorSplit 误罚 trips+pair 修后)",
+  "round": 1,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "Jc",
+   "Qc",
+   "Jd",
+   "Qd",
+   "Js"
+  ],
+  "state": {
+   "top": [],
+   "middle": [],
+   "bottom": [],
+   "usedCards": []
   },
-  {
-    "name": "实战 24 [R3]: 顶AA + 中[2s 2c]弱对 + 底QQ, 发[2d Ks Kh] → KK放底凑KKQQ (别KK→中成KK22两对压底QQ=倒置, 测两对盲区修复)",
-    "round": 3,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "2d",
-      "Ks",
-      "Kh"
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "Qc",
+     "Qd"
     ],
-    "state": {
-      "top": [
-        "Ac",
-        "As"
-      ],
-      "middle": [
-        "2s",
-        "2c"
-      ],
-      "bottom": [
-        "Qh",
-        "Qc",
-        "6h"
-      ],
-      "usedCards": [
-        "Ac",
-        "As",
-        "2s",
-        "2c",
-        "Qh",
-        "Qc",
-        "6h",
-        "2d",
-        "Ks",
-        "Kh"
-      ]
-    },
-    "expecteds": [
-      {
-        "top": [],
-        "middle": [],
-        "bottom": [
-          "Ks",
-          "Kh"
-        ]
-      }
-    ],
-    "wrongs": [
-      {
-        "top": [],
-        "middle": [
-          "Ks",
-          "Kh"
-        ],
-        "bottom": []
-      }
+    "bottom": [
+     "Jc",
+     "Jd",
+     "Js"
     ]
-  },
-  {
-    "name": "实战 25 [R4]: 顶AA + 中[2s 2c 3s 4c] + 底QQ, 发[2d 8s 9h] → 中道不塞 (别2d→222三条压底QQ倒置), 摊开让中底各凑两对",
-    "round": 4,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "2d",
-      "8s",
-      "9h"
-    ],
-    "state": {
-      "top": [
-        "Ac",
-        "As"
-      ],
-      "middle": [
-        "2s",
-        "2c",
-        "3s",
-        "4c"
-      ],
-      "bottom": [
-        "Qh",
-        "Qc",
-        "6h"
-      ],
-      "usedCards": [
-        "Ac",
-        "As",
-        "2s",
-        "2c",
-        "3s",
-        "4c",
-        "Qh",
-        "Qc",
-        "6h",
-        "2d",
-        "8s",
-        "9h"
-      ]
-    },
-    "expecteds": [
-      {
-        "top": [
-          "8s"
-        ],
-        "middle": [],
-        "bottom": [
-          "9h"
-        ]
-      },
-      {
-        "top": [
-          "9h"
-        ],
-        "middle": [],
-        "bottom": [
-          "8s"
-        ]
-      },
-      {
-        "top": [
-          "9h"
-        ],
-        "middle": [],
-        "bottom": [
-          "2d"
-        ]
-      },
-      {
-        "top": [
-          "8s"
-        ],
-        "middle": [],
-        "bottom": [
-          "2d"
-        ]
-      },
-      {
-        "top": [
-          "2d"
-        ],
-        "middle": [],
-        "bottom": [
-          "9h"
-        ]
-      },
-      {
-        "top": [
-          "2d"
-        ],
-        "middle": [],
-        "bottom": [
-          "8s"
-        ]
-      }
-    ],
-    "wrongs": [
-      {
-        "top": [],
-        "middle": [
-          "2d"
-        ],
-        "bottom": []
-      }
+   },
+   {
+    "top": [],
+    "middle": [],
+    "bottom": [
+     "Jc",
+     "Qc",
+     "Jd",
+     "Qd",
+     "Js"
     ]
-  },
-  {
-    "name": "实战 26 [R3]: 顶[] 中[3d4h2c2h]=22 底[Qd Kd Jc] 发[7s X As] → X+As上顶锁AA范 (ypk-174260554-28, JokerATop+12; NN本偏摊开10.3, 范率优先翻)",
-    "round": 3,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "7s",
-      "X",
-      "As"
+   },
+   {
+    "top": [
+     "Qc",
+     "Qd"
     ],
-    "state": {
-      "top": [],
-      "middle": [
-        "3d",
-        "4h",
-        "2c",
-        "2h"
-      ],
-      "bottom": [
-        "Qd",
-        "Kd",
-        "Jc"
-      ],
-      "usedCards": [
-        "Qd",
-        "Kd",
-        "3d",
-        "4h",
-        "Jc",
-        "3h",
-        "6c",
-        "9c",
-        "Qs",
-        "8s",
-        "2c",
-        "6h",
-        "2h",
-        "8d",
-        "8h",
-        "Qh"
-      ]
-    },
-    "expecteds": [
-      {
-        "top": [
-          "X",
-          "As"
-        ],
-        "middle": [],
-        "bottom": []
-      }
-    ],
-    "wrongs": [
-      {
-        "top": [
-          "As"
-        ],
-        "middle": [],
-        "bottom": [
-          "X"
-        ]
-      }
+    "middle": [],
+    "bottom": [
+     "Jc",
+     "Jd",
+     "Js"
     ]
-  },
-  {
-    "name": "实战 27 [R2] ⚠️待定: 中[3h6h6s]=66 底[8d Qs] 发[2c 6d 7d] → AI 6d7d→中凑666三条(满). 两难: 底8Q留3空要≥666三条(~65-75% foul) vs 保守; 6d7d进底反挤死底(剩1空凑不出花/顺). RnMidExceedsBot 盲区(底未成对skip). 待定是否加\"中三条托不住底\"guard类比RnTopTripsOvercommit (ypk-174260554-25)",
-    "round": 2,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "2c",
-      "6d",
-      "7d"
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [],
+    "middle": [
+     "Jc"
     ],
-    "state": {
-      "top": [],
-      "middle": [
-        "3h",
-        "6h",
-        "6s"
-      ],
-      "bottom": [
-        "8d",
-        "Qs"
-      ],
-      "usedCards": [
-        "3h",
-        "6h",
-        "6s",
-        "8d",
-        "Qs",
-        "Ah",
-        "X",
-        "4s",
-        "8h",
-        "9c"
-      ]
-    },
-    "expecteds": [
-      {
-        "top": [],
-        "middle": [
-          "6d",
-          "7d"
-        ],
-        "bottom": []
-      }
-    ],
-    "wrongs": []
-  },
-  {
-    "name": "实战 28 [R2]: 底TT 中[6h 2h] 发[9s Jd 4c] → Jd放底(TTQJ强底+催TTJJ两对,3J活)/4c放中. J放顶零范路径(JJ<QQ非范 + JJJ三条会犯规弱中mid max6) + foul险. RnLoneSubQOnTopPenalty 治 (太子专属, ypk-185336138-28)",
-    "round": 2,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "9s",
-      "Jd",
-      "4c"
-    ],
-    "state": {
-      "top": [],
-      "middle": [
-        "6h",
-        "2h"
-      ],
-      "bottom": [
-        "Qh",
-        "Td",
-        "Th"
-      ],
-      "usedCards": [
-        "6h",
-        "Qh",
-        "Td",
-        "2h",
-        "Th",
-        "2d",
-        "Ac",
-        "Ad",
-        "X",
-        "7s",
-        "Qc",
-        "As",
-        "9d",
-        "5h",
-        "Qd",
-        "Tc",
-        "8c",
-        "4h",
-        "Ah",
-        "6d",
-        "Kh"
-      ]
-    },
-    "expecteds": [
-      {
-        "top": [],
-        "middle": [
-          "4c"
-        ],
-        "bottom": [
-          "Jd"
-        ]
-      }
-    ],
-    "wrongs": [
-      {
-        "top": [],
-        "middle": [
-          "Jd"
-        ],
-        "bottom": [
-          "4c"
-        ]
-      }
+    "bottom": [
+     "Qc",
+     "Jd",
+     "Qd",
+     "Js"
     ]
+   }
+  ]
+ },
+ {
+  "name": "实战 13 [R1]: 四条 A [Ah Ac Ad As 2s] — AA顶锁范 + AA底, 不该 AAA 全上顶 (trips fix ypk-63963466-4 系列)",
+  "round": 1,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "Ah",
+   "Ac",
+   "Ad",
+   "As",
+   "2s"
+  ],
+  "state": {
+   "top": [],
+   "middle": [],
+   "bottom": [],
+   "usedCards": []
   },
-  {
-    "name": "实战 29 保留进 A+范 +2 ",
-    "round": 2,
-    "state": {
-      "top": [
-        "X"
-      ],
-      "middle": [
-        "4h",
-        "3c"
-      ],
-      "bottom": [
-        "Td",
-        "7s"
-      ],
-      "usedCards": [
-        "4h",
-        "Td",
-        "X",
-        "7s",
-        "3c",
-        "5d",
-        "4d",
-        "2d",
-        "7c",
-        "Qc",
-        "2c",
-        "5h",
-        "8c",
-        "Js",
-        "9c"
-      ]
-    },
-    "dealt": [
-      "5s",
-      "2h",
-      "Ks"
+  "expecteds": [
+   {
+    "top": [
+     "Ah",
+     "Ac"
     ],
-    "discardCount": 1,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "topK": 1,
-    "mode": "normal",
-    "game_id": "ypk-185336138-22",
-    "seat_number": 2,
-    "uid": "13618424",
-    "expecteds": [
-      {
-        "top": [
-          "Ks"
-        ],
-        "middle": [
-          "5s"
-        ],
-        "bottom": []
-      },
-      {
-        "top": [
-          "Ks"
-        ],
-        "middle": [
-          "2h"
-        ],
-        "bottom": []
-      }
+    "middle": [
+     "2s"
+    ],
+    "bottom": [
+     "Ad",
+     "As"
     ]
+   },
+   {
+    "top": [
+     "Ah",
+     "Ac"
+    ],
+    "middle": [
+     "Ad",
+     "As",
+     "2s"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "Ah",
+     "Ad"
+    ],
+    "middle": [
+     "2s"
+    ],
+    "bottom": [
+     "Ac",
+     "As"
+    ]
+   },
+   {
+    "top": [
+     "Ah",
+     "Ad"
+    ],
+    "middle": [
+     "Ac",
+     "As",
+     "2s"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "Ah",
+     "As"
+    ],
+    "middle": [
+     "2s"
+    ],
+    "bottom": [
+     "Ac",
+     "Ad"
+    ]
+   },
+   {
+    "top": [
+     "Ah",
+     "As"
+    ],
+    "middle": [
+     "Ac",
+     "Ad",
+     "2s"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "Ac",
+     "Ad"
+    ],
+    "middle": [
+     "2s"
+    ],
+    "bottom": [
+     "Ah",
+     "As"
+    ]
+   },
+   {
+    "top": [
+     "Ac",
+     "Ad"
+    ],
+    "middle": [
+     "Ah",
+     "As",
+     "2s"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "Ac",
+     "As"
+    ],
+    "middle": [
+     "2s"
+    ],
+    "bottom": [
+     "Ah",
+     "Ad"
+    ]
+   },
+   {
+    "top": [
+     "Ac",
+     "As"
+    ],
+    "middle": [
+     "Ah",
+     "Ad",
+     "2s"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "Ad",
+     "As"
+    ],
+    "middle": [
+     "2s"
+    ],
+    "bottom": [
+     "Ah",
+     "Ac"
+    ]
+   },
+   {
+    "top": [
+     "Ad",
+     "As"
+    ],
+    "middle": [
+     "Ah",
+     "Ac",
+     "2s"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "Ah",
+     "Ac"
+    ],
+    "middle": [
+     "Ad",
+     "As"
+    ],
+    "bottom": [
+     "2s"
+    ]
+   },
+   {
+    "top": [
+     "Ah",
+     "Ad"
+    ],
+    "middle": [
+     "Ac",
+     "As"
+    ],
+    "bottom": [
+     "2s"
+    ]
+   },
+   {
+    "top": [
+     "Ah",
+     "As"
+    ],
+    "middle": [
+     "Ac",
+     "Ad"
+    ],
+    "bottom": [
+     "2s"
+    ]
+   },
+   {
+    "top": [
+     "Ac",
+     "Ad"
+    ],
+    "middle": [
+     "Ah",
+     "As"
+    ],
+    "bottom": [
+     "2s"
+    ]
+   },
+   {
+    "top": [
+     "Ac",
+     "As"
+    ],
+    "middle": [
+     "Ah",
+     "Ad"
+    ],
+    "bottom": [
+     "2s"
+    ]
+   },
+   {
+    "top": [
+     "Ad",
+     "As"
+    ],
+    "middle": [
+     "Ah",
+     "Ac"
+    ],
+    "bottom": [
+     "2s"
+    ]
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "Ah",
+     "Ac",
+     "Ad"
+    ],
+    "middle": [
+     "2s"
+    ],
+    "bottom": [
+     "As"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "实战 14 [R1]: 三条A+2鬼 [Ah Ac As X X] — AA顶锁范 + 鬼拆中底(SplitDoubleJoker), 不该 AAA 全上顶",
+  "round": 1,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "Ah",
+   "Ac",
+   "As",
+   "X",
+   "X"
+  ],
+  "state": {
+   "top": [],
+   "middle": [],
+   "bottom": [],
+   "usedCards": []
   },
-  {
-    "name": "实战 29b [R2]: top=[X] 中[4h 3c] 底[Td 7s] 发[5s 2h Ks] → Ks上头留空(等A升AA范)+5s/2h进中凑顺draw, 别2h填顶锁死KK (ypk-185336138-22, RnPreserveTopAAChase)",
-    "round": 2,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "5s",
-      "2h",
-      "Ks"
+  "expecteds": [
+   {
+    "top": [
+     "Ah",
+     "As"
     ],
-    "state": {
-      "top": [
-        "X"
-      ],
-      "middle": [
-        "4h",
-        "3c"
-      ],
-      "bottom": [
-        "Td",
-        "7s"
-      ],
-      "usedCards": [
-        "4h",
-        "Td",
-        "X",
-        "7s",
-        "3c",
-        "5d",
-        "4d",
-        "2d",
-        "7c",
-        "Qc",
-        "2c",
-        "5h",
-        "8c",
-        "Js",
-        "9c"
-      ]
-    },
-    "expecteds": [
-      {
-        "top": [
-          "Ks"
-        ],
-        "middle": [
-          "5s"
-        ],
-        "bottom": []
-      },
-      {
-        "top": [
-          "Ks"
-        ],
-        "middle": [
-          "2h"
-        ],
-        "bottom": []
-      }
+    "middle": [
+     "Ac",
+     "X"
     ],
-    "wrongs": [
-      {
-        "top": [
-          "Ks",
-          "2h"
-        ],
-        "middle": [],
-        "bottom": []
-      }
+    "bottom": [
+     "X"
     ]
+   },
+   {
+    "top": [
+     "Ah",
+     "Ac"
+    ],
+    "middle": [
+     "As",
+     "X"
+    ],
+    "bottom": [
+     "X"
+    ]
+   },
+   {
+    "top": [
+     "Ac",
+     "As"
+    ],
+    "middle": [
+     "Ah",
+     "X"
+    ],
+    "bottom": [
+     "X"
+    ]
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "Ah",
+     "Ac",
+     "As"
+    ],
+    "middle": [
+     "X"
+    ],
+    "bottom": [
+     "X"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "实战 15 [R3]: 孤鬼在顶[X]+底TTT+发3A — 单A上顶追AA范 + 废A放底(不埋AA中) (ypk-32571722-17, RnSingleJokerTopChaseA)",
+  "round": 3,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "As",
+   "Ah",
+   "Ac"
+  ],
+  "state": {
+   "top": [
+    "X"
+   ],
+   "middle": [
+    "9s",
+    "2h"
+   ],
+   "bottom": [
+    "Th",
+    "Tc",
+    "Kh",
+    "Ts"
+   ],
+   "usedCards": [
+    "9s",
+    "X",
+    "Th",
+    "Tc",
+    "Kh",
+    "3h",
+    "4h",
+    "4d",
+    "6s",
+    "Qd",
+    "2h",
+    "Ts",
+    "Js",
+    "6c",
+    "Ks",
+    "5c",
+    "Jh",
+    "6d",
+    "9h",
+    "Jd",
+    "Td",
+    "Kd",
+    "3s",
+    "Qh",
+    "Ad",
+    "7s",
+    "8s",
+    "7d",
+    "8d"
+   ]
   },
-  {
-    "name": "实战 30 [R5]: top=[6c 7s] 中[2d Jc 3s 2c]=22 底[顺] 发[Jh 5h 9d] → Jh进中凑JJ22两对(底顺>中), 别弃Jh保22 (ypk-459082-16, RnMidMakeTwoPair恢复)",
-    "round": 5,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "Jh",
-      "5h",
-      "9d"
+  "expecteds": [
+   {
+    "top": [
+     "As"
     ],
-    "state": {
-      "top": [
-        "6c",
-        "7s"
-      ],
-      "middle": [
-        "2d",
-        "Jc",
-        "3s",
-        "2c"
-      ],
-      "bottom": [
-        "7c",
-        "8s",
-        "6h",
-        "9h",
-        "5d"
-      ],
-      "usedCards": [
-        "7c",
-        "2d",
-        "8s",
-        "6h",
-        "9h",
-        "X",
-        "2h",
-        "Ks",
-        "Kc",
-        "5c",
-        "3h",
-        "Jc",
-        "5d",
-        "Ac",
-        "X",
-        "3s",
-        "6c",
-        "7d",
-        "Jd",
-        "8h",
-        "7s",
-        "2c",
-        "4h",
-        "Ah",
-        "8c",
-        "Ts",
-        "8d",
-        "Th",
-        "Kh",
-        "As",
-        "3c",
-        "5s",
-        "4d",
-        "Tc"
-      ]
-    },
-    "expecteds": [
-      {
-        "top": [
-          "9d"
-        ],
-        "middle": [
-          "Jh"
-        ],
-        "bottom": []
-      },
-      {
-        "top": [
-          "5h"
-        ],
-        "middle": [
-          "Jh"
-        ],
-        "bottom": []
-      }
-    ],
-    "wrongs": [
-      {
-        "top": [
-          "9d"
-        ],
-        "middle": [
-          "5h"
-        ],
-        "bottom": []
-      }
+    "middle": [],
+    "bottom": [
+     "Ac"
     ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "As",
+     "Ah"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [],
+    "middle": [
+     "As",
+     "Ac"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [],
+    "middle": [
+     "Ah",
+     "Ac"
+    ],
+    "bottom": []
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "Ah",
+     "Ac"
+    ],
+    "middle": [],
+    "bottom": []
+   }
+  ]
+ },
+ {
+  "name": "实战 16 [R3]: 鬼+Q在顶[X Qc](已可进QQ范)+发3A — 不该再单A上顶, AA进中 (RnSingleJokerTopChaseA 守卫: 已锁不追)",
+  "round": 3,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "As",
+   "Ah",
+   "Ac"
+  ],
+  "state": {
+   "top": [
+    "X",
+    "Qc"
+   ],
+   "middle": [
+    "9s",
+    "2h"
+   ],
+   "bottom": [
+    "Th",
+    "Tc",
+    "Ts"
+   ],
+   "usedCards": [
+    "9s",
+    "X",
+    "Qc",
+    "Th",
+    "Tc",
+    "3h",
+    "4h",
+    "4d",
+    "6s",
+    "Qd",
+    "2h",
+    "Ts",
+    "Js",
+    "6c",
+    "Ks",
+    "5c",
+    "Jh",
+    "6d",
+    "9h",
+    "Jd",
+    "Td",
+    "Kd",
+    "3s",
+    "Qh",
+    "Ad",
+    "7s",
+    "8s",
+    "7d"
+   ]
   },
-  {
-    "name": "实战 31 [R2]: top=[Kd] 中[3s] 底[9c 7d 9h]=99 发[Jd 5d Qs] → 高牌(Q/J)进底当99kicker+5d进中, 别Jd进中浪费 (ypk-459082-15, RnMidHighCardOverBot)",
-    "round": 2,
-    "jokerCount": 2,
-    "pureMLP": true,
-    "dealt": [
-      "Jd",
-      "5d",
-      "Qs"
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "Ah",
+     "Ac"
     ],
-    "state": {
-      "top": [
-        "Kd"
-      ],
-      "middle": [
-        "3s"
-      ],
-      "bottom": [
-        "9c",
-        "7d",
-        "9h"
-      ],
-      "usedCards": [
-        "3s",
-        "9c",
-        "Kd",
-        "7d",
-        "9h",
-        "Ah",
-        "6s",
-        "7s",
-        "Qd",
-        "9d",
-        "Qc",
-        "Tc",
-        "Ac",
-        "6d",
-        "Ad",
-        "4c",
-        "7c",
-        "Ts",
-        "9s",
-        "Jh",
-        "X"
-      ]
-    },
-    "expecteds": [
-      {
-        "top": [],
-        "middle": [
-          "5d"
-        ],
-        "bottom": [
-          "Qs"
-        ]
-      },
-      {
-        "top": [],
-        "middle": [
-          "5d"
-        ],
-        "bottom": [
-          "Jd"
-        ]
-      }
+    "bottom": []
+   },
+   {
+    "top": [],
+    "middle": [
+     "As",
+     "Ac"
     ],
-    "wrongs": [
-      {
-        "top": [],
-        "middle": [
-          "Jd",
-          "5d"
-        ],
-        "bottom": []
-      }
+    "bottom": []
+   },
+   {
+    "top": [
+     "As"
+    ],
+    "middle": [],
+    "bottom": [
+     "Ac"
     ]
-  }
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "As"
+    ],
+    "middle": [
+     "Ac"
+    ],
+    "bottom": []
+   }
+  ]
+ },
+ {
+  "name": "实战 17 [R3]: 鬼+K在顶[X Kc](已可进QQ范)+发3A — 不该再单A上顶, AA进中 (RnSingleJokerTopChaseA 守卫: 已锁不追)",
+  "round": 3,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "As",
+   "Ah",
+   "Ac"
+  ],
+  "state": {
+   "top": [
+    "X",
+    "Kc"
+   ],
+   "middle": [
+    "9s",
+    "2h"
+   ],
+   "bottom": [
+    "Th",
+    "Tc",
+    "Ts"
+   ],
+   "usedCards": [
+    "Kc",
+    "9s",
+    "X",
+    "Qc",
+    "Th",
+    "Tc",
+    "3h",
+    "4h",
+    "4d",
+    "6s",
+    "Qd",
+    "2h",
+    "Ts",
+    "Js",
+    "6c",
+    "Ks",
+    "5c",
+    "Jh",
+    "6d",
+    "9h",
+    "Jd",
+    "Td",
+    "Kd",
+    "3s",
+    "Qh",
+    "Ad",
+    "7s",
+    "8s",
+    "7d"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "Ah",
+     "Ac"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [],
+    "middle": [
+     "As",
+     "Ah"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [],
+    "middle": [
+     "As",
+     "Ac"
+    ],
+    "bottom": []
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "As"
+    ],
+    "middle": [],
+    "bottom": [
+     "Ac"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "实战 18 [R3]: 鬼+A在顶[X Ad]+ 发3A",
+  "round": 3,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "As",
+   "Ah",
+   "Ac"
+  ],
+  "state": {
+   "top": [
+    "X",
+    "Ad"
+   ],
+   "middle": [
+    "9s",
+    "2h"
+   ],
+   "bottom": [
+    "Th",
+    "Tc",
+    "Ts"
+   ],
+   "usedCards": [
+    "Ad",
+    "9s",
+    "X",
+    "Qc",
+    "Th",
+    "Tc",
+    "3h",
+    "4h",
+    "4d",
+    "6s",
+    "Qd",
+    "2h",
+    "Ts",
+    "Js",
+    "6c",
+    "Ks",
+    "5c",
+    "Jh",
+    "6d",
+    "9h",
+    "Jd",
+    "Td",
+    "Kd",
+    "3s",
+    "Qh",
+    "Ad",
+    "7s",
+    "8s",
+    "7d"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "Ah",
+     "Ac"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [],
+    "middle": [
+     "As",
+     "Ac"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [],
+    "middle": [
+     "As",
+     "Ah"
+    ],
+    "bottom": []
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "As"
+    ],
+    "middle": [],
+    "bottom": [
+     "Ac"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "实战 19 [R4]: 鬼顶[X]+双三条板, 发[X Ts 3c] → top凑333三条(re-fan) 不是AA对",
+  "round": 4,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "X",
+   "Ts",
+   "3c"
+  ],
+  "state": {
+   "top": [
+    "X"
+   ],
+   "middle": [
+    "8c",
+    "8d",
+    "7h",
+    "8h"
+   ],
+   "bottom": [
+    "Td",
+    "Jd",
+    "Tc",
+    "Th"
+   ],
+   "usedCards": [
+    "Td",
+    "8c",
+    "Jd",
+    "8d",
+    "Tc",
+    "2s",
+    "Kh",
+    "6h",
+    "5h",
+    "Jh",
+    "Kd",
+    "3s",
+    "5s",
+    "4c",
+    "9c",
+    "7h",
+    "8h",
+    "Qc",
+    "Qd",
+    "2d",
+    "9d",
+    "9h",
+    "Th",
+    "4s",
+    "X",
+    "Ad",
+    "3h",
+    "As",
+    "5c",
+    "6s"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "X",
+     "3c"
+    ],
+    "middle": [],
+    "bottom": []
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "X",
+     "Ts"
+    ],
+    "middle": [],
+    "bottom": []
+   }
+  ]
+ },
+ {
+  "name": "实战 20 [R4]: top锁KK + mid222三条, 发[Kd 9c 6c] → 保KK不升KKK(KKK>222会犯规)",
+  "round": 4,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "Kd",
+   "9c",
+   "6c"
+  ],
+  "state": {
+   "top": [
+    "Ks",
+    "Kh"
+   ],
+   "middle": [
+    "3d",
+    "2c",
+    "2d",
+    "2s"
+   ],
+   "bottom": [
+    "Ts",
+    "8h",
+    "Js"
+   ],
+   "usedCards": [
+    "Ts",
+    "3d",
+    "8h",
+    "Ks",
+    "2c",
+    "5h",
+    "Kh",
+    "2d",
+    "2s",
+    "4s",
+    "Js",
+    "8d",
+    "X",
+    "Jh"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "Kd"
+    ],
+    "bottom": [
+     "9c"
+    ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "Kd"
+    ],
+    "bottom": [
+     "6c"
+    ]
+   },
+   {
+    "top": [
+     "6c"
+    ],
+    "middle": [
+     "Kd"
+    ],
+    "bottom": []
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "Kd"
+    ],
+    "middle": [],
+    "bottom": [
+     "9c"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "实战 21 [R2]: top=[Kh] 发[Ah Jc X] → 鬼+A 上顶锁 AA 范 (不是 A单上顶/鬼撑底)",
+  "round": 2,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "Ah",
+   "Jc",
+   "X"
+  ],
+  "state": {
+   "top": [
+    "Kh"
+   ],
+   "middle": [
+    "2s",
+    "3d"
+   ],
+   "bottom": [
+    "8c",
+    "Ts"
+   ],
+   "usedCards": [
+    "2s",
+    "8c",
+    "Ts",
+    "Kh",
+    "3d",
+    "9c",
+    "2h",
+    "Tc",
+    "5d",
+    "Qc",
+    "4d",
+    "7s",
+    "Ks",
+    "7c",
+    "6h"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "Ah",
+     "X"
+    ],
+    "middle": [],
+    "bottom": []
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "Ah"
+    ],
+    "middle": [
+     "X"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "Ah"
+    ],
+    "middle": [],
+    "bottom": [
+     "X"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "实战 22 [R3]: bot已KKK(2真K+鬼) 发[Ks Kh 6d] → 别塞双K凑5王(废鬼), 1K上顶锁KK范",
+  "round": 3,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "Ks",
+   "Kh",
+   "6d"
+  ],
+  "state": {
+   "top": [
+    "X"
+   ],
+   "middle": [
+    "2d",
+    "7s",
+    "7d"
+   ],
+   "bottom": [
+    "Kc",
+    "Kd",
+    "X"
+   ],
+   "usedCards": [
+    "2d",
+    "Kc",
+    "X",
+    "Kd",
+    "7s",
+    "Qc",
+    "4s",
+    "7d",
+    "Qs",
+    "X",
+    "5h",
+    "8s"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "Ks"
+    ],
+    "middle": [],
+    "bottom": [
+     "Kh"
+    ]
+   },
+   {
+    "top": [
+     "Kh"
+    ],
+    "middle": [],
+    "bottom": [
+     "Ks"
+    ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "Ks",
+     "Kh"
+    ],
+    "bottom": []
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [],
+    "middle": [],
+    "bottom": [
+     "Ks",
+     "Kh"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "实战 23 [R2]: AA顶(被迫)+QQ底, 发[Ks Kh 3h] → KK放底凑KKQQ两对(别KK中倒置/别丢K)",
+  "round": 2,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "Ks",
+   "Kh",
+   "3h"
+  ],
+  "state": {
+   "top": [
+    "Ac",
+    "As"
+   ],
+   "middle": [],
+   "bottom": [
+    "Qh",
+    "Qc",
+    "6h"
+   ],
+   "usedCards": [
+    "Qh",
+    "Qc",
+    "6h",
+    "Ac",
+    "As",
+    "4h",
+    "Js",
+    "X",
+    "5s",
+    "Kd",
+    "Qs",
+    "Kc",
+    "4d",
+    "3s",
+    "Ah",
+    "7s",
+    "4c",
+    "9c"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [],
+    "bottom": [
+     "Ks",
+     "Kh"
+    ]
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [],
+    "middle": [
+     "Ks",
+     "Kh"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "Ks"
+    ],
+    "middle": [],
+    "bottom": []
+   },
+   {
+    "top": [
+     "Kh"
+    ],
+    "middle": [],
+    "bottom": []
+   }
+  ]
+ },
+ {
+  "name": "实战 24 [R3]: 顶AA + 中[2s 2c]弱对 + 底QQ, 发[2d Ks Kh] → KK放底凑KKQQ (别KK→中成KK22两对压底QQ=倒置, 测两对盲区修复)",
+  "round": 3,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "2d",
+   "Ks",
+   "Kh"
+  ],
+  "state": {
+   "top": [
+    "Ac",
+    "As"
+   ],
+   "middle": [
+    "2s",
+    "2c"
+   ],
+   "bottom": [
+    "Qh",
+    "Qc",
+    "6h"
+   ],
+   "usedCards": [
+    "Ac",
+    "As",
+    "2s",
+    "2c",
+    "Qh",
+    "Qc",
+    "6h",
+    "2d",
+    "Ks",
+    "Kh"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [],
+    "bottom": [
+     "Ks",
+     "Kh"
+    ]
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [],
+    "middle": [
+     "Ks",
+     "Kh"
+    ],
+    "bottom": []
+   }
+  ]
+ },
+ {
+  "name": "实战 25 [R4]: 顶AA + 中[2s 2c 3s 4c] + 底QQ, 发[2d 8s 9h] → 中道不塞 (别2d→222三条压底QQ倒置), 摊开让中底各凑两对",
+  "round": 4,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "2d",
+   "8s",
+   "9h"
+  ],
+  "state": {
+   "top": [
+    "Ac",
+    "As"
+   ],
+   "middle": [
+    "2s",
+    "2c",
+    "3s",
+    "4c"
+   ],
+   "bottom": [
+    "Qh",
+    "Qc",
+    "6h"
+   ],
+   "usedCards": [
+    "Ac",
+    "As",
+    "2s",
+    "2c",
+    "3s",
+    "4c",
+    "Qh",
+    "Qc",
+    "6h",
+    "2d",
+    "8s",
+    "9h"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "8s"
+    ],
+    "middle": [],
+    "bottom": [
+     "9h"
+    ]
+   },
+   {
+    "top": [
+     "9h"
+    ],
+    "middle": [],
+    "bottom": [
+     "8s"
+    ]
+   },
+   {
+    "top": [
+     "9h"
+    ],
+    "middle": [],
+    "bottom": [
+     "2d"
+    ]
+   },
+   {
+    "top": [
+     "8s"
+    ],
+    "middle": [],
+    "bottom": [
+     "2d"
+    ]
+   },
+   {
+    "top": [
+     "2d"
+    ],
+    "middle": [],
+    "bottom": [
+     "9h"
+    ]
+   },
+   {
+    "top": [
+     "2d"
+    ],
+    "middle": [],
+    "bottom": [
+     "8s"
+    ]
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [],
+    "middle": [
+     "2d"
+    ],
+    "bottom": []
+   }
+  ]
+ },
+ {
+  "name": "实战 26 [R3]: 顶[] 中[3d4h2c2h]=22 底[Qd Kd Jc] 发[7s X As] → X+As上顶锁AA范 (ypk-174260554-28, JokerATop+12; NN本偏摊开10.3, 范率优先翻)",
+  "round": 3,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "7s",
+   "X",
+   "As"
+  ],
+  "state": {
+   "top": [],
+   "middle": [
+    "3d",
+    "4h",
+    "2c",
+    "2h"
+   ],
+   "bottom": [
+    "Qd",
+    "Kd",
+    "Jc"
+   ],
+   "usedCards": [
+    "Qd",
+    "Kd",
+    "3d",
+    "4h",
+    "Jc",
+    "3h",
+    "6c",
+    "9c",
+    "Qs",
+    "8s",
+    "2c",
+    "6h",
+    "2h",
+    "8d",
+    "8h",
+    "Qh"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "X",
+     "As"
+    ],
+    "middle": [],
+    "bottom": []
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "As"
+    ],
+    "middle": [],
+    "bottom": [
+     "X"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "实战 27 [R2] ⚠️待定: 中[3h6h6s]=66 底[8d Qs] 发[2c 6d 7d] → AI 6d7d→中凑666三条(满). 两难: 底8Q留3空要≥666三条(~65-75% foul) vs 保守; 6d7d进底反挤死底(剩1空凑不出花/顺). RnMidExceedsBot 盲区(底未成对skip). 待定是否加\"中三条托不住底\"guard类比RnTopTripsOvercommit (ypk-174260554-25)",
+  "round": 2,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "2c",
+   "6d",
+   "7d"
+  ],
+  "state": {
+   "top": [],
+   "middle": [
+    "3h",
+    "6h",
+    "6s"
+   ],
+   "bottom": [
+    "8d",
+    "Qs"
+   ],
+   "usedCards": [
+    "3h",
+    "6h",
+    "6s",
+    "8d",
+    "Qs",
+    "Ah",
+    "X",
+    "4s",
+    "8h",
+    "9c"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "6d",
+     "7d"
+    ],
+    "bottom": []
+   }
+  ],
+  "wrongs": []
+ },
+ {
+  "name": "实战 28 [R2]: 底TT 中[6h 2h] 发[9s Jd 4c] → Jd放底(TTQJ强底+催TTJJ两对,3J活)/4c放中. J放顶零范路径(JJ<QQ非范 + JJJ三条会犯规弱中mid max6) + foul险. RnLoneSubQOnTopPenalty 治 (太子专属, ypk-185336138-28)",
+  "round": 2,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "9s",
+   "Jd",
+   "4c"
+  ],
+  "state": {
+   "top": [],
+   "middle": [
+    "6h",
+    "2h"
+   ],
+   "bottom": [
+    "Qh",
+    "Td",
+    "Th"
+   ],
+   "usedCards": [
+    "6h",
+    "Qh",
+    "Td",
+    "2h",
+    "Th",
+    "2d",
+    "Ac",
+    "Ad",
+    "X",
+    "7s",
+    "Qc",
+    "As",
+    "9d",
+    "5h",
+    "Qd",
+    "Tc",
+    "8c",
+    "4h",
+    "Ah",
+    "6d",
+    "Kh"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "4c"
+    ],
+    "bottom": [
+     "Jd"
+    ]
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [],
+    "middle": [
+     "Jd"
+    ],
+    "bottom": [
+     "4c"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "实战 29 保留进 A+范 +2 ",
+  "round": 2,
+  "state": {
+   "top": [
+    "X"
+   ],
+   "middle": [
+    "4h",
+    "3c"
+   ],
+   "bottom": [
+    "Td",
+    "7s"
+   ],
+   "usedCards": [
+    "4h",
+    "Td",
+    "X",
+    "7s",
+    "3c",
+    "5d",
+    "4d",
+    "2d",
+    "7c",
+    "Qc",
+    "2c",
+    "5h",
+    "8c",
+    "Js",
+    "9c"
+   ]
+  },
+  "dealt": [
+   "5s",
+   "2h",
+   "Ks"
+  ],
+  "discardCount": 1,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "topK": 1,
+  "mode": "normal",
+  "game_id": "ypk-185336138-22",
+  "seat_number": 2,
+  "uid": "13618424",
+  "expecteds": [
+   {
+    "top": [
+     "Ks"
+    ],
+    "middle": [
+     "5s"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "Ks"
+    ],
+    "middle": [
+     "2h"
+    ],
+    "bottom": []
+   }
+  ]
+ },
+ {
+  "name": "实战 29b [R2]: top=[X] 中[4h 3c] 底[Td 7s] 发[5s 2h Ks] → Ks上头留空(等A升AA范)+5s/2h进中凑顺draw, 别2h填顶锁死KK (ypk-185336138-22, RnPreserveTopAAChase)",
+  "round": 2,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "5s",
+   "2h",
+   "Ks"
+  ],
+  "state": {
+   "top": [
+    "X"
+   ],
+   "middle": [
+    "4h",
+    "3c"
+   ],
+   "bottom": [
+    "Td",
+    "7s"
+   ],
+   "usedCards": [
+    "4h",
+    "Td",
+    "X",
+    "7s",
+    "3c",
+    "5d",
+    "4d",
+    "2d",
+    "7c",
+    "Qc",
+    "2c",
+    "5h",
+    "8c",
+    "Js",
+    "9c"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "Ks"
+    ],
+    "middle": [
+     "5s"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "Ks"
+    ],
+    "middle": [
+     "2h"
+    ],
+    "bottom": []
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "Ks",
+     "2h"
+    ],
+    "middle": [],
+    "bottom": []
+   }
+  ]
+ },
+ {
+  "name": "实战 30 [R5]: top=[6c 7s] 中[2d Jc 3s 2c]=22 底[顺] 发[Jh 5h 9d] → Jh进中凑JJ22两对(底顺>中), 别弃Jh保22 (ypk-459082-16, RnMidMakeTwoPair恢复)",
+  "round": 5,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "Jh",
+   "5h",
+   "9d"
+  ],
+  "state": {
+   "top": [
+    "6c",
+    "7s"
+   ],
+   "middle": [
+    "2d",
+    "Jc",
+    "3s",
+    "2c"
+   ],
+   "bottom": [
+    "7c",
+    "8s",
+    "6h",
+    "9h",
+    "5d"
+   ],
+   "usedCards": [
+    "7c",
+    "2d",
+    "8s",
+    "6h",
+    "9h",
+    "X",
+    "2h",
+    "Ks",
+    "Kc",
+    "5c",
+    "3h",
+    "Jc",
+    "5d",
+    "Ac",
+    "X",
+    "3s",
+    "6c",
+    "7d",
+    "Jd",
+    "8h",
+    "7s",
+    "2c",
+    "4h",
+    "Ah",
+    "8c",
+    "Ts",
+    "8d",
+    "Th",
+    "Kh",
+    "As",
+    "3c",
+    "5s",
+    "4d",
+    "Tc"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "9d"
+    ],
+    "middle": [
+     "Jh"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "5h"
+    ],
+    "middle": [
+     "Jh"
+    ],
+    "bottom": []
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "9d"
+    ],
+    "middle": [
+     "5h"
+    ],
+    "bottom": []
+   }
+  ]
+ },
+ {
+  "name": "实战 31 [R2]: top=[Kd] 中[3s] 底[9c 7d 9h]=99 发[Jd 5d Qs] → 高牌(Q/J)进底当99kicker+5d进中, 别Jd进中浪费 (ypk-459082-15, RnMidHighCardOverBot)",
+  "round": 2,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "Jd",
+   "5d",
+   "Qs"
+  ],
+  "state": {
+   "top": [
+    "Kd"
+   ],
+   "middle": [
+    "3s"
+   ],
+   "bottom": [
+    "9c",
+    "7d",
+    "9h"
+   ],
+   "usedCards": [
+    "3s",
+    "9c",
+    "Kd",
+    "7d",
+    "9h",
+    "Ah",
+    "6s",
+    "7s",
+    "Qd",
+    "9d",
+    "Qc",
+    "Tc",
+    "Ac",
+    "6d",
+    "Ad",
+    "4c",
+    "7c",
+    "Ts",
+    "9s",
+    "Jh",
+    "X"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "5d"
+    ],
+    "bottom": [
+     "Qs"
+    ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "5d"
+    ],
+    "bottom": [
+     "Jd"
+    ]
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [],
+    "middle": [
+     "Jd",
+     "5d"
+    ],
+    "bottom": []
+   }
+  ]
+ },
+ {
+  "name": "实战 35 [R1]: 底222 set 不该放中道 — 三条进底(强成手)/高牌进中 (ypk-9109834-4, ConnectorSplit hierarchy 漏跳 trips)",
+  "round": 1,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "8h",
+   "Td",
+   "2d",
+   "2c",
+   "2s"
+  ],
+  "state": {
+   "top": [],
+   "middle": [],
+   "bottom": [],
+   "usedCards": [
+    "9h",
+    "2h",
+    "7c",
+    "X",
+    "6s",
+    "9d",
+    "3d",
+    "Js",
+    "4s",
+    "8c",
+    "9s",
+    "4h",
+    "Jd",
+    "Ad",
+    "4c",
+    "Ac",
+    "6d"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "8h",
+     "Td"
+    ],
+    "bottom": [
+     "2d",
+     "2c",
+     "2s"
+    ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "8h"
+    ],
+    "bottom": [
+     "Td",
+     "2d",
+     "2c",
+     "2s"
+    ]
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [],
+    "middle": [
+     "2d",
+     "2c",
+     "2s"
+    ],
+    "bottom": [
+     "8h",
+     "Td"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "实战 36 [R1]: 鬼搏顶范, 4d5d 同花连张该留中别拆 (ypk X9s2s4d5d, ConnectorSplit hierarchy 误罚拆draw)",
+  "round": 1,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "X",
+   "9s",
+   "2s",
+   "4d",
+   "5d"
+  ],
+  "state": {
+   "top": [],
+   "middle": [],
+   "bottom": [],
+   "usedCards": []
+  },
+  "expecteds": [
+   {
+    "top": [
+     "X"
+    ],
+    "middle": [
+     "4d",
+     "5d"
+    ],
+    "bottom": [
+     "9s",
+     "2s"
+    ]
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "X"
+    ],
+    "middle": [
+     "2s",
+     "4d"
+    ],
+    "bottom": [
+     "9s",
+     "5d"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "实战 37 [R2]: 底已KK强对, 发33该进中成对(别埋底凑KK33两对) — RnBotMakeTwoPair 低对无倒置不奖 (ypk 5d4d中 KK8底 发3d3h6d)",
+  "round": 2,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "3d",
+   "3h",
+   "6d"
+  ],
+  "state": {
+   "top": [],
+   "middle": [
+    "5d",
+    "4d"
+   ],
+   "bottom": [
+    "Kh",
+    "Kd",
+    "8h"
+   ],
+   "usedCards": [
+    "Kh",
+    "Kd",
+    "8h",
+    "5d",
+    "4d"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "3d",
+     "3h"
+    ],
+    "bottom": []
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [],
+    "middle": [],
+    "bottom": [
+     "3d",
+     "3h"
+    ]
+   }
+  ]
+ }
 ]

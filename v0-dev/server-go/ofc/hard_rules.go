@@ -567,34 +567,31 @@ func canFantasyTopFinal(topCards []Card) bool {
 	if len(topCards) < 3 {
 		return true // 未满, 未来可补
 	}
-	hasJoker := false
+	jokers := 0
 	var rankCnt [13]int
-	hasHigh := false
 	for _, c := range topCards {
 		if c.IsJoker() {
-			hasJoker = true
+			jokers++
 		} else {
 			rankCnt[c.Rank()]++
-			if int(c.Rank()) >= int(RankQ) {
-				hasHigh = true
-			}
 		}
 	}
-	// trips?
+	// 2026-06-14 joker-aware fix: 原版只认"鬼+高牌"配 ≥Q 对, 漏了 双鬼+任意=三条 / 鬼+低对=三条.
+	// trips (joker-aware): 任 rank 真牌数 + jokers >= 3 → 三条范 (实战19 [X X 3c]=333).
+	maxCnt := 0
 	for _, n := range rankCnt {
-		if n >= 3 {
-			return true
+		if n > maxCnt {
+			maxCnt = n
 		}
 	}
-	// pair ≥Q?
-	for r := int(RankQ); r <= int(RankA); r++ {
-		if rankCnt[r] >= 2 {
-			return true
-		}
-	}
-	// joker + 高牌 → 立刻 pair ≥Q via wild
-	if hasJoker && hasHigh {
+	if maxCnt+jokers >= 3 {
 		return true
+	}
+	// pair ≥Q (joker-aware): ≥Q 真牌数 + jokers >= 2 → 对范
+	for r := int(RankQ); r <= int(RankA); r++ {
+		if rankCnt[r]+jokers >= 2 {
+			return true
+		}
 	}
 	return false
 }
@@ -1054,14 +1051,40 @@ func botAtLeastTwoPair(row []Card) bool {
 // 关键全靠 pre-guard: 底已 ≥两对(含三条/葫芦, 如实战16/17 底TTT)→ 不奖 (非本轮新做).
 //   → 实战16/17 底TTT 被 pre-guard 挡(到不了 post); case44 底顺draw无对不触发.
 // post 用 ≥两对 (不限恰两对): 否则奖两对、不奖葫芦/金刚 = 不对称, 可能把更强的成葫芦摆法比下去.
+// highestRealPairRank — row 里最高的"真对子"(cnt>=2) rank; 不把 joker 凑的对算进去
+// (joker 凑对/三条由外层 botAtLeastTwoPair 处理); 无真对返回 -1.
+func highestRealPairRank(row []Card) int {
+	var cnt [13]int
+	for _, c := range row {
+		if !c.IsJoker() {
+			cnt[c.Rank()]++
+		}
+	}
+	for r := 12; r >= 0; r-- {
+		if cnt[r] >= 2 {
+			return r
+		}
+	}
+	return -1
+}
+
 func RnBotMakeTwoPairBonus(postState, preState *GameState) float32 {
 	if botAtLeastTwoPair(preState.Bottom) {
 		return 0 // 底已 ≥两对, 非本轮新做
 	}
-	if botAtLeastTwoPair(postState.Bottom) {
-		return 8
+	if !botAtLeastTwoPair(postState.Bottom) {
+		return 0
 	}
-	return 0
+	// 2026-06-14: 本意是"防高对放中倒置压底" (实战23/24: 底QQ + 发KK → KK放底凑KKQQ,
+	// 别KK→中成KK..两对压底QQ). 只有当新对 > 原底对(新对若进中会倒置)时才该奖.
+	// 底已有"高对" + 本轮塞"更低的对"当 kicker 凑两对 (底KK + 33 → KK33): 33进中不倒置,
+	// 反而给中道 made pair 更值 → 不奖 (ypk 头空中5d4d 底KKK8h 发33).
+	prePair := highestRealPairRank(preState.Bottom)
+	postHiPair := highestRealPairRank(postState.Bottom)
+	if prePair >= 0 && postHiPair <= prePair {
+		return 0 // 新对 ≤ 原底对 = 埋低 kicker 对, 无倒置可防
+	}
+	return 8
 }
 
 // RnMidMakeTwoPairBonus — 本轮把中道做成 ≥两对, 且底道 > 中道 (维持 bot>mid 不倒置) → +8.
@@ -2090,10 +2113,33 @@ func ConnectorSplitPenalty(p Placement, cards []Card) float32 {
 		}
 	}
 	// 每对 (mid, bot) mid > bot → +3 (违反 bot ≥ mid hierarchy, sp15: 5→3 减重)
-	// 注: 这里按 rank 比较 (不是牌型). 对"低对在底 + 高单在中"是真 foul 风险 (case 26),
-	// 保留. JJJ+QQ 的误罚主要在上面连张 split 部分, 已跳过成对/三条 → 这里残留 +18 不影响结果.
+	// 注: 这里按 rank 比较 (不是牌型). 对"低对在底 + 高单在中"是真 foul 风险 (case 26), 保留.
+	// 2026-06-14: 底道该 rank 已成三条+(count>=3)时跳过 — made set 远强于中道单张, 无 foul 威胁;
+	// 按 raw rank 罚会把"set 进底 + 高牌进中"误推成"set 进中" (ypk-9109834-4: 底222 NN TE 33
+	// 想放底, 本罚 +9~12 反推到中道 29). 低对(count==2)仍走 case 26 逻辑.
+	botRankCnt := make(map[int]int)
+	botMax := -1
+	for _, br := range botRanks {
+		botRankCnt[br]++
+		if br > botMax {
+			botMax = br
+		}
+	}
 	for _, mr := range midRanks {
+		// 2026-06-14: mid>bot hierarchy 只在"真威胁"时罚, 不再每张两两比.
+		//   (a) 中牌 > 底道最强张(botMax) → 中道可能整体压过底道 (std21: 中9h>底7).
+		//   (b) 中牌 > 底道某"成对"的牌 → 威胁 made pair = 真 foul 险 (case26/std26: 中5>底33).
+		// 否则底道的"低单张"(既非最强, 又非成对) 不罚 — 否则一张无关低牌凭空造罚, 逼 AI 拆同花
+		// 连张 (ypk X9s2s4d5d: 中[4 5] vs 底[9 2], 9压过4/5且2是无关低单 → 0 罚).
+		midToppsWhole := mr > botMax
 		for _, br := range botRanks {
+			if botRankCnt[br] >= 3 {
+				continue // 底成三条+: set 远强于中道单张, 与 rank 无关 (gamecase 35 底222)
+			}
+			paired := botRankCnt[br] >= 2
+			if !midToppsWhole && !paired {
+				continue // 底道低单张, 无 foul 威胁
+			}
 			if mr > br {
 				penalty += 3
 			}

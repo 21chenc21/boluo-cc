@@ -15,3 +15,12 @@ func TestBotMakeTwoPair_Skip_PreAlreadyTwoPair(t *testing.T) {
 	post := st([]string{"Ac","As"}, []string{}, []string{"Qh","Qc","Ks","Kh","6h"})
 	if got := RnBotMakeTwoPairBonus(post, pre); got != 0 { t.Fatalf("底已两对 应不奖, got %v", got) }
 }
+
+func TestBotMakeTwoPair_Skip_LowKickerPairUnderHighPair(t *testing.T) {
+	// 底已KK(高对) + 塞低对33 → KK33: 33进中不倒置(33<KK), 该奖让位给"33→中成对" → 不奖.
+	pre := st([]string{}, []string{"5d", "4d"}, []string{"Kh", "Kd", "8h"})
+	post := st([]string{}, []string{"5d", "4d"}, []string{"Kh", "Kd", "8h", "3d", "3h"}) // KK33
+	if got := RnBotMakeTwoPairBonus(post, pre); got != 0 {
+		t.Fatalf("底KK + 低对33凑KK33 不该奖(无倒置可防), got %v", got)
+	}
+}
