@@ -2941,5 +2941,75 @@
     ]
    }
   ]
+ },
+ {
+  "name": "实战 38 [R3]: 底88 发8s 该进底凑888-99葫芦, 别摊8s去中道当死kicker (8只剩1张) — RnBotMakeTwoPair 葫芦分级+14 (ypk-12124490-13)",
+  "round": 3,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "9h",
+   "8s",
+   "Th"
+  ],
+  "state": {
+   "top": [
+    "As",
+    "Kc"
+   ],
+   "middle": [
+    "5s",
+    "5d"
+   ],
+   "bottom": [
+    "8c",
+    "9d",
+    "8h"
+   ],
+   "usedCards": [
+    "As",
+    "8c",
+    "9d",
+    "5s",
+    "Kc",
+    "Qc",
+    "5d",
+    "8h",
+    "3c",
+    "7c",
+    "Ac",
+    "9c",
+    "Jh",
+    "2s",
+    "5c",
+    "X",
+    "7h",
+    "Ad",
+    "5h",
+    "Ks",
+    "2c"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [],
+    "bottom": [
+     "9h",
+     "8s"
+    ]
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [],
+    "middle": [
+     "8s"
+    ],
+    "bottom": [
+     "9h"
+    ]
+   }
+  ]
  }
 ]
