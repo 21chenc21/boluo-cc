@@ -3011,5 +3011,217 @@
     ]
    }
   ]
+ },
+ {
+  "name": "实战 39 [R3]: 鬼上顶锁范后 8s该进底凑888三条(别9h两对) — 候选支配过滤(同顶中底大者赢)解决 value-head低估三条 (ypk-12124490-13 89X)",
+  "round": 3,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "8s",
+   "9h",
+   "X"
+  ],
+  "state": {
+   "top": [
+    "As",
+    "Kc"
+   ],
+   "middle": [
+    "5s",
+    "5d"
+   ],
+   "bottom": [
+    "8c",
+    "9d",
+    "8h"
+   ],
+   "usedCards": [
+    "As",
+    "8c",
+    "9d",
+    "5s",
+    "Kc",
+    "Qc",
+    "5d",
+    "8h",
+    "3c",
+    "7c",
+    "Ac",
+    "9c",
+    "Jh",
+    "2s",
+    "5c",
+    "X",
+    "7h",
+    "Ad",
+    "5h",
+    "Ks",
+    "2c"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "X"
+    ],
+    "middle": [],
+    "bottom": [
+     "8s"
+    ]
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "X"
+    ],
+    "middle": [],
+    "bottom": [
+     "9h"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "实战 40 [R3]: Ah上顶锁AA范后 8s该进底凑888三条(别9h两对) — 候选支配过滤解决, 同 89X (ypk-12124490-13 89A)",
+  "round": 3,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "8s",
+   "9h",
+   "Ah"
+  ],
+  "state": {
+   "top": [
+    "As",
+    "Kc"
+   ],
+   "middle": [
+    "5s",
+    "5d"
+   ],
+   "bottom": [
+    "8c",
+    "9d",
+    "8h"
+   ],
+   "usedCards": [
+    "As",
+    "8c",
+    "9d",
+    "5s",
+    "Kc",
+    "Qc",
+    "5d",
+    "8h",
+    "3c",
+    "7c",
+    "Ac",
+    "9c",
+    "Jh",
+    "2s",
+    "5c",
+    "X",
+    "7h",
+    "Ad",
+    "5h",
+    "Ks",
+    "2c"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "Ah"
+    ],
+    "middle": [],
+    "bottom": [
+     "8s"
+    ]
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "Ah"
+    ],
+    "middle": [],
+    "bottom": [
+     "9h"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "实战 41 [R3]: Kh(KK顶范弱)不如锁底888-99葫芦 → 8s+9h都进底, 弃Kh (ypk-12124490-13 89K, 分级bonus葫芦+14生效)",
+  "round": 3,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "8s",
+   "9h",
+   "Kh"
+  ],
+  "state": {
+   "top": [
+    "As",
+    "Kc"
+   ],
+   "middle": [
+    "5s",
+    "5d"
+   ],
+   "bottom": [
+    "8c",
+    "9d",
+    "8h"
+   ],
+   "usedCards": [
+    "As",
+    "8c",
+    "9d",
+    "5s",
+    "Kc",
+    "Qc",
+    "5d",
+    "8h",
+    "3c",
+    "7c",
+    "Ac",
+    "9c",
+    "Jh",
+    "2s",
+    "5c",
+    "X",
+    "7h",
+    "Ad",
+    "5h",
+    "Ks",
+    "2c"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [],
+    "bottom": [
+     "8s",
+     "9h"
+    ]
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "Kh"
+    ],
+    "middle": [],
+    "bottom": [
+     "8s"
+    ]
+   }
+  ]
  }
 ]

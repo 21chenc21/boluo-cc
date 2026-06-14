@@ -327,6 +327,74 @@ func (er *ExpertRollout) ExpertPlace5(state *GameState, cards []Card) {
 }
 
 // ExpertPlace3 — R2-5 弃 1 摆 2 (修改 state, 与 JS expertPlace3 同语义)
+// bottomDomScore — 底道当前成手的可比强度 (joker-aware, 仅 made hand). tier*100 + 主rank.
+// 用于"同顶中底大者赢"支配过滤 (用户 2026-06-14, 绕开 value-head 对强成手低估 89X).
+func bottomDomScore(row []Card) int {
+	var cnt [13]int
+	j := 0
+	for _, c := range row {
+		if c.IsJoker() {
+			j++
+		} else {
+			cnt[c.Rank()]++
+		}
+	}
+	pairs, trips, quads, maxc := 0, 0, 0, 0
+	for _, n := range cnt {
+		if n > maxc {
+			maxc = n
+		}
+		if n == 2 {
+			pairs++
+		}
+		if n == 3 {
+			trips++
+		}
+		if n >= 4 {
+			quads++
+		}
+	}
+	eff := maxc + j // joker 补最大堆
+	tier := 0       // 高牌/draw
+	switch {
+	case eff >= 4 || quads > 0:
+		tier = 7 // 金刚
+	case (trips > 0 && pairs > 0) || (eff >= 3 && pairs >= 1):
+		tier = 6 // 葫芦
+	case eff >= 3:
+		tier = 3 // 三条
+	case pairs >= 2:
+		tier = 2 // 两对
+	case pairs >= 1 || (j >= 1 && maxc >= 1):
+		tier = 1 // 一对 (含鬼+单)
+	}
+	prim := -1
+	for r := 12; r >= 0; r-- {
+		if cnt[r] >= 2 {
+			prim = r
+			break
+		}
+	}
+	if prim < 0 {
+		for r := 12; r >= 0; r-- {
+			if cnt[r] >= 1 {
+				prim = r
+				break
+			}
+		}
+	}
+	return tier*100 + prim + 1
+}
+
+// topMidKey — 顶+中 placement 的归一化 key (排序, 同集合同 key).
+func topMidKey(gs *GameState) string {
+	t := append([]string(nil), cardIDs(gs.Top)...)
+	m := append([]string(nil), cardIDs(gs.Middle)...)
+	sort.Strings(t)
+	sort.Strings(m)
+	return joinIDs(t) + "|" + joinIDs(m)
+}
+
 func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 	actions := GenerateRoundNActions(cards, state)
 
@@ -375,6 +443,29 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 			}
 			uniq = filtered
 		}
+	}
+
+	// === 支配过滤 (用户 2026-06-14): 同顶+同中 → 底道成手严格大者支配, 删底小的. ===
+	// 绕开 value-head 对强成手低估 (89X: 同顶中, 888三条 严格 > 88-99两对 → 删两对那个).
+	// 仅 made-hand 比较; 裸跑 bench 看是否误删 draw.
+	if !HardRulesDisabled && len(uniq) > 1 {
+		best := make(map[string]int, len(uniq))
+		for _, c := range uniq {
+			k := topMidKey(c.gs)
+			if sc := bottomDomScore(c.gs.Bottom); sc > best[k] {
+				best[k] = sc
+			}
+		}
+		kept := make([]cand, 0, len(uniq))
+		for _, c := range uniq {
+			sc := bottomDomScore(c.gs.Bottom)
+			// draw 守护: 只删 made-pair+ 的弱底 (>=100); 高牌型底(顺/花 draw)永不删.
+			if sc >= 100 && sc < best[topMidKey(c.gs)] {
+				continue // 被同顶中更强底道严格支配
+			}
+			kept = append(kept, c)
+		}
+		uniq = kept
 	}
 
 	// stage1 ranking: value (head0) + 可选 policy (head3) bias - foul-imminent penalty
