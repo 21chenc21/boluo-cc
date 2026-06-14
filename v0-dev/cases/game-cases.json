@@ -2387,7 +2387,7 @@
     "wrongs": []
   },
   {
-    "name": "实战 28 [R2] 🎯sp25靶(当前failing): 底TT 中[6h 2h] 发[9s Jd 4c] → Jd放底(TTQJ强底+T-J-Q连)/4c放中(低牌安全)/弃9s. 当前NN反结构 Jd→中(JJ>TT foul险)+4c占底. 纯value-head判错(特征favor正解但组合错), 零规则干预. 待sp25 retrain修 (ypk-185336138-28)",
+    "name": "实战 28 [R2]: 底TT 中[6h 2h] 发[9s Jd 4c] → Jd放底(TTQJ强底+催TTJJ两对,3J活)/4c放中. J放顶零范路径(JJ<QQ非范 + JJJ三条会犯规弱中mid max6) + foul险. RnLoneSubQOnTopPenalty 治 (太子专属, ypk-185336138-28)",
     "round": 2,
     "jokerCount": 2,
     "pureMLP": true,

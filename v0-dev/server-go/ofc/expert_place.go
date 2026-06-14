@@ -413,6 +413,8 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 		item.teScore += RnPreserveTopAAChaseBonus(item.gs)
 		// 2026-06-14 用户提案(诊断中): 中放牌>底锚+底未三条 → -8 (高牌该进底)
 		item.teScore -= RnMidHighCardOverBotPenalty(item.gs, state)
+		// 2026-06-14 太子专属: T/J 起手扔空顶(零范路径)+底成对 → -3 (实战28, 该进底凑两对)
+		item.teScore -= RnLoneSubQOnTopPenalty(item.gs, state)
 	}
 
 	sort.SliceStable(uniq, func(i, j int) bool { return uniq[i].teScore > uniq[j].teScore })

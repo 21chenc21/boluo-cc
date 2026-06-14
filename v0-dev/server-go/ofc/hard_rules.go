@@ -1137,6 +1137,34 @@ func RnMidHighCardOverBotPenalty(postState, preState *GameState) float32 {
 	return 0
 }
 
+// RnLoneSubQOnTopPenalty — 太子专属 (2026-06-14, 实战28 ypk-185336138-28): 本轮起手往**空顶**放
+// 1 张 T/J (<Q) 而底道已成对+未满 → 罚. 该 T/J 在顶**零范路径**:① 自配 TT/JJ < QQ 不是对范;
+// ② 升 TTT/JJJ 三条范又会犯规(需 mid ≥ 该三条, 但弱中托不住, 实战28 mid max 6 < J). = 死张 + foul险.
+// 该牌进底更值 (底有对 → 添两对 draw, 实战28 底TT + Jd → 催 TTJJ). ⚠️ 模型特定, 换 sp24/sp25 须重评.
+func RnLoneSubQOnTopPenalty(postState, preState *GameState) float32 {
+	if len(preState.Top) != 0 || len(postState.Top) != 1 {
+		return 0 // 只管"本轮往空顶起手放 1 张"
+	}
+	c := postState.Top[0]
+	if c.IsJoker() {
+		return 0
+	}
+	r := int(c.Rank())
+	if r < int(RankT) || r >= int(RankQ) {
+		return 0 // 只罚 T/J (高但 <Q 自配非范); 低张/QKA/鬼 不罚
+	}
+	// 升三条范是否被弱中堵死: mid 现成牌型 < 该 rank 三条 → 升 TTT/JJJ 必犯规 → 顶零范路径
+	midType, midTrip := midMadeFloor(postState.Middle)
+	if midType > TypeThreeOfAKind || (midType == TypeThreeOfAKind && midTrip >= r) {
+		return 0 // 中能托住该三条 → 顶 T/J 还有三条范苗头, 不罚
+	}
+	bot := partialEvalTP(postState.Bottom)
+	if bot.Type < TypePair || len(postState.Bottom) >= 5 {
+		return 0 // 底须已成对且未满 (放底能添两对 draw)
+	}
+	return 3
+}
+
 // partialEvalTP — 两对感知的部分行评估 (中>底 倒置比较专用).
 // partialEval (features_v2.go) 只认 单对/三条: 遇两对 (如 [2s 2c Ks Kh]) 会
 //   ① 误判成单对; ② 更糟 — 从低位扫 rankCnt 先撞到小对, 报成"22对"漏掉 KK.
