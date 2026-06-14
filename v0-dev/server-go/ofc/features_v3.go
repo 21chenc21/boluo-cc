@@ -126,9 +126,9 @@ func BuildFeaturesV3(gs *GameState) []float32 {
 	fillDiscard(f[129:131], gs) // 2026-05-19: 用 gs.LastDiscard, R1 / 无 discard 时 0
 
 	// 2026-05-19 Tier 1+2+3 新增 (16 dim, idx 131-146)
-	fillCrossRowSplits(f[131:137], gs)        // L: V2 复用, 6 dim
-	fillLockedAndDraws(f[137:145], gs)        // LR: 8 dim
-	fillDiscardExtra(f[145:147], gs)          // N2: 2 dim, 弃牌副信号
+	fillCrossRowSplits(f[131:137], gs) // L: V2 复用, 6 dim
+	fillLockedAndDraws(f[137:145], gs) // LR: 8 dim
+	fillDiscardExtra(f[145:147], gs)   // N2: 2 dim, 弃牌副信号
 
 	// 2026-06-03: dim130 (N_disc "本轮弃了 Q/K/A" 二元标志) 固化清零 — 净负特征.
 	// value head 训练时学到 "弃高牌≈好局面" 的伪相关, 在"弃 Q 留 J 做成中道花"类局面
@@ -848,9 +848,43 @@ func pTopPairQKA(gs *GameState, rankRem [13]int, jokerRem, deckTotal, topSlots i
 }
 
 // pTopFinalPairExact — P(top final 恰好是 pair_r, 不是 trips_r)
+// jokerTopMadePairRank — 满顶含 joker 时 joker 最优完成的对子 rank (joker 配最高真单张).
+// 已有真对(joker→三条) / 无 joker → 返回 -1 (非 exact joker-pair).
+func jokerTopMadePairRank(top []Card) int {
+	jokers := 0
+	var cnt [13]int
+	for _, c := range top {
+		if c.IsJoker() {
+			jokers++
+		} else {
+			cnt[c.Rank()]++
+		}
+	}
+	if jokers == 0 {
+		return -1
+	}
+	for _, n := range cnt {
+		if n >= 2 {
+			return -1 // 已真对, joker 升三条非 exact pair
+		}
+	}
+	for r := 12; r >= 0; r-- {
+		if cnt[r] >= 1 {
+			return r // joker 配最高真单张
+		}
+	}
+	return -1
+}
+
 func pTopFinalPairExact(gs *GameState, r uint8, rankRem [13]int, jokerRem, deckTotal, topSlots int) float32 {
 	// 简化: 假设 = P(top 至少 2 张 r) - P(top ≥ 3 张 r)
 	topHasR := countRankInRow(gs.Top, int(r))
+	// 2026-06-14 (uniform): 顶上鬼锁的对子 rank (鬼配最高真单张) 算进 topHasR — 鬼已成对锁范.
+	// 修 F_fantasyGran 鬼锁 AA/KK 范误判: 满顶 [As Kc X]=AA (countRankInRow 不数鬼→原 0) +
+	// partial 顶含鬼 [Ac X] (原 hypergeo 漏鬼→低估). 统一处理满顶/partial, 含升三条概率. ypk 89X.
+	if jokerTopMadePairRank(gs.Top) == int(r) {
+		topHasR++
+	}
 	deckR := rankRem[int(r)] + jokerRem // joker 可顶
 	needFor2 := 2 - topHasR
 	needFor3 := 3 - topHasR
@@ -864,7 +898,7 @@ func pTopFinalPairExact(gs *GameState, r uint8, rankRem [13]int, jokerRem, deckT
 		return 1 - pUp
 	}
 	if topSlots == 0 {
-		return 0
+		return 0 // 满顶且未成对 → 非 exact pair
 	}
 	p2 := hypergeoAtLeast(deckTotal, deckR, topSlots, needFor2)
 	p3 := hypergeoAtLeast(deckTotal, deckR, topSlots, needFor3)
@@ -1323,16 +1357,32 @@ func maxPairRankRow(row []Card) int {
 // twoPairHighRank — row 两对中较大对的 rank. -1 if no 2pair.
 func twoPairHighRank(row []Card) int {
 	pairs := getAllPairRanks(row)
-	if len(pairs) < 2 {
-		return -1
+	if len(pairs) == 0 {
+		return -1 // 真无对
 	}
-	maxR := -1
-	for _, r := range pairs {
-		if r > maxR {
-			maxR = r
+	if len(pairs) >= 2 {
+		maxR := -1
+		for _, r := range pairs {
+			if r > maxR {
+				maxR = r
+			}
+		}
+		return maxR
+	}
+	// 2026-06-14: 单一成对 rank — 若是三条+(cnt>=3)即三条/金刚, 返回该 rank (强成手, 别给 -1
+	// junk 哨兵, 否则三条/金刚在此维跟"无对"同信号 → value head 低估, ypk-12124490-13 89X).
+	// 单纯一对(cnt==2)仍 -1 (非两对).
+	r := pairs[0]
+	cnt := 0
+	for _, c := range row {
+		if !c.IsJoker() && int(c.Rank()) == r {
+			cnt++
 		}
 	}
-	return maxR
+	if cnt >= 3 {
+		return r
+	}
+	return -1
 }
 
 // getAllPairRanks — row 中所有 pair 的 rank 列表

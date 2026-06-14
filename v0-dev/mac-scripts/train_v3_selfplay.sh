@@ -110,7 +110,7 @@ SCRIPT_VERSION="2026-05-22-sp18"
 #     - Mark cases 35/37/40/45 as warn (AI 选合理但不在 expecteds)
 #     - sp17 iter-1 r1 deployed 8002, bench: 59通过/4警告/0 真错.
 #     - DATA_VERSION → i147-sp18 (rollout policy 含 sp17 best, 数据 fresh).
-DATA_VERSION="i147-sp18"
+DATA_VERSION="i147-sp25"  # 2026-06-14 特征修: dim106三条哨兵 + F_fantasyGran鬼范, fresh dataset
 # ====================================================================
 
 set -e
@@ -264,7 +264,7 @@ for ((iter=1; iter<=ITERS; iter++)); do
     echo "[iter $iter] Phase A: gen $GAMES games (rollouts=100, indim 147, SELF-PLAY + exploration)..." | tee -a "$LOG"
     GEN_ARGS=(-num-games "$GAMES" -jokers 2 -rollouts 100 -r1-cap 30
               -phantom-opponents 2 -indim 147
-              -foul-cost 6 -fan-bonus-qq 20 -fan-bonus-kk 40 -fan-bonus-aa 100 -fan-bonus-trips 120
+              -foul-cost 6 -fan-bonus-qq 20 -fan-bonus-kk 40 -fan-bonus-aa 100 -fan-bonus-trips 160
               -out-dir "$GEN_OUT")
     if [ -n "$BEST_CKPT" ] && [ -f "$BEST_CKPT" ]; then
         GEN_ARGS+=(-weights "$BEST_CKPT")
@@ -292,7 +292,7 @@ for ((iter=1; iter<=ITERS; iter++)); do
     TRAIN_ARGS=(-dataset-dir "$DATASET_ROOT" -dataset-keep-warm-start -hours 1 -round-min 30
                 -outdim 4 -h1 512 -h2 256 -h3 128 -indim 147
                 -epochs 30 -lr 0.001 -warm-lr-mult 0.2 -y-recompute
-                -fan-bonus-qq 20 -fan-bonus-kk 40 -fan-bonus-aa 100 -fan-bonus-trips 120
+                -fan-bonus-qq 20 -fan-bonus-kk 40 -fan-bonus-aa 100 -fan-bonus-trips 160
                 -foul-cost 6 -fan-w 0.40 -foul-w 0.10 -policy-w 0.30
                 -ckpt-dir "$TRAIN_OUT" -policy "v0-v3-sp-iter$iter")
     if [ -n "$BEST_CKPT" ] && [ -f "$BEST_CKPT" ]; then
