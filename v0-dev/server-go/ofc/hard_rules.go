@@ -1138,9 +1138,10 @@ func RnMidHighCardOverBotPenalty(postState, preState *GameState) float32 {
 }
 
 // RnLoneSubQOnTopPenalty — 太子专属 (2026-06-14, 实战28 ypk-185336138-28): 本轮起手往**空顶**放
-// 1 张 T/J (<Q) 而底道已成对+未满 → 罚. 该 T/J 在顶**零范路径**:① 自配 TT/JJ < QQ 不是对范;
-// ② 升 TTT/JJJ 三条范又会犯规(需 mid ≥ 该三条, 但弱中托不住, 实战28 mid max 6 < J). = 死张 + foul险.
-// 该牌进底更值 (底有对 → 添两对 draw, 实战28 底TT + Jd → 催 TTJJ). ⚠️ 模型特定, 换 sp24/sp25 须重评.
+// 1 张 **≥中道最大真牌 且 <Q** 的牌, 而底道已成对+未满 → 罚 -2. 该牌在顶**零范路径 + foul险**:
+// ① 自配对 < QQ 不是对范; ② 升三条范又会犯规(需 mid ≥ 该三条, 弱中托不住);
+// ③ 自配对 > 中max → 顶对压中 foul. (比中max小的牌上顶: 中能匹配, 不foul, 不罚.)
+// 该牌进底更值 (底有对 → 添两对 draw, 实战28 底TT + Jd(≥mid max6) → 催 TTJJ). ⚠️ 模型特定, 换 sp24/sp25 须重评.
 func RnLoneSubQOnTopPenalty(postState, preState *GameState) float32 {
 	if len(preState.Top) != 0 || len(postState.Top) != 1 {
 		return 0 // 只管"本轮往空顶起手放 1 张"
@@ -1150,19 +1151,25 @@ func RnLoneSubQOnTopPenalty(postState, preState *GameState) float32 {
 		return 0
 	}
 	r := int(c.Rank())
-	if r < int(RankT) || r >= int(RankQ) {
-		return 0 // 只罚 T/J (高但 <Q 自配非范); 低张/QKA/鬼 不罚
+	midMaxIdx := -1 // 中道现有最大真牌 rank
+	for _, mc := range postState.Middle {
+		if !mc.IsJoker() && int(mc.Rank()) > midMaxIdx {
+			midMaxIdx = int(mc.Rank())
+		}
 	}
-	// 升三条范是否被弱中堵死: mid 现成牌型 < 该 rank 三条 → 升 TTT/JJJ 必犯规 → 顶零范路径
+	if midMaxIdx < 0 || r < midMaxIdx || r >= int(RankQ) {
+		return 0 // 只罚 [中道最大牌, Q): 比中max小不foul, Q+有范苗头, 中无真牌不比
+	}
+	// 升三条范是否被弱中堵死: mid 现成牌型 < 该 rank 三条 → 升三条必犯规 → 顶零范路径
 	midType, midTrip := midMadeFloor(postState.Middle)
 	if midType > TypeThreeOfAKind || (midType == TypeThreeOfAKind && midTrip >= r) {
-		return 0 // 中能托住该三条 → 顶 T/J 还有三条范苗头, 不罚
+		return 0 // 中能托住该三条 → 顶牌还有三条范苗头, 不罚
 	}
 	bot := partialEvalTP(postState.Bottom)
 	if bot.Type < TypePair || len(postState.Bottom) >= 5 {
 		return 0 // 底须已成对且未满 (放底能添两对 draw)
 	}
-	return 3
+	return 2
 }
 
 // partialEvalTP — 两对感知的部分行评估 (中>底 倒置比较专用).
