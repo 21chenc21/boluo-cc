@@ -23,15 +23,22 @@ func makeStateV3(t *testing.T, top, mid, bot []string) *GameState {
 	return gs
 }
 
-// TestV3_Dim — feature 维度严格 147 (2026-05-19: 131 → 147 加 Tier 1+2+3)
+// TestV3_Dim — feature 维度严格 150 (2026-06-14 sp26: 147 → 150 加 O 组成手行序; 之前 131→147 加 Tier 1+2+3)
 func TestV3_Dim(t *testing.T) {
 	gs := NewGameState(2)
 	f := BuildFeaturesV3(gs)
-	if len(f) != 147 {
-		t.Fatalf("V3 dim: got %d, want 147", len(f))
+	if len(f) != 150 {
+		t.Fatalf("V3 dim: got %d, want 150", len(f))
 	}
-	if FeatureDimV3 != 147 {
-		t.Fatalf("FeatureDimV3 const: got %d, want 147", FeatureDimV3)
+	if FeatureDimV3 != 150 {
+		t.Fatalf("FeatureDimV3 const: got %d, want 150", FeatureDimV3)
+	}
+	if FeatureDimV3Base != 147 {
+		t.Fatalf("FeatureDimV3Base const: got %d, want 147", FeatureDimV3Base)
+	}
+	// 太子 dispatch: BuildFeatures(gs,147) 取前 147 维
+	if got := len(BuildFeatures(gs, FeatureDimV3Base)); got != 147 {
+		t.Fatalf("BuildFeatures(147) 应取前147维, got %d", got)
 	}
 }
 

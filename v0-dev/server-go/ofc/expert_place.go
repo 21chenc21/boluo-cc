@@ -103,7 +103,32 @@ func (er *ExpertRollout) ExpertPlace5(state *GameState, cards []Card) {
 		//   - R1FlushGroupOnBotBonus +5 (替 r1RuleFlushGroup_OnBot, 无 TT 例外)
 		//   - R1SingleJokerNoAOnTopBonus +5 (2026-06-03: 单鬼无 A 留顶)
 		// FoulImminentPenalty 通用到所有 round (R1 这里 + R2-R5 prerank)
-		penalty := ConnectorSplitPenalty(p, cards) + R1FourInRowPenalty(p, cards) + R1IncoherentRowPenalty(p, cards) + R1TopNonAKXPenalty(p, cards, state) + R1JokerOnTopWithAAPenalty(p, cards) + FoulImminentPenalty(gs) - R1SameSuitInRowBonus(p, cards) - R1JokerWithAOnTopBonus(p, cards) - R1SingleAOnTopBonus(p, cards) - R1FlushGroupOnBotBonus(p, cards) - R1SingleJokerNoAOnTopBonus(p, cards)
+		penalty := float32(0)
+		radd := func(name string, v float32) {
+			if !DisabledRules[name] {
+				penalty += v
+			}
+		}
+		radd("ConnectorSplit", ConnectorSplitPenalty(p, cards))
+		radd("R1FourInRow", R1FourInRowPenalty(p, cards))
+		radd("R1IncoherentRow", R1IncoherentRowPenalty(p, cards))
+		radd("R1TopNonAKX", R1TopNonAKXPenalty(p, cards, state))
+		radd("R1JokerOnTopWithAA", R1JokerOnTopWithAAPenalty(p, cards))
+		radd("R1HighCardBotKicker", R1HighCardShouldBeBotKickerPenalty(p, cards))
+		radd("R1LoneKingOnTop", R1LoneKingOnTopPenalty(p, cards))
+		radd("MidPlacedOverBot", RnMidPlacedOverBotPlacedPenalty(gs, state))
+		radd("Foul", FoulImminentPenalty(gs))
+		radd("R1SameSuit", -R1SameSuitInRowBonus(p, cards))
+		radd("R1JokerWithAOnTop", -R1JokerWithAOnTopBonus(p, cards))
+		radd("R1SingleAOnTop", -R1SingleAOnTopBonus(p, cards))
+		radd("R1FlushGroupOnBot", -R1FlushGroupOnBotBonus(p, cards))
+		radd("R1BotDraw", -R1BottomDrawBonus(p, cards))
+		radd("R1MidOverBotCard", R1MidOverBotCardPenalty(p, cards))
+		radd("R1SingleJokerNoAOnTop", -R1SingleJokerNoAOnTopBonus(p, cards))
+		radd("R1BigPairOnBot", -R1BigPairOnBotBonus(p, cards))
+		if SoftRulesDisabled { // 裸跑: 只留纯 value head
+			penalty = 0
+		}
 		score -= penalty
 		candidates = append(candidates, cand{p, score, gs, penalty, 0})
 	}
@@ -134,10 +159,20 @@ func (er *ExpertRollout) ExpertPlace5(state *GameState, cards []Card) {
 	sort.SliceStable(candidates, func(i, j int) bool { return candidates[i].score > candidates[j].score })
 
 	if MctsDebugTrace {
-		fmt.Println("=== R1 Prerank (MLP value head + PolicyBoost) top 5 ===")
-		for i := 0; i < 5 && i < len(candidates); i++ {
+		fmt.Println("=== R1 Prerank (MLP value head + PolicyBoost) top 12 ===")
+		for i := 0; i < 12 && i < len(candidates); i++ {
 			c := candidates[i]
-			fmt.Printf("  [%d] %s  score=%.4f\n", i+1, placementStr(c.gs), c.score)
+			fmt.Printf("  [%d] %s  score=%.4f  (te+pol=%.4f  penalty=%.4f)\n", i+1, placementStr(c.gs), c.score, c.score+c.penalty, c.penalty)
+		}
+		fmt.Println("  --- rule 拆分 (top 6): CSP/4row/incoh/topNonAKX/jokAA/foul | -bSuit/-bJokA/-bSingleA/-bFlush/-bSingleJok/-bBigPair ---")
+		for i := 0; i < 6 && i < len(candidates); i++ {
+			c := candidates[i]
+			p := c.placement
+			fmt.Printf("  [%d] %.1f/%.1f/%.1f/%.1f/%.1f/%.1f | -%.1f/-%.1f/-%.1f/-%.1f/-%.1f/-%.1f\n", i+1,
+				ConnectorSplitPenalty(p, cards), R1FourInRowPenalty(p, cards), R1IncoherentRowPenalty(p, cards),
+				R1TopNonAKXPenalty(p, cards, state), R1JokerOnTopWithAAPenalty(p, cards), FoulImminentPenalty(c.gs),
+				R1SameSuitInRowBonus(p, cards), R1JokerWithAOnTopBonus(p, cards), R1SingleAOnTopBonus(p, cards),
+				R1FlushGroupOnBotBonus(p, cards), R1SingleJokerNoAOnTopBonus(p, cards), R1BigPairOnBotBonus(p, cards))
 		}
 	}
 
@@ -359,14 +394,21 @@ func bottomDomScore(row []Card) int {
 	switch {
 	case eff >= 4 || quads > 0:
 		tier = 7 // 金刚
-	case (trips > 0 && pairs > 0) || (eff >= 3 && pairs >= 1):
-		tier = 6 // 葫芦
+	// 2026-06-18 port v0-dev 修 (用户发现 ypk-129630538-16 手3 R5: straight-blind domScore 把"凑顺底"误删→逼犯规).
+	case (trips > 0 && pairs > 0) || (pairs >= 2 && j >= 1):
+		tier = 6 // 葫芦 (真三条+对, 或 2对+鬼)
 	case eff >= 3:
 		tier = 3 // 三条
 	case pairs >= 2:
 		tier = 2 // 两对
 	case pairs >= 1 || (j >= 1 && maxc >= 1):
 		tier = 1 // 一对 (含鬼+单)
+	}
+	// 2026-06-18 port v0-dev: 满5张行检测顺/花/SF (count-based 漏鬼凑的顺 → 误删凑顺底. 顺4/花5/SF8, 取max)
+	if len(row) == 5 {
+		if t := int(Evaluate5JokerCap(row, nil).Type); t > tier {
+			tier = t
+		}
 	}
 	prim := -1
 	for r := 12; r >= 0; r-- {
@@ -386,6 +428,61 @@ func bottomDomScore(row []Card) int {
 	return tier*100 + prim + 1
 }
 
+// 支配软罚参数 (用户 2026-06-18: dominance 改软加分, 不强过滤). sibling-relative, 小幅 tie-break.
+const (
+	domSoftScale = 2.0 // dom 分差 → 罚分 斜率
+	domSoftCap   = 3.0 // 单候选最大软罚 (防过火破坏 value-head / draw)
+)
+
+// domSoftPen — dom 分差(gap>0) 映射到软罚分, 线性封顶.
+func domSoftPen(gap float32) float32 {
+	p := float32(domSoftScale) * gap
+	if p > domSoftCap {
+		p = domSoftCap
+	}
+	return p
+}
+
+// rowHasJoker — 行内是否含鬼 (含鬼=wild发育, partial board 支配软罚要豁免, 防手4类发育底被误罚).
+func rowHasJoker(row []Card) bool {
+	for _, c := range row {
+		if c.IsJoker() {
+			return true
+		}
+	}
+	return false
+}
+
+// domScoreK — kicker-aware 成手支配分 (bottomDomScore + 高kicker小数). 仅 made-pair+(>=100).
+// 用于支配软罚 tie-break: 区分 KKQ vs KK3 (同对不同 kicker, bottomDomScore 看不出).
+func domScoreK(row []Card) float32 {
+	base := bottomDomScore(row)
+	if base < 100 {
+		return float32(base)
+	}
+	var cnt [13]int
+	for _, c := range row {
+		if !c.IsJoker() {
+			cnt[c.Rank()]++
+		}
+	}
+	pairRank := -1
+	for r := 12; r >= 0; r-- {
+		if cnt[r] >= 2 {
+			pairRank = r
+			break
+		}
+	}
+	kick := -1
+	for r := 12; r >= 0; r-- {
+		if cnt[r] >= 1 && r != pairRank {
+			kick = r
+			break
+		}
+	}
+	return float32(base) + 0.1*float32(kick+1)
+}
+
 // topMidKey — 顶+中 placement 的归一化 key (排序, 同集合同 key).
 func topMidKey(gs *GameState) string {
 	t := append([]string(nil), cardIDs(gs.Top)...)
@@ -395,6 +492,75 @@ func topMidKey(gs *GameState) string {
 	return joinIDs(t) + "|" + joinIDs(m)
 }
 
+// topMidMadeKey — 顶exact + 中道成手cmp(type*16+rank, 忽略kicker). 底道支配过滤用:
+//   同顶+同中成手(如都55对, 仅kicker差) → 比底道成手强弱. 治 hand67: Ad该进底成broadway顺,
+//   不是进中当55的死kicker (底顺413 严格支配 底KKK312, 但旧 exact-middle key 因kicker(A/2/K)不同没分组).
+func topMidMadeKey(gs *GameState) string {
+	t := append([]string(nil), cardIDs(gs.Top)...)
+	sort.Strings(t)
+	return joinIDs(t) + fmt.Sprintf("|M%d", madeHandCmp(gs.Middle))
+}
+
+// topBotKey — 顶+底 placement 的归一化 key (mirror topMidKey, 中道支配过滤用).
+func topBotKey(gs *GameState) string {
+	t := append([]string(nil), cardIDs(gs.Top)...)
+	b := append([]string(nil), cardIDs(gs.Bottom)...)
+	sort.Strings(t)
+	sort.Strings(b)
+	return joinIDs(t) + "|" + joinIDs(b)
+}
+
+// rnSoftScore — R2-R5 软规则对 base value-head 的净有符号调整 (= teScore - base).
+// trace=true 同时返回各非零项明细 (OFC_DEBUG_TRACE 撸规则用). ⚠️ 增删软规则必同步这里.
+func rnSoftScore(action *RoundNAction, dealt []Card, gs, state *GameState, trace bool) (float32, string) {
+	if SoftRulesDisabled {
+		return 0, "纯NN(软规则关)"
+	}
+	var adj float32
+	var sb string
+	add := func(name string, v float32) {
+		if DisabledRules[name] {
+			return
+		}
+		adj += v
+		if trace && v != 0 {
+			sb += fmt.Sprintf(" %s%+.1f", name, v)
+		}
+	}
+	add("Foul", -FoulImminentPenalty(gs))
+	add("JokerSameRow", -RnJokersSameRowPenalty(action, gs))
+	add("SingleJokerTopA", RnSingleJokerTopChaseABonus(gs, state))
+	add("LoneAceMidJokerTop", -RnLoneAceMidJokerTopPenalty(gs, state))
+	add("TopTripsFan", RnTopTripsFantasyBonus(gs))
+	add("TopTripsOver", -RnTopTripsOvercommitPenalty(gs, state))
+	add("JokerAOnTop", RnJokerAOnTopBonus(action, gs))
+	add("QuadsJokerWaste", -RnQuadsJokerWastePenalty(gs))
+	add("MidExceedsBot", -RnMidExceedsBotPenalty(gs, state))
+	add("HighCardWrongRow", -RnHighCardWrongRowPenalty(gs, state))
+	add("MidPairTwoPair", RnMidPairCompletesTwoPairBonus(gs, state))
+	add("MidDrawFace", RnMidDrawFaceGated(dealt, gs))
+	add("BotDrawFace", rowDrawFaceBonus(gs.Bottom))
+	add("MidTwoPairBotDraw", RnMidTwoPairBotDrawBonus(gs))
+	add("JokerHighSeedTop", RnJokerHighSeedOnTopBonus(action, gs))
+	add("AceToMidVsTopAA", RnAceToMidSupportTopAABonus(action, gs))
+	add("BotMakeTwoPair", RnBotMakeTwoPairBonus(gs, state))
+	add("MidMakeTwoPair", RnMidMakeTwoPairBonus(gs, state))
+	add("PreserveTopAA", RnPreserveTopAAChaseBonus(gs))
+	add("MidHighOverBot", -RnMidHighCardOverBotPenalty(gs, state))
+	add("MidPlacedOverBot", -RnMidPlacedOverBotPlacedPenalty(gs, state))
+	add("LoneSubQTop", -RnLoneSubQOnTopPenalty(gs, state))
+	add("RedundantHighLockedAA", -RnRedundantHighOnLockedAAPenalty(gs, state))
+	add("DeadLowKickerFanTop", -RnDeadLowKickerOnFanTopPenalty(gs, state))
+	add("AceToTopSeed", RnAceToTopSeedBonus(gs, state))
+	add("R2BotPairMidDraw", R2BotPairMidDrawBonus(gs, state))
+	add("MidKickerBotFlush", -RnMidKickerShouldBotFlushPenalty(action, gs, state))
+	add("TopPairOvercommit", -RnTopPairOvercommitPenalty(gs, state))
+	if trace && sb == "" {
+		sb = " 无"
+	}
+	return adj, sb
+}
+
 func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 	actions := GenerateRoundNActions(cards, state)
 
@@ -402,6 +568,7 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 		action  *RoundNAction
 		gs      *GameState
 		teScore float32
+		domAdj  float32 // 支配软罚 (sibling-relative, 在 dom 块算, ranking 时并入 teScore)
 	}
 
 	// dedup
@@ -420,11 +587,27 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 			continue
 		}
 		seen[key] = true
-		uniq = append(uniq, cand{a, gs, 0})
+		uniq = append(uniq, cand{a, gs, 0, 0})
+	}
+
+	// === R3-R5 无进范可能 → 全听 NN (跳所有软/硬规则, 用户 2026-06-19/20) ===
+	// 无候选能保住 foul-free 范 (各候选 post 都 FantasyLost 或 只能靠 foul 成范) → 规则没意义, 纯 value-head top-1.
+	// (A.csv局6 R4: 顶[Ad]单A唯一范=AA, 中只能QQ<AA → 全候选假范 → 听NN选 22→中避foul.)
+	// (D-nndiff局94 R3: 顶[4c]弱, 任何摆法范都靠 foul (中→底链撑不住) → 听NN选 8h→底凑红桃花draw.)
+	pureNN := false
+	if state.Round >= 3 && !HardRulesDisabled {
+		anyFan := false
+		for i := range uniq {
+			if !FantasyLost(uniq[i].gs) && !fantasyOnlyViaFoul(uniq[i].gs) {
+				anyFan = true
+				break
+			}
+		}
+		pureNN = !anyFan
 	}
 
 	// === Hard rule filter (打地鼠): 在 ranking 之前 narrow 候选 ===
-	if !HardRulesDisabled {
+	if !HardRulesDisabled && !pureNN {
 		rnc := make([]RNCand, len(uniq))
 		for i, c := range uniq {
 			rnc[i] = RNCand{Action: c.action, GS: c.gs}
@@ -448,10 +631,10 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 	// === 支配过滤 (用户 2026-06-14): 同顶+同中 → 底道成手严格大者支配, 删底小的. ===
 	// 绕开 value-head 对强成手低估 (89X: 同顶中, 888三条 严格 > 88-99两对 → 删两对那个).
 	// 仅 made-hand 比较; 裸跑 bench 看是否误删 draw.
-	if !HardRulesDisabled && len(uniq) > 1 {
+	if !HardRulesDisabled && !pureNN && len(uniq) > 1 {
 		best := make(map[string]int, len(uniq))
 		for _, c := range uniq {
-			k := topMidKey(c.gs)
+			k := topMidMadeKey(c.gs)
 			if sc := bottomDomScore(c.gs.Bottom); sc > best[k] {
 				best[k] = sc
 			}
@@ -460,62 +643,103 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 		for _, c := range uniq {
 			sc := bottomDomScore(c.gs.Bottom)
 			// draw 守护: 只删 made-pair+ 的弱底 (>=100); 高牌型底(顺/花 draw)永不删.
-			if sc >= 100 && sc < best[topMidKey(c.gs)] {
-				continue // 被同顶中更强底道严格支配
+			// 2026-06-18 (手4 R3 ypk-129761610-3): 只在底道满5张(成手定型)才比 — 早轮底道3张就比会
+			//   误删"当前对子小但有发育"的底 (底[Qs X 9d]QQ被底[Qs X Ah]AA支配删, 但9d会配9s成99/999).
+			// 2026-06-19 (hand67): key 改 topMidMadeKey (中道按成手分组忽略kicker), 让 55+Ad/55+2c 比底道.
+			if sc >= 100 && sc < best[topMidMadeKey(c.gs)] && len(c.gs.Bottom) >= 5 {
+				continue // 被同顶+同中成手更强底道严格支配
 			}
 			kept = append(kept, c)
 		}
 		uniq = kept
 	}
 
-	// stage1 ranking: value (head0) + 可选 policy (head3) bias - foul-imminent penalty
+	// === 底道支配软罚 (partial board, 用户 2026-06-18: 不用强过滤, 改软加分, 治局16/17) ===
+	// 同顶+同中, 底道成手更强(kicker-aware)者支配; 弱者按 dom 差距小幅软罚(≤DomSoftCap), 不删.
+	// 局17 R2 底QQ>JJ(NN漏判0.66) / 局16 R3 底KKQ>KK3(kicker, NN偏0.32). sibling-relative→无全局失真.
+	// ⚠️ 小心draw: 花draw底(hasNFlushDraw≥3)豁免不罚; 满5张已由上面硬过滤管, 这里只 <5 张.
+	if !HardRulesDisabled && !pureNN && len(uniq) > 1 {
+		best := make(map[string]float32, len(uniq))
+		for i := range uniq {
+			b := uniq[i].gs.Bottom
+			if len(b) >= 5 || len(b) < 2 || bottomDomScore(b) < 100 || hasNFlushDraw(b, 3) || rowHasJoker(b) {
+				continue
+			}
+			if k := topMidKey(uniq[i].gs); domScoreK(b) > best[k] {
+				best[k] = domScoreK(b)
+			}
+		}
+		for i := range uniq {
+			b := uniq[i].gs.Bottom
+			if len(b) >= 5 || len(b) < 2 || bottomDomScore(b) < 100 || hasNFlushDraw(b, 3) || rowHasJoker(b) {
+				continue
+			}
+			if s := domScoreK(b); s < best[topMidKey(uniq[i].gs)] {
+				uniq[i].domAdj -= domSoftPen(best[topMidKey(uniq[i].gs)] - s)
+			}
+		}
+	}
+
+	// === 中道支配软罚 (mirror 底道, 用户 2026-06-18 局75 R5: 硬过滤改软加分) ===
+	// 同顶+同底, 中道成手更强且**非foul(中≤底)**者支配; 弱者软罚. 局75 中555>333(NN噪声偏333 1.8, 同13范).
+	// 只在整盘定型(中满5+底满5)比 — 弃牌无未来纯结构 tie-break; 花draw中豁免.
+	// 中道软罚只在整盘定型(中满5+底满5)比 → 行已成手, 不查 flush draw (hasNFlushDraw 会把含鬼成手误判成花draw).
+	midElig := func(c *cand) bool {
+		m := c.gs.Middle
+		if len(m) < 5 || len(c.gs.Bottom) < 5 || bottomDomScore(m) < 100 {
+			return false
+		}
+		return !IsFoulJoker(c.gs.Top, m, c.gs.Bottom) // foul 中道不当支配者
+	}
+	if !HardRulesDisabled && !pureNN && len(uniq) > 1 {
+		best := make(map[string]float32, len(uniq))
+		for i := range uniq {
+			if !midElig(&uniq[i]) {
+				continue
+			}
+			if k := topBotKey(uniq[i].gs); domScoreK(uniq[i].gs.Middle) > best[k] {
+				best[k] = domScoreK(uniq[i].gs.Middle)
+			}
+		}
+		for i := range uniq {
+			if !midElig(&uniq[i]) {
+				continue
+			}
+			if s := domScoreK(uniq[i].gs.Middle); s < best[topBotKey(uniq[i].gs)] {
+				uniq[i].domAdj -= domSoftPen(best[topBotKey(uniq[i].gs)] - s)
+			}
+		}
+	}
+
+	// stage1 ranking: value (head0) + 可选 policy (head3) bias - foul-imminent penalty + 支配软罚
 	for i := range uniq {
 		item := &uniq[i]
 		item.teScore = TrainedEval(item.gs)
 		if _, _, _, plogit, hasPolicy := TrainedEvalFull(item.gs); hasPolicy {
 			item.teScore += PolicyBoost * plogit
 		}
-		// FoulImminent — apply 后 partial state foul 必然 → 大 penalty (R2-R5 都生效, 2026-05-17 通用化)
-		foul := FoulImminentPenalty(item.gs)
-		item.teScore -= foul
-		// 2026-06-13 删 RnSingleAOnTopBonus(+10 A单上顶): case 29 太子已自学会(无它也过),
-		//   case 46 它在硬撑过严期望(用户判定弃A没问题, 已放宽), 且帮不到手2(排除鬼). 退休.
-		// 2026-06-01 加: 鬼同行罚 (mid/bot 任一行 ≥2 鬼) → -5
-		item.teScore -= RnJokersSameRowPenalty(item.action, item.gs)
-		// 2026-06-05 加: 孤鬼(或鬼+sub-Q)在顶 + 放 1 A 上顶追 AA 范 (废 A 放底) → +8
-		item.teScore += RnSingleJokerTopChaseABonus(item.gs, state)
-		// 2026-06-05 加: 鬼在顶 + 孤 A 进中 (死张堵两对) → -8 (废 A 应放底或双A成对)
-		item.teScore -= RnLoneAceMidJokerTopPenalty(item.gs, state)
-		// 2026-06-11 加: top foul-safe 三条 (re-fan 锚, 17张范) > top AA对 (16张范) → +5
-		item.teScore += RnTopTripsFantasyBonus(item.gs)
-		// 2026-06-13 加: 顶把已锁 QQ+ 范对升成三条但中道托不住 → foul风险 -12 (ypk-70123850-2 R4 KKK)
-		item.teScore -= RnTopTripsOvercommitPenalty(item.gs, state)
-		// 2026-06-13 加: 鬼+A 上顶锁 AA 范 → +10 (NN 低估鬼锁顶范, ypk-70123850-10 R2)
-		item.teScore += RnJokerAOnTopBonus(item.action, item.gs)
-		// 2026-06-13 加: 某行真四条+鬼 (鬼废成kicker) → -15 通用 overstuff 罚 (ypk-94634314-14 R3)
-		item.teScore -= RnQuadsJokerWastePenalty(item.gs)
-		// 2026-06-13 加: 中道成牌 > 底道 (违反 bot≥mid 倒置) → -15 (ypk-88080714-8 R2 KK中>QQ底)
-		item.teScore -= RnMidExceedsBotPenalty(item.gs)
-		// 2026-06-13 加: 本轮把底做成 ≥两对 (KK→底凑KKQQ强底) → +8 (ypk-88080714-8 R2)
-		item.teScore += RnBotMakeTwoPairBonus(item.gs, state)
-		// 2026-06-14 恢复: 中凑两对+底>中 → +8 (ypk-459082-16 R5 弃Jh该凑JJ22)
-		item.teScore += RnMidMakeTwoPairBonus(item.gs, state)
-		// 2026-06-14 加: top 鬼+QQ/KK 留空位 + A/鬼活 → +2 保留升 AA 范潜力 (ypk-185336138-22)
-		item.teScore += RnPreserveTopAAChaseBonus(item.gs)
-		// 2026-06-14 用户提案(诊断中): 中放牌>底锚+底未三条 → -8 (高牌该进底)
-		item.teScore -= RnMidHighCardOverBotPenalty(item.gs, state)
-		// 2026-06-14 太子专属: T/J 起手扔空顶(零范路径)+底成对 → -3 (实战28, 该进底凑两对)
-		item.teScore -= RnLoneSubQOnTopPenalty(item.gs, state)
+		if !pureNN { // R4/R5 无进范可能 → 跳软规则, 纯 value-head
+			adj, _ := rnSoftScore(item.action, cards, item.gs, state, false)
+			item.teScore += adj + item.domAdj
+		}
 	}
 
 	sort.SliceStable(uniq, func(i, j int) bool { return uniq[i].teScore > uniq[j].teScore })
 
 	if MctsDebugTrace {
-		fmt.Println("=== RN Prerank (MLP value head + PolicyBoost) top 5 ===")
-		for i := 0; i < 5 && i < len(uniq); i++ {
+		if pureNN {
+			fmt.Println("=== RN Prerank: R3-R5 无进范可能 → 全听NN (软/硬规则全跳) ===")
+		}
+		fmt.Println("=== RN Prerank (value head base + 软规则明细) top 8 ===")
+		for i := 0; i < 8 && i < len(uniq); i++ {
 			c := uniq[i]
 			discCard := cards[c.action.DiscardIdx].String()
-			fmt.Printf("  [%d] %s 弃 %s  score=%.4f\n", i+1, placementStr(c.gs), discCard, c.teScore)
+			base := TrainedEval(c.gs)
+			if _, _, _, plogit, hasPolicy := TrainedEvalFull(c.gs); hasPolicy {
+				base += PolicyBoost * plogit
+			}
+			_, rules := rnSoftScore(c.action, cards, c.gs, state, true)
+			fmt.Printf("  [%d] %s 弃 %s  score=%.4f  (base=%.4f 规则:%s)\n", i+1, placementStr(c.gs), discCard, c.teScore, base, rules)
 		}
 	}
 

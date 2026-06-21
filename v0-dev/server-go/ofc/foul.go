@@ -33,11 +33,22 @@ func TopExceedsMid(top, mid HandValue) bool {
 		midKicker1 := ((mid.Value - 1000000) % 50625) / 3375
 		return topKicker > midKicker1
 	case TypeHighCard:
-		// top: r0*225 + r1*15 + r2
-		// mid: r0*15^4 + ...
+		// top: r0*225 + r1*15 + r2 ; mid: r0*15^4 + r1*15^3 + r2*15^2 + r3*15 + r4
 		topR0 := top.Value / 225
 		midR0 := mid.Value / 50625
-		return topR0 > midR0
+		if topR0 != midR0 {
+			return topR0 > midR0
+		}
+		// 2026-06-14 修: r0 相同时比次高/第三 kicker (原只比 r0 → 顶AKT vs 中A8764 都A高漏判冒顶,
+		//   joker 范 solver 摆出 foul 布局, ypk 2026-06-14 范). 0-joker 走 IsFoul 无此问题.
+		topR1 := (top.Value % 225) / 15
+		midR1 := (mid.Value % 50625) / 3375
+		if topR1 != midR1 {
+			return topR1 > midR1
+		}
+		topR2 := top.Value % 15
+		midR2 := (mid.Value % 3375) / 225
+		return topR2 > midR2
 	}
 	return false
 }

@@ -36,9 +36,10 @@ type StateSpec struct {
 }
 
 type LayoutSpec struct {
-	Top    []string `json:"top"`
-	Middle []string `json:"middle"`
-	Bottom []string `json:"bottom"`
+	Top      []string `json:"top"`
+	Middle   []string `json:"middle"`
+	Bottom   []string `json:"bottom"`
+	SuitFree bool     `json:"suitFree,omitempty"` // 2026-06-15: true=按点数匹配(忽略花色), 默认严格(保同花)
 }
 
 type TestCase struct {
@@ -78,6 +79,31 @@ func sortKey(cards []string) string {
 	}
 	sort.Strings(norm)
 	return strings.Join(norm, ",")
+}
+
+// rankKey: 去花色, 仅按点数(+joker)排序匹配. 用于 suitFree exp.
+func rankKey(cards []string) string {
+	norm := make([]string, len(cards))
+	for i, c := range cards {
+		nc := normCard(c)
+		if nc != "X" && len(nc) >= 2 {
+			nc = nc[:len(nc)-1] // 去掉花色字符
+		}
+		norm[i] = nc
+	}
+	sort.Strings(norm)
+	return strings.Join(norm, ",")
+}
+
+// layoutMatch: exp.SuitFree 时按点数, 否则严格(花色敏感, 保同花正确).
+func layoutMatch(exp LayoutSpec, aiTop, aiMid, aiBot []string) bool {
+	key := sortKey
+	if exp.SuitFree {
+		key = rankKey
+	}
+	return key(aiTop) == key(exp.Top) &&
+		key(aiMid) == key(exp.Middle) &&
+		key(aiBot) == key(exp.Bottom)
 }
 
 func diffCards(before, after []ofc.Card) []ofc.Card {
@@ -192,9 +218,7 @@ func runOneCase(c TestCase, jokers int, cfg *ofc.RolloutConfig, rng *rand.Rand) 
 		}
 		// match: fantasy 的 expected 是 FULL layout (不是 added)
 		for _, exp := range c.Expecteds {
-			if sortKey(aiTop) == sortKey(exp.Top) &&
-				sortKey(aiMid) == sortKey(exp.Middle) &&
-				sortKey(aiBot) == sortKey(exp.Bottom) {
+			if layoutMatch(exp, aiTop, aiMid, aiBot) {
 				return true, aiTop, aiMid, aiBot, discard
 			}
 		}
@@ -237,9 +261,7 @@ func runOneCase(c TestCase, jokers int, cfg *ofc.RolloutConfig, rng *rand.Rand) 
 	}
 
 	for _, exp := range c.Expecteds {
-		if sortKey(aiTop) == sortKey(exp.Top) &&
-			sortKey(aiMid) == sortKey(exp.Middle) &&
-			sortKey(aiBot) == sortKey(exp.Bottom) {
+		if layoutMatch(exp, aiTop, aiMid, aiBot) {
 			return true, aiTop, aiMid, aiBot, discard
 		}
 	}
@@ -304,6 +326,23 @@ func main() {
 		ofc.MctsDisabled = true
 		fmt.Println("[bench-cases] DISABLE_MCTS set; pure MLP mode (prerank top-1, no rollout)")
 	}
+	if os.Getenv("DISABLE_SOFT_RULES") != "" {
+		ofc.SoftRulesDisabled = true
+		fmt.Println("[bench-cases] DISABLE_SOFT_RULES=1: 裸跑 (跳过全部软 bonus/penalty, 纯 value head)")
+	}
+	if os.Getenv("DISABLE_HARD_RULES") != "" {
+		ofc.HardRulesDisabled = true
+		fmt.Println("[bench-cases] DISABLE_HARD_RULES=1: 跳过候选 filter")
+	}
+	if os.Getenv("OFC_DEBUG_TRACE") != "" {
+		ofc.MctsDebugTrace = true
+	}
+	if rs := os.Getenv("DISABLE_RULES"); rs != "" {
+		for _, n := range strings.Split(rs, ",") {
+			ofc.DisabledRules[strings.TrimSpace(n)] = true
+		}
+		fmt.Printf("[bench-cases] DISABLE_RULES=%s\n", rs)
+	}
 
 	// Load cases
 	cases, err := loadCases(*casesFile)
@@ -317,6 +356,11 @@ func main() {
 	// Pre-build cfg from defaults
 	cfg := ofc.DefaultRolloutConfig
 	cfg.R1Mult = float32(*r1Mult)
+	// 2026-06-19 fix: DISABLE_MCTS 宣称 "pure MLP mode" 但从没 set cfg.PureMLP → 实际跑 rollout,
+	// 跟 prod pureMLP 决策不一致 (实战102 prod选QK→中却被bench判过). 对齐 prod.
+	if ofc.MctsDisabled {
+		cfg.PureMLP = true
+	}
 
 	// 并行跑所有 case
 	results := make([]caseResult, len(cases))

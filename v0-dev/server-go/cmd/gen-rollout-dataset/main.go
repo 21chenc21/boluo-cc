@@ -544,6 +544,13 @@ func main() {
 	flag.Parse()
 	startT := time.Now()
 
+	// 2026-06-17: 纯NN gen — 关软硬规则+候选裁剪, 让 rollout 真实 foul → 标签携真实代价.
+	// 治 sp26 失败根因(带规则 gen 把 foul/行序信号洗没). 默认关(不设 env 行为不变).
+	if os.Getenv("DISABLE_HARD_RULES") != "" {
+		ofc.HardRulesDisabled = true
+		log.Println("[gen] DISABLE_HARD_RULES=1: 纯NN rollout (关软硬规则+裁剪), 标签反映真实 foul/行序代价")
+	}
+
 	if *weightsIn != "" {
 		if err := ofc.LoadWeightsFromFile(*weightsIn); err != nil {
 			log.Fatalf("load weights: %v", err)

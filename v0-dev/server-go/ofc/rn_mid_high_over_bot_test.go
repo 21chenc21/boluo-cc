@@ -4,8 +4,8 @@ import "testing"
 func TestMidHighOverBot_Fire(t *testing.T) {
 	pre := st([]string{"Kd"}, []string{"3s"}, []string{"9c", "7d", "9h"}) // 底99 锚=9
 	post := st([]string{"Kd"}, []string{"3s", "Jd"}, []string{"9c", "7d", "9h"}) // Jd进中, J>9
-	if got := RnMidHighCardOverBotPenalty(post, pre); got != 5 {
-		t.Fatalf("J进中越过底99锚 应罚5, got %v", got)
+	if got := RnMidHighCardOverBotPenalty(post, pre); got != 10 {
+		t.Fatalf("J进中越过底99锚 应罚10, got %v", got) // 2026-06-17 用户 5→10 (局41)
 	}
 }
 func TestMidHighOverBot_Skip_MidTrips(t *testing.T) {
@@ -20,5 +20,32 @@ func TestMidHighOverBot_Skip_LowAdded(t *testing.T) {
 	post := st([]string{"Kd"}, []string{"3s", "5d"}, []string{"9c", "7d", "9h"}) // 5d<9锚
 	if got := RnMidHighCardOverBotPenalty(post, pre); got != 0 {
 		t.Fatalf("中放牌<底锚 应不罚, got %v", got)
+	}
+}
+
+// 2026-06-18 s99局39 R4: 中道有鬼时高牌跟鬼配成对(AA托顶范) → 豁免, 不罚.
+func TestMidHighOverBot_JokerExempt(t *testing.T) {
+	pre := st([]string{"Ad", "Ah"}, []string{"4h", "9h", "Th"}, []string{"8s", "9s", "2s", "Ks"})
+	post := st([]string{"Ad", "Ah"}, []string{"4h", "9h", "Th", "X", "Ac"}, []string{"8s", "9s", "2s", "Ks"})
+	if got := RnMidHighCardOverBotPenalty(post, pre); got != 0 {
+		t.Fatalf("中道有鬼+Ac配AA 应豁免, got %v", got)
+	}
+}
+
+// 2026-06-18 s99局40 R2: 顶范级对(AA) → 中道高牌是必要发育(托住AA顶), 豁免 MidHighOverBot
+func TestMidHighOverBot_FanTopExempt(t *testing.T) {
+	pre := st([]string{"As", "Ad"}, []string{"4c"}, []string{"Qs", "6s", "6d"})
+	post := st([]string{"As", "Ad"}, []string{"4c", "7h"}, []string{"Qs", "6s", "6d"}) // 7h进中, 顶AA
+	if got := RnMidHighCardOverBotPenalty(post, pre); got != 0 {
+		t.Fatalf("顶AA范 中道高牌发育 应豁免0, got %v", got)
+	}
+}
+
+// 反例: 顶非范级对(5c) → 高牌进中越底锚 仍罚10 (区别std-28该上顶)
+func TestMidHighOverBot_NonFanTopFires(t *testing.T) {
+	pre := st([]string{"5c"}, []string{"4c"}, []string{"Qs", "6s", "6d"})
+	post := st([]string{"5c"}, []string{"4c", "7h"}, []string{"Qs", "6s", "6d"})
+	if got := RnMidHighCardOverBotPenalty(post, pre); got != 10 {
+		t.Fatalf("顶非范级 高牌进中越底锚 应罚10, got %v", got)
 	}
 }

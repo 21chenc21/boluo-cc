@@ -16,6 +16,13 @@ func TestCanFantasyTop(t *testing.T) {
 		{"A67高张非范", []string{"Ac", "6h", "7d"}, false},
 		{"鬼+低张J非范", []string{"X", "Jc", "5h"}, false}, // 鬼+J=JJ<QQ, 非对范
 		{"未满留余地", []string{"Ac"}, true},
+		// 2026-06-17 bug fix: 未满顶也要看现有牌+空位可达性
+		{"2低张+1空位凑不出范(bug修)", []string{"7c", "2h"}, false}, // 配不出QQ+/凑不齐三条
+		{"Q单+低张+1空位可配QQ", []string{"Qc", "2h"}, true},       // Qc 再摸 Q → QQ
+		{"空顶3空位可补", []string{}, true},
+		{"低对77+1空位→777三条", []string{"7c", "7h"}, true},  // 摸 7 → 777
+		{"鬼+低张+1空位可达三条", []string{"X", "3c"}, true},  // 鬼+3+摸3 → 333
+		{"1低张2空位可摸QQ", []string{"7c"}, true},
 	}
 	for _, c := range tc {
 		cards := make([]Card, len(c.cards))

@@ -32,7 +32,7 @@
 #   v3-train-i147-selfplay/best.json (current best 自循环 rollout policy)
 
 # ====================================================================
-SCRIPT_VERSION="2026-05-22-sp18"
+SCRIPT_VERSION="2026-06-17-purenn"
 # 改动历史:
 #   2026-05-19-sp1: 基于 train_v3_iter.sh fork, 改 gen rollout policy = best.json (self-play).
 #   2026-05-19-sp2: rollouts 20 → 100.
@@ -110,7 +110,7 @@ SCRIPT_VERSION="2026-05-22-sp18"
 #     - Mark cases 35/37/40/45 as warn (AI 选合理但不在 expecteds)
 #     - sp17 iter-1 r1 deployed 8002, bench: 59通过/4警告/0 真错.
 #     - DATA_VERSION → i147-sp18 (rollout policy 含 sp17 best, 数据 fresh).
-DATA_VERSION="i150-sp26"  # 2026-06-14 sp25(dim106+F鬼范) + 成手行序 O组追加(dim147-149, 治"强成手压上层"倒置). 太子147-d warm-start auto-pad 0, fresh dataset
+DATA_VERSION="i150-purenn"  # 2026-06-17 纯NN gen (DISABLE_HARD_RULES): rollout 真foul, 标签携真实代价. warm-start sp26. fresh dataset.
 # ====================================================================
 
 set -e
@@ -135,7 +135,9 @@ TRANSLATE_BIN="$BIN_DIR/translate-v2-v3-weights"
 BENCH3_BIN="$BIN_DIR/bench-3metric"
 
 # 2026-06-14 (用户): bench TC = std63 + 41 gamecase 总通过数 (训练带上所有 case).
-# 设全局 BENCH_TC_STD / BENCH_TC_GC / BENCH_STD_LINE / BENCH_GC_LINE; stdout = 总通过数.
+# 设全局 BENCH_TC_STD / BENCH_TC_GC / BENCH_GC_TOTAL / BENCH_STD_LINE / BENCH_GC_LINE / BENCH_TOTAL.
+# ⚠️ 必须直接调用 (bench_total_tc "$ck"), 不能用 $(bench_total_tc ...) — 子shell 会丢全局赋值,
+#    导致 "std /63 + gc /" 显示为空. 用后读 $BENCH_TOTAL 拿总分.
 bench_total_tc() {
     local ck="$1" o1 o2
     o1=$(DISABLE_MCTS=1 "$BENCH_BIN" -ckpt "$ck" -cases cases/all-tests-expanded.json -workers 0 2>&1 | grep 结果 | tail -1)
@@ -144,7 +146,18 @@ bench_total_tc() {
     BENCH_TC_STD=$(echo "$o1" | grep -oE "[0-9]+通过" | head -1 | grep -oE "[0-9]+"); [ -z "$BENCH_TC_STD" ] && BENCH_TC_STD=0
     BENCH_TC_GC=$(echo "$o2" | grep -oE "[0-9]+通过" | head -1 | grep -oE "[0-9]+"); [ -z "$BENCH_TC_GC" ] && BENCH_TC_GC=0
     BENCH_GC_TOTAL=$(echo "$o2" | grep -oE "[0-9]+总计" | head -1 | grep -oE "[0-9]+"); [ -z "$BENCH_GC_TOTAL" ] && BENCH_GC_TOTAL=44
-    echo $((BENCH_TC_STD + BENCH_TC_GC))
+    BENCH_TOTAL=$((BENCH_TC_STD + BENCH_TC_GC))
+}
+
+# litmus_ok — 纯NN(DISABLE_HARD_RULES) 跑 gamecase, 所有 note 含"一票否决"的 veto case 全过才 OK.
+# 纯NN gen 目标=不靠规则的自给 value head, 故 litmus 用纯NN模式卡(不是带规则).
+litmus_ok() {
+    local ck="$1" veto fails
+    veto=$(python3 -c "import json,re;ns=[];[ns.append('实战 '+re.match(r'实战 (\\d+)',c['name']).group(1)+' ') for c in json.load(open('cases/game-cases.json')) if '一票否决' in c.get('note','') and re.match(r'实战 (\\d+)',c['name'])];print('|'.join(ns))" 2>/dev/null)
+    [ -z "$veto" ] && { echo "OK"; return 0; }
+    fails=$(DISABLE_HARD_RULES=1 DISABLE_MCTS=1 "$BENCH_BIN" -ckpt "$ck" -cases cases/game-cases.json -workers 0 2>&1 | grep "✗" | grep -E "$veto")
+    if [ -n "$fails" ]; then echo "FAIL"; echo "$fails" >&2; return 1; fi
+    echo "OK"; return 0
 }
 
 echo "[v3-sp] (re)build binaries..."
@@ -251,7 +264,7 @@ if [ -e "$BEST_LINK" ]; then
     RESOLVED=$(readlink -f "$BEST_LINK" 2>/dev/null || echo "$BEST_LINK")
     if [ -f "$RESOLVED" ]; then
         echo "[v3-sp] best.json → $RESOLVED, bench 取分 (std63 + gamecase)..." | tee -a "$LOG"
-        EXISTING_TC=$(bench_total_tc "$RESOLVED")
+        bench_total_tc "$RESOLVED"; EXISTING_TC=$BENCH_TOTAL
         echo "    $BENCH_STD_LINE | $BENCH_GC_LINE" | tee -a "$LOG"
         if [ -n "$EXISTING_TC" ] && [ "$EXISTING_TC" -gt 0 ]; then
             BEST_TC=$EXISTING_TC
@@ -277,7 +290,7 @@ for ((iter=1; iter<=ITERS; iter++)); do
     echo "[iter $iter] Phase A: gen $GAMES games (rollouts=100, indim 150, SELF-PLAY + exploration)..." | tee -a "$LOG"
     GEN_ARGS=(-num-games "$GAMES" -jokers 2 -rollouts 100 -r1-cap 30
               -phantom-opponents 2 -indim 150
-              -foul-cost 6 -fan-bonus-qq 20 -fan-bonus-kk 40 -fan-bonus-aa 100 -fan-bonus-trips 160
+              -foul-cost 6 -fan-bonus-qq 20 -fan-bonus-kk 40 -fan-bonus-aa 120 -fan-bonus-trips 160
               -out-dir "$GEN_OUT")
     if [ -n "$BEST_CKPT" ] && [ -f "$BEST_CKPT" ]; then
         GEN_ARGS+=(-weights "$BEST_CKPT")
@@ -286,7 +299,7 @@ for ((iter=1; iter<=ITERS; iter++)); do
         echo "[iter $iter]   rollout policy = embed default (cold start)" | tee -a "$LOG"
     fi
     # 用 PIPESTATUS[0] 拿 gen 的真实退出码 (bash 3.2 pipefail + tee 不可靠, 见 sp7).
-    "$GEN_BIN" "${GEN_ARGS[@]}" 2>&1 | tee -a "$LOG" || true
+    DISABLE_HARD_RULES=1 "$GEN_BIN" "${GEN_ARGS[@]}" 2>&1 | tee -a "$LOG" || true
     GEN_EXIT=${PIPESTATUS[0]}
     if [ "$GEN_EXIT" -ne 0 ]; then
         echo "[iter $iter] FATAL: gen 失败 (exit=$GEN_EXIT)" | tee -a "$LOG"
@@ -305,7 +318,7 @@ for ((iter=1; iter<=ITERS; iter++)); do
     TRAIN_ARGS=(-dataset-dir "$DATASET_ROOT" -dataset-keep-warm-start -hours 1 -round-min 30
                 -outdim 4 -h1 512 -h2 256 -h3 128 -indim 150
                 -epochs 30 -lr 0.001 -warm-lr-mult 0.2 -y-recompute
-                -fan-bonus-qq 20 -fan-bonus-kk 40 -fan-bonus-aa 100 -fan-bonus-trips 160
+                -fan-bonus-qq 20 -fan-bonus-kk 40 -fan-bonus-aa 120 -fan-bonus-trips 160
                 -foul-cost 6 -fan-w 0.40 -foul-w 0.10 -policy-w 0.30
                 -ckpt-dir "$TRAIN_OUT" -policy "v0-v3-sp-iter$iter")
     if [ -n "$BEST_CKPT" ] && [ -f "$BEST_CKPT" ]; then
@@ -340,7 +353,7 @@ for ((iter=1; iter<=ITERS; iter++)); do
     NEW_CKPT=""
     for ck in "${NEW_CKPTS[@]}"; do
         echo "[iter $iter] Phase C: bench $ck (std63 + gamecase)" | tee -a "$LOG"
-        TC=$(bench_total_tc "$ck")
+        bench_total_tc "$ck"; TC=$BENCH_TOTAL
         [ -z "$TC" ] && TC=0
         echo "    $BENCH_STD_LINE | $BENCH_GC_LINE" | tee -a "$LOG"
         echo "[iter $iter]   $ck → std $BENCH_TC_STD/63 + gc $BENCH_TC_GC/$BENCH_GC_TOTAL = $TC" | tee -a "$LOG"
@@ -399,6 +412,12 @@ for ((iter=1; iter<=ITERS; iter++)); do
         REASON="score↑ ($BEST_SCORE → $NEW_SCORE) [tc/fan stable]"
     else
         REASON="testcase/fantasy/score 均未严格优于 best"
+    fi
+
+    # 纯NN gen litmus 硬门禁: 挂任一 veto(同花/两对/R1行序/顶范合法) → 阻止 promote
+    if [ "$SHOULD_PROMOTE" -eq 1 ] && [ "$(litmus_ok "$NEW_CKPT")" != "OK" ]; then
+        SHOULD_PROMOTE=0
+        REASON="$REASON BUT litmus veto 挂 → 阻止 promote (见上 ✗)"
     fi
 
     if [ "$SHOULD_PROMOTE" -eq 1 ]; then

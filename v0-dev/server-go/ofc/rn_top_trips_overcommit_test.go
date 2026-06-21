@@ -6,8 +6,9 @@ import "testing"
 func TestRnTopOvercommit_Fire_KKK_over222(t *testing.T) {
 	pre := st([]string{"Ks", "Kh"}, []string{"3d", "2c", "2d", "2s"}, []string{"Ts", "8h", "Js", "9c"})
 	post := st([]string{"Ks", "Kh", "Kd"}, []string{"3d", "2c", "2d", "2s"}, []string{"Ts", "8h", "Js", "9c"})
-	if got := RnTopTripsOvercommitPenalty(post, pre); got != 10 {
-		t.Fatalf("KKK over mid222 应罚 10, got %v", got)
+	// 2026-06-15 §10b 分级: 中222三条 rank2 < top KKK rank K → 10 + (11-0)*0.6 = 16.6
+	if got := RnTopTripsOvercommitPenalty(post, pre); got < 16.5 || got > 16.7 {
+		t.Fatalf("KKK over mid222 分级应罚 ~16.6, got %v", got)
 	}
 }
 
@@ -38,11 +39,11 @@ func TestRnTopOvercommit_Skip_MidSupports(t *testing.T) {
 	}
 }
 
-func TestRnTopOvercommit_Skip_LowPairPre(t *testing.T) {
-	// pre-top 是 99 (< QQ, 没锁范) 升 999 → 不归这条 (可能是合理 re-fan)
+func TestRnTopOvercommit_Fire_LowTripsOver222(t *testing.T) {
+	// 2026-06-15 §10b 去低对守护: 99→999 三条压中222三条 → 仍 foul 该罚. 999 rank9 - 222 rank2 = 7 → 10 + 7*0.6 = 14.2
 	pre := st([]string{"9s", "9h"}, []string{"3d", "2c", "2d", "2s"}, []string{"Ts", "8h", "Js", "9c"})
 	post := st([]string{"9s", "9h", "9d"}, []string{"3d", "2c", "2d", "2s"}, []string{"Ts", "8h", "Js", "9c"})
-	if got := RnTopTripsOvercommitPenalty(post, pre); got != 0 {
-		t.Fatalf("低对(非范锁)升三条 应 0, got %v", got)
+	if got := RnTopTripsOvercommitPenalty(post, pre); got < 14.1 || got > 14.3 {
+		t.Fatalf("低三条999压中222 应罚 ~14.2, got %v", got)
 	}
 }

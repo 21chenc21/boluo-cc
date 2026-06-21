@@ -15,15 +15,8 @@ func TestConnectorSplit_TripsPair_NoConnectorPenalty(t *testing.T) {
 	}
 }
 
-func TestConnectorSplit_RealStraightDraw_StillPenalized(t *testing.T) {
-	// 单 J + 单 Q (真顺子连张) 拆两行 → 仍罚 (≥5)
-	cards := parseHand("Jc", "Qd", "7h", "3s", "2c")
-	p := Placement{RowMiddle, RowBottom, RowBottom, RowTop, RowTop} // Jc中 Qd底 → J-Q 拆
-	pen := ConnectorSplitPenalty(p, cards)
-	if pen < 5 {
-		t.Fatalf("单 J+单 Q 真连张拆开 应罚 ≥5, got %v", pen)
-	}
-}
+// 2026-06-19 DELETED TestConnectorSplit_RealStraightDraw_StillPenalized — 测的是已删的 Part1
+// (连张跨行拆罚, 用户"不要这个拆顺子规则了"). 连张信号交给 value-head/L2 features.
 
 func TestConnectorSplit_PairTogether_NoPenalty(t *testing.T) {
 	// QQ 同行 (都在底) → 无连张 split (本就同行); 加个无关高牌, 验不乱罚

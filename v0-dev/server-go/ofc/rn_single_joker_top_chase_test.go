@@ -162,3 +162,30 @@ func TestRnTopTrips_MidFlushStraight(t *testing.T) {
 		}
 	}
 }
+
+// 2026-06-18 s99局76: 顶X+As=AA锁 + 底成顺 → 中道A是发育(托AA顺), 豁免 LoneAceMidJokerTop
+func TestLoneAceMidJokerTop_ExemptAAStraightBot(t *testing.T) {
+	pre := st([]string{"X", "As"}, []string{"5h", "2c"}, []string{"9c", "Ts", "8d", "Jd", "7h"})
+	post := st([]string{"X", "As"}, []string{"5h", "2c", "Ac"}, []string{"9c", "Ts", "8d", "Jd", "7h"})
+	if got := RnLoneAceMidJokerTopPenalty(post, pre); got != 0 {
+		t.Fatalf("顶AA锁+底顺 中道A发育 应豁免0, got %v", got)
+	}
+}
+
+// 反例: 顶X+Ad=AA 但底弱[X 6c] (实战51) → A该进底不进中, 仍罚8
+func TestLoneAceMidJokerTop_FireWeakBot(t *testing.T) {
+	pre := st([]string{"X", "Ad"}, []string{"3d"}, []string{"X", "6c"})
+	post := st([]string{"X", "Ad"}, []string{"3d", "Ac"}, []string{"X", "6c"})
+	if got := RnLoneAceMidJokerTopPenalty(post, pre); got != 8 {
+		t.Fatalf("顶AA但底弱(实战51) A进中 仍罚8, got %v", got)
+	}
+}
+
+// 反例: 顶鬼无A (原case) → A该上顶配鬼成AA, 进中浪费 仍罚8
+func TestLoneAceMidJokerTop_FireNoAceTop(t *testing.T) {
+	pre := st([]string{"X"}, []string{"3d"}, []string{"9c", "Ts", "8d", "Jd", "7h"})
+	post := st([]string{"X"}, []string{"3d", "Ac"}, []string{"9c", "Ts", "8d", "Jd", "7h"})
+	if got := RnLoneAceMidJokerTopPenalty(post, pre); got != 8 {
+		t.Fatalf("顶鬼无A A进中浪费 应罚8, got %v", got)
+	}
+}

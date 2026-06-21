@@ -369,7 +369,8 @@ func BuildFeaturesForDebug(gs *GameState) []float32 {
 }
 
 // BuildFeatures — 显式指定 inDim. 自动 dispatch:
-//   inDim == 147 → V3 (2026-05-19 v2: 加 Tier 1+2+3, L/LR/N2)
+//   inDim == 150 → V3 (2026-06-14 sp26: +O组 成手行序 147-149)
+//   inDim == 147 → V3Base (太子, 成手行序前; 取 150-d 的前 147. gen 用太子 rollout / bootstrap bench)
 //   inDim == 131 → V3 legacy (旧 V3 layout, fail-fast 防意外加载)
 //   inDim == 134 → V2
 //   inDim >= 128 && 其它 → V2 (legacy, pad/truncate)
@@ -377,6 +378,11 @@ func BuildFeaturesForDebug(gs *GameState) []float32 {
 func BuildFeatures(gs *GameState, inDim int) []float32 {
 	if inDim == FeatureDimV3 {
 		return BuildFeaturesV3(gs)
+	}
+	if inDim == FeatureDimV3Base {
+		// 太子 (147-d, 成手行序前). gen 用太子当 rollout / bootstrap bench 走此分支.
+		// 前 147 维 = sp25 layout (含 dim106/F 修, M_foulMargin 原版), 不含 O 组成手行序.
+		return BuildFeaturesV3(gs)[:FeatureDimV3Base]
 	}
 	if inDim == 131 {
 		// 旧 V3 layout (Tier 1+2+3 还没加), 已废弃, 不要用. 显式 panic 比静默 pad 安全.

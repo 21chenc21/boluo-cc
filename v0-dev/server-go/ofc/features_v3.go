@@ -37,8 +37,14 @@ import (
 //   LR: 137-144  Tier 2: bot/mid locked-royalty tier + bot/mid 4-flush + bot 4-straight open/gutshot +
 //                mid 4-straight combined + pair_kicker_rank_max
 //   N2: 145-146  弃牌副信号 (Tier 3 EXTRA): break_bot_suit_commitment / break_connector
+//   O:  147-149  成手行序 (2026-06-14 sp26 追加, partial+rank-aware): 中-顶 / 底-中 / 最紧 margin.
+//                负 = "强成手压上层"倒置. 太子(147-d)不含此组, warm-start auto-pad 0.
 
-const FeatureDimV3 = 147
+// 2026-06-14 sp26: 147 → 150, 追加"成手行序" O 组 (dim147-149). 太子(147-d) warm-start 自动 pad 0.
+const FeatureDimV3 = 150
+
+// FeatureDimV3Base — 成手行序前的 147-d layout. 太子 ckpt 是此 dim; gen 用太子当 rollout 时建 147-d 特征.
+const FeatureDimV3Base = 147
 
 // Fantasy bonus calibration (与训练 label 对齐, 见 design doc).
 // 2026-06-12: const → var, 可被 ckpt 里的 fanBonus* 字段覆盖 (见 SetFanBonusScale / loadWeightsFromBytes).
@@ -126,9 +132,9 @@ func BuildFeaturesV3(gs *GameState) []float32 {
 	fillDiscard(f[129:131], gs) // 2026-05-19: 用 gs.LastDiscard, R1 / 无 discard 时 0
 
 	// 2026-05-19 Tier 1+2+3 新增 (16 dim, idx 131-146)
-	fillCrossRowSplits(f[131:137], gs)        // L: V2 复用, 6 dim
-	fillLockedAndDraws(f[137:145], gs)        // LR: 8 dim
-	fillDiscardExtra(f[145:147], gs)          // N2: 2 dim, 弃牌副信号
+	fillCrossRowSplits(f[131:137], gs) // L: V2 复用, 6 dim
+	fillLockedAndDraws(f[137:145], gs) // LR: 8 dim
+	fillDiscardExtra(f[145:147], gs)   // N2: 2 dim, 弃牌副信号
 
 	// 2026-06-03: dim130 (N_disc "本轮弃了 Q/K/A" 二元标志) 固化清零 — 净负特征.
 	// value head 训练时学到 "弃高牌≈好局面" 的伪相关, 在"弃 Q 留 J 做成中道花"类局面
@@ -137,6 +143,9 @@ func BuildFeaturesV3(gs *GameState) []float32 {
 	// (注: 只清 dim130; dim129 弃牌 rank 连续值在别处有用, 一起清会掉 1 个 std case.)
 	// fanProb head 本就正确偏 Qd, 但 DefaultMultiHeadCfg.FanBoost=0 没接线, 救不了 value head —— 故从特征侧治本.
 	f[130] = 0
+
+	// 2026-06-14 sp26 追加: O 组 成手行序 (3 dim, idx 147-149). 治"强成手压上层"倒置.
+	fillMadeRowOrder(f[147:150], gs)
 
 	return f
 }
@@ -431,6 +440,39 @@ func fillCommitment(f []float32, gs *GameState) {
 // ============ Group M: 各行 foul margin (3 dim, idx 125-127) ============
 // 用 RAW eval (Evaluate3/5, 不带 cap) 计算 — 避免 cap chain 把 mid > bot 改成 Type=-2
 
+// rowMadeScore — 行成手强度标量 (type*13 + 主rank), joker-aware + partial-aware.
+// "成手行序"特征用: 让 value head 看见各行*当前成手*的强弱序, 抓"强成手压在上层"的倒置.
+// partialEvalTP: 满行 → Evaluate5JokerCap (含 flush/straight); partial → made-floor (joker 补三条/对).
+func rowMadeScore(row []Card) int {
+	hv := partialEvalTP(row)
+	var cnt [13]int
+	for _, c := range row {
+		if !c.IsJoker() {
+			cnt[c.Rank()]++
+		}
+	}
+	prim := -1
+	for r := 12; r >= 0; r-- { // 最高真对/三条/四条 rank
+		if cnt[r] >= 2 {
+			prim = r
+			break
+		}
+	}
+	if prim < 0 { // 无对 → 最高真单张
+		for r := 12; r >= 0; r-- {
+			if cnt[r] >= 1 {
+				prim = r
+				break
+			}
+		}
+	}
+	if prim < 0 {
+		prim = 0 // 全鬼 / 空行
+	}
+	return int(hv.Type)*13 + prim
+}
+
+// fillFoulMargin — 原版 foul margin (满行 + type-only), dim125-127. 太子按此训, 不改 (零扰动).
 func fillFoulMargin(f []float32, gs *GameState, topEv, midEv, botEv HandValue) {
 	// 重算 raw eval (无 cap), 完整 row 才算
 	topRaw := safeRawEvalTop(gs.Top)
@@ -446,6 +488,23 @@ func fillFoulMargin(f []float32, gs *GameState, topEv, midEv, botEv HandValue) {
 		minM = dBotMid
 	}
 	f[2] = clampF(minM, -1, 1)
+}
+
+// fillMadeRowOrder — 成手行序 (新 dim147-149, 追加法 warm-start pad=0 零扰动).
+// 治 value head "强成手压上层"倒置 (大对爱放中道 / 89X三条不进底). partial+rank-aware,
+// 补 fillFoulMargin 两 gap: ① 满行才算 ② type-only (中KK对 vs 底44对 都 Pair → margin 0).
+// 归一化 /13 = 一个 type 级; 同type rank 差 (KK vs 44 = 9/13≈0.7) 也体现.
+func fillMadeRowOrder(f []float32, gs *GameState) {
+	topS := rowMadeScore(gs.Top)
+	midS := rowMadeScore(gs.Middle)
+	botS := rowMadeScore(gs.Bottom)
+	f[0] = clampF(float32(midS-topS)/13.0, -1, 1) // 中-顶 行序 (正常 ≥0)
+	f[1] = clampF(float32(botS-midS)/13.0, -1, 1) // 底-中 行序 (负 = 中>底倒置, 主 bias)
+	minM := f[0]
+	if f[1] < minM {
+		minM = f[1]
+	}
+	f[2] = minM // 最紧行序 margin (负 = 某处倒置)
 }
 
 // safeRawEvalTop — 3-card top raw eval
@@ -848,9 +907,43 @@ func pTopPairQKA(gs *GameState, rankRem [13]int, jokerRem, deckTotal, topSlots i
 }
 
 // pTopFinalPairExact — P(top final 恰好是 pair_r, 不是 trips_r)
+// jokerTopMadePairRank — 满顶含 joker 时 joker 最优完成的对子 rank (joker 配最高真单张).
+// 已有真对(joker→三条) / 无 joker → 返回 -1 (非 exact joker-pair).
+func jokerTopMadePairRank(top []Card) int {
+	jokers := 0
+	var cnt [13]int
+	for _, c := range top {
+		if c.IsJoker() {
+			jokers++
+		} else {
+			cnt[c.Rank()]++
+		}
+	}
+	if jokers == 0 {
+		return -1
+	}
+	for _, n := range cnt {
+		if n >= 2 {
+			return -1 // 已真对, joker 升三条非 exact pair
+		}
+	}
+	for r := 12; r >= 0; r-- {
+		if cnt[r] >= 1 {
+			return r // joker 配最高真单张
+		}
+	}
+	return -1
+}
+
 func pTopFinalPairExact(gs *GameState, r uint8, rankRem [13]int, jokerRem, deckTotal, topSlots int) float32 {
 	// 简化: 假设 = P(top 至少 2 张 r) - P(top ≥ 3 张 r)
 	topHasR := countRankInRow(gs.Top, int(r))
+	// 2026-06-14 (uniform): 顶上鬼锁的对子 rank (鬼配最高真单张) 算进 topHasR — 鬼已成对锁范.
+	// 修 F_fantasyGran 鬼锁 AA/KK 范误判: 满顶 [As Kc X]=AA (countRankInRow 不数鬼→原 0) +
+	// partial 顶含鬼 [Ac X] (原 hypergeo 漏鬼→低估). 统一处理满顶/partial, 含升三条概率. ypk 89X.
+	if jokerTopMadePairRank(gs.Top) == int(r) {
+		topHasR++
+	}
 	deckR := rankRem[int(r)] + jokerRem // joker 可顶
 	needFor2 := 2 - topHasR
 	needFor3 := 3 - topHasR
@@ -864,7 +957,7 @@ func pTopFinalPairExact(gs *GameState, r uint8, rankRem [13]int, jokerRem, deckT
 		return 1 - pUp
 	}
 	if topSlots == 0 {
-		return 0
+		return 0 // 满顶且未成对 → 非 exact pair
 	}
 	p2 := hypergeoAtLeast(deckTotal, deckR, topSlots, needFor2)
 	p3 := hypergeoAtLeast(deckTotal, deckR, topSlots, needFor3)
@@ -1149,6 +1242,35 @@ func pBotGEMid(gs *GameState, midEv, botEv HandValue, rankRem [13]int, suitRem [
 
 // pFoulFinal — P(top > mid ∨ mid > bot)
 // 注: evalRowSafe 用 cap chain, 当 mid > bot 时 midEv.Type = -2 (overCap 标志). 用 raw Evaluate5 重算.
+// pTopGTMid — P(顶 > 中道最终牌型) = 顶压中犯规概率 (中道未满时). joker-aware floor + maxAchievable
+// 粗粒度桶 (同 pMidGTBot 风格). 治: 顶已成三条/高对, 中道当前追不上且要大跳才能托住 → 高 foul.
+func pTopGTMid(gs *GameState, topEv, midEv HandValue, rankRem [13]int, suitRem [4]int, jokerRem, midSlots int) float32 {
+	if len(gs.Top) == 0 || midSlots == 0 {
+		return 0 // 顶空 / 中道已满(由外层精确判)
+	}
+	topT := topEv.Type
+	if topT < TypePair {
+		return 0 // 顶高牌, 顶>中 foul 风险低
+	}
+	// 当前顶 > 中? (先比 type, 同 type 比对子/三条 rank)
+	cur := topT > midEv.Type
+	if topT == midEv.Type {
+		cur = highestRealPairRank(gs.Top) > highestRealPairRank(gs.Middle)
+	}
+	if !cur {
+		return 0 // 中道现状已 ≥ 顶 → 无顶>中 foul
+	}
+	// 中道当前 < 顶. 上限能追上吗?
+	midMax := int(maxAchievableHandType(gs.Middle, midSlots, rankRem, suitRem, jokerRem))
+	if midMax < topT {
+		return 1 // 中道上限 type 都 < 顶 → 铁定 foul
+	}
+	if midMax > topT {
+		return 0.7 // 能跳更高 type(如 trips→FH) 但概率低(~25-30%) → foul ~0.7
+	}
+	return 0.8 // 同 type 需更高 rank, 更难
+}
+
 func pFoulFinal(gs *GameState, topEv, midEv, botEv HandValue, rankRem [13]int, suitRem [4]int, jokerRem, deckTotal int) float32 {
 	midSlots := 5 - len(gs.Middle)
 	botSlots := 5 - len(gs.Bottom)
@@ -1177,7 +1299,10 @@ func pFoulFinal(gs *GameState, topEv, midEv, botEv HandValue, rankRem [13]int, s
 
 	// 估算 P(将来 foul)
 	pMidGT := pMidGTBot(gs, midEv, botEv, rankRem, suitRem, jokerRem, deckTotal, midSlots, botSlots)
-	return pMidGT // 简化: 只考虑 mid > bot 路径
+	// 2026-06-15: 加 P(顶>中) 路径 — 中道未满时估"顶压中"犯规概率 (原只算 mid>bot, 漏判
+	// KKK顶 + 中道封顶托不住 这类 ~70% foul, ypk-36634954-18). 组合 = P(任一行 foul).
+	pTopGT := pTopGTMid(gs, topEv, midEv, rankRem, suitRem, jokerRem, midSlots)
+	return pMidGT + pTopGT - pMidGT*pTopGT
 }
 
 // ============================================================
@@ -1323,16 +1448,32 @@ func maxPairRankRow(row []Card) int {
 // twoPairHighRank — row 两对中较大对的 rank. -1 if no 2pair.
 func twoPairHighRank(row []Card) int {
 	pairs := getAllPairRanks(row)
-	if len(pairs) < 2 {
-		return -1
+	if len(pairs) == 0 {
+		return -1 // 真无对
 	}
-	maxR := -1
-	for _, r := range pairs {
-		if r > maxR {
-			maxR = r
+	if len(pairs) >= 2 {
+		maxR := -1
+		for _, r := range pairs {
+			if r > maxR {
+				maxR = r
+			}
+		}
+		return maxR
+	}
+	// 2026-06-14: 单一成对 rank — 若是三条+(cnt>=3)即三条/金刚, 返回该 rank (强成手, 别给 -1
+	// junk 哨兵, 否则三条/金刚在此维跟"无对"同信号 → value head 低估, ypk-12124490-13 89X).
+	// 单纯一对(cnt==2)仍 -1 (非两对).
+	r := pairs[0]
+	cnt := 0
+	for _, c := range row {
+		if !c.IsJoker() && int(c.Rank()) == r {
+			cnt++
 		}
 	}
-	return maxR
+	if cnt >= 3 {
+		return r
+	}
+	return -1
 }
 
 // getAllPairRanks — row 中所有 pair 的 rank 列表
