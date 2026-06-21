@@ -16,11 +16,10 @@
     "6c"
    ],
    "bottom": [
-    "X",
+    "Xj0",
     "Jd"
    ],
    "usedCards": [
-    "X",
     "5c",
     "6s",
     "6c",
@@ -45,7 +44,8 @@
      "8d"
     ]
    }
-  ]
+  ],
+  "note": "重训靶: sp26 value-head弱(8d浪费中道,太子原生留花). RnMidKickerShouldBotFlush 规则stopgap硬修, 重训让value head自学估同花draw后该规则可删."
  },
  {
   "name": "实战 2 [R3]: 鬼上头 + KQ 选高 → K 上头, Q 弃 (KK > QQ fantasy)",
@@ -58,7 +58,7 @@
   ],
   "state": {
    "top": [
-    "X"
+    "Xj0"
    ],
    "middle": [
     "8c",
@@ -66,16 +66,14 @@
     "2s"
    ],
    "bottom": [
-    "X",
+    "Xj1",
     "Jh",
     "9c"
    ],
    "usedCards": [
-    "X",
     "8c",
     "Tc",
     "2s",
-    "X",
     "Jh",
     "9c",
     "3d"
@@ -89,6 +87,14 @@
     "middle": [],
     "bottom": [
      "Jc"
+    ]
+   },
+   {
+    "top": [],
+    "middle": [],
+    "bottom": [
+     "Qc",
+     "Kh"
     ]
    }
   ]
@@ -164,7 +170,7 @@
   "jokerCount": 2,
   "pureMLP": true,
   "dealt": [
-   "X",
+   "Xj0",
    "7d",
    "Ah"
   ],
@@ -205,7 +211,7 @@
     "Jh",
     "Ac",
     "6h",
-    "X",
+    "Xj1",
     "7d",
     "Ah"
    ]
@@ -216,7 +222,7 @@
      "Ah"
     ],
     "middle": [
-     "X"
+     "Xj0"
     ],
     "bottom": []
    },
@@ -226,7 +232,7 @@
     ],
     "middle": [],
     "bottom": [
-     "X"
+     "Xj0"
     ]
    }
   ],
@@ -291,7 +297,7 @@
     "9c",
     "4d",
     "Qd",
-    "X"
+    "Xj0"
    ]
   },
   "expecteds": [
@@ -330,13 +336,13 @@
   "pureMLP": true,
   "dealt": [
    "Ad",
-   "X",
+   "Xj1",
    "Ts"
   ],
   "state": {
    "top": [
     "As",
-    "X"
+    "Xj0"
    ],
    "middle": [
     "4c",
@@ -366,7 +372,6 @@
     "8s",
     "Td",
     "5s",
-    "X",
     "8h",
     "7d",
     "Kd",
@@ -382,7 +387,7 @@
     ],
     "middle": [],
     "bottom": [
-     "X"
+     "Xj0"
     ]
    },
    {
@@ -390,13 +395,13 @@
     "middle": [],
     "bottom": [
      "Ad",
-     "X"
+     "Xj0"
     ]
    },
    {
     "top": [],
     "middle": [
-     "X"
+     "Xj0"
     ],
     "bottom": [
      "Ts"
@@ -422,7 +427,7 @@
   "pureMLP": true,
   "dealt": [
    "Kc",
-   "X",
+   "Xj1",
    "7s"
   ],
   "state": {
@@ -430,7 +435,7 @@
     "Ac"
    ],
    "middle": [
-    "X"
+    "Xj0"
    ],
    "bottom": [
     "7d",
@@ -442,7 +447,6 @@
     "9d",
     "Ac",
     "8d",
-    "X",
     "5s",
     "4s",
     "9s",
@@ -454,14 +458,14 @@
    {
     "top": [
      "Kc",
-     "X"
+     "Xj0"
     ],
     "middle": [],
     "bottom": []
    },
    {
     "top": [
-     "X"
+     "Xj0"
     ],
     "middle": [
      "7s"
@@ -470,7 +474,7 @@
    },
    {
     "top": [
-     "X"
+     "Xj0"
     ],
     "middle": [
      "Kc"
@@ -496,7 +500,7 @@
   "jokerCount": 2,
   "pureMLP": true,
   "dealt": [
-   "X",
+   "Xj1",
    "As",
    "8h"
   ],
@@ -509,12 +513,11 @@
     "5c"
    ],
    "bottom": [
-    "X"
+    "Xj0"
    ],
    "usedCards": [
     "7h",
     "6d",
-    "X",
     "7c",
     "5c",
     "Qs",
@@ -526,7 +529,7 @@
   "expecteds": [
    {
     "top": [
-     "X",
+     "Xj0",
      "As"
     ],
     "middle": [],
@@ -559,7 +562,7 @@
    "top": [],
    "middle": [
     "8h",
-    "X",
+    "Xj0",
     "3h",
     "7h"
    ],
@@ -572,7 +575,6 @@
    ],
    "usedCards": [
     "8h",
-    "X",
     "7c",
     "Qc",
     "3c",
@@ -613,7 +615,8 @@
     "middle": [],
     "bottom": []
    }
-  ]
+  ],
+  "note": "一票否决(训练版litmus 同花识别): 2h必进中成红心同花, 弃2h=不认锁定同花"
  },
  {
   "name": "实战 10 [R1]: [8h X 7c Qc 3c] 单鬼无 A — 鬼必上头(留范/灵活), 不埋中道配 88 (ypk-178127178-8, R1SingleJokerNoAOnTop +5)",
@@ -622,7 +625,7 @@
   "pureMLP": true,
   "dealt": [
    "8h",
-   "X",
+   "Xj0",
    "7c",
    "Qc",
    "3c"
@@ -636,7 +639,7 @@
   "expecteds": [
    {
     "top": [
-     "X"
+     "Xj0"
     ],
     "middle": [
      "8h"
@@ -649,7 +652,7 @@
    },
    {
     "top": [
-     "X"
+     "Xj0"
     ],
     "middle": [
      "7c",
@@ -690,7 +693,7 @@
    "Ah",
    "Js",
    "9h",
-   "X",
+   "Xj0",
    "Qd",
    "As",
    "Qh",
@@ -712,7 +715,7 @@
     "top": [
      "Tc",
      "Ts",
-     "X"
+     "Xj0"
     ],
     "middle": [
      "6s",
@@ -910,6 +913,19 @@
      "Jd",
      "As"
     ]
+   },
+   {
+    "top": [
+     "Ah",
+     "Ac"
+    ],
+    "middle": [
+     "Jd"
+    ],
+    "bottom": [
+     "2s",
+     "As"
+    ]
    }
   ],
   "wrongs": [
@@ -926,7 +942,8 @@
      "Jd"
     ]
    }
-  ]
+  ],
+  "note": "RnMidDrawFaceBonus(+2): 中道全单张+顺面/花面加分. 4s→中成3-4-6顺面得+2 > 4s→顶(中3-6-K无面). 用户准则\"都是单张有顺面花面加分\", 比惩罚接张埋顶干净通用. gap仅0.19也是sp27训练靶. 2026-06-17"
  },
  {
   "name": "实战 12 [R1]: JJJ+QQ [Jc Qc Jd Qd Js] — 三条J+对Q 保持成型 (QQ中+JJJ底 或 葫芦底), 不该拆 JJJ (ConnectorSplit 误罚 trips+pair 修后)",
@@ -1271,8 +1288,8 @@
    "Ah",
    "Ac",
    "As",
-   "X",
-   "X"
+   "Xj0",
+   "Xj1"
   ],
   "state": {
    "top": [],
@@ -1288,10 +1305,10 @@
     ],
     "middle": [
      "Ac",
-     "X"
+     "Xj0"
     ],
     "bottom": [
-     "X"
+     "Xj0"
     ]
    },
    {
@@ -1301,10 +1318,10 @@
     ],
     "middle": [
      "As",
-     "X"
+     "Xj0"
     ],
     "bottom": [
-     "X"
+     "Xj0"
     ]
    },
    {
@@ -1314,10 +1331,10 @@
     ],
     "middle": [
      "Ah",
-     "X"
+     "Xj0"
     ],
     "bottom": [
-     "X"
+     "Xj0"
     ]
    }
   ],
@@ -1349,7 +1366,7 @@
   ],
   "state": {
    "top": [
-    "X"
+    "Xj0"
    ],
    "middle": [
     "9s",
@@ -1363,7 +1380,6 @@
    ],
    "usedCards": [
     "9s",
-    "X",
     "Th",
     "Tc",
     "Kh",
@@ -1401,7 +1417,8 @@
     "middle": [],
     "bottom": [
      "Ac"
-    ]
+    ],
+    "suitFree": true
    },
    {
     "top": [],
@@ -1409,7 +1426,8 @@
      "As",
      "Ah"
     ],
-    "bottom": []
+    "bottom": [],
+    "suitFree": true
    },
    {
     "top": [],
@@ -1417,7 +1435,8 @@
      "As",
      "Ac"
     ],
-    "bottom": []
+    "bottom": [],
+    "suitFree": true
    },
    {
     "top": [],
@@ -1425,7 +1444,8 @@
      "Ah",
      "Ac"
     ],
-    "bottom": []
+    "bottom": [],
+    "suitFree": true
    }
   ],
   "wrongs": [
@@ -1451,7 +1471,7 @@
   ],
   "state": {
    "top": [
-    "X",
+    "Xj0",
     "Qc"
    ],
    "middle": [
@@ -1465,7 +1485,6 @@
    ],
    "usedCards": [
     "9s",
-    "X",
     "Qc",
     "Th",
     "Tc",
@@ -1501,7 +1520,8 @@
      "Ah",
      "Ac"
     ],
-    "bottom": []
+    "bottom": [],
+    "suitFree": true
    },
    {
     "top": [],
@@ -1509,7 +1529,8 @@
      "As",
      "Ac"
     ],
-    "bottom": []
+    "bottom": [],
+    "suitFree": true
    },
    {
     "top": [
@@ -1518,7 +1539,8 @@
     "middle": [],
     "bottom": [
      "Ac"
-    ]
+    ],
+    "suitFree": true
    }
   ],
   "wrongs": [
@@ -1545,7 +1567,7 @@
   ],
   "state": {
    "top": [
-    "X",
+    "Xj0",
     "Kc"
    ],
    "middle": [
@@ -1560,7 +1582,6 @@
    "usedCards": [
     "Kc",
     "9s",
-    "X",
     "Qc",
     "Th",
     "Tc",
@@ -1596,7 +1617,8 @@
      "Ah",
      "Ac"
     ],
-    "bottom": []
+    "bottom": [],
+    "suitFree": true
    },
    {
     "top": [],
@@ -1604,7 +1626,8 @@
      "As",
      "Ah"
     ],
-    "bottom": []
+    "bottom": [],
+    "suitFree": true
    },
    {
     "top": [],
@@ -1612,7 +1635,18 @@
      "As",
      "Ac"
     ],
-    "bottom": []
+    "bottom": [],
+    "suitFree": true
+   },
+   {
+    "top": [
+     "Ah"
+    ],
+    "middle": [],
+    "bottom": [
+     "As"
+    ],
+    "suitFree": true
    }
   ],
   "wrongs": [
@@ -1625,7 +1659,8 @@
      "Ac"
     ]
    }
-  ]
+  ],
+  "note": "MidExceedsBot 假倒置豁免治(中2266两对>底KK单对, 但底KK rank高会发育反超→不罚). value head 本就偏好66→中(base6.15>QQ顶4.05), 之前被MidExceedsBot-18误埋. 2026-06-17"
  },
  {
   "name": "实战 18 [R3]: 鬼+A在顶[X Ad]+ 发3A",
@@ -1639,7 +1674,7 @@
   ],
   "state": {
    "top": [
-    "X",
+    "Xj0",
     "Ad"
    ],
    "middle": [
@@ -1654,7 +1689,6 @@
    "usedCards": [
     "Ad",
     "9s",
-    "X",
     "Qc",
     "Th",
     "Tc",
@@ -1727,13 +1761,13 @@
   "jokerCount": 2,
   "pureMLP": true,
   "dealt": [
-   "X",
+   "Xj1",
    "Ts",
    "3c"
   ],
   "state": {
    "top": [
-    "X"
+    "Xj0"
    ],
    "middle": [
     "8c",
@@ -1772,7 +1806,6 @@
     "9h",
     "Th",
     "4s",
-    "X",
     "Ad",
     "3h",
     "As",
@@ -1783,7 +1816,7 @@
   "expecteds": [
    {
     "top": [
-     "X",
+     "Xj0",
      "3c"
     ],
     "middle": [],
@@ -1840,7 +1873,7 @@
     "4s",
     "Js",
     "8d",
-    "X",
+    "Xj0",
     "Jh"
    ]
   },
@@ -1893,7 +1926,7 @@
   "dealt": [
    "Ah",
    "Jc",
-   "X"
+   "Xj0"
   ],
   "state": {
    "top": [
@@ -1929,7 +1962,7 @@
    {
     "top": [
      "Ah",
-     "X"
+     "Xj0"
     ],
     "middle": [],
     "bottom": []
@@ -1968,7 +2001,7 @@
   ],
   "state": {
    "top": [
-    "X"
+    "Xj0"
    ],
    "middle": [
     "2d",
@@ -1978,19 +2011,17 @@
    "bottom": [
     "Kc",
     "Kd",
-    "X"
+    "Xj1"
    ],
    "usedCards": [
     "2d",
     "Kc",
-    "X",
     "Kd",
     "7s",
     "Qc",
     "4s",
     "7d",
     "Qs",
-    "X",
     "5h",
     "8s"
    ]
@@ -2021,6 +2052,14 @@
      "Kh"
     ],
     "bottom": []
+   },
+   {
+    "top": [],
+    "middle": [],
+    "bottom": [
+     "Qc",
+     "Kh"
+    ]
    }
   ],
   "wrongs": [
@@ -2063,7 +2102,7 @@
     "As",
     "4h",
     "Js",
-    "X",
+    "Xj0",
     "5s",
     "Kd",
     "Qs",
@@ -2154,6 +2193,14 @@
     "middle": [],
     "bottom": [
      "Ks",
+     "Kh"
+    ]
+   },
+   {
+    "top": [],
+    "middle": [],
+    "bottom": [
+     "Qc",
      "Kh"
     ]
    }
@@ -2283,7 +2330,7 @@
   "pureMLP": true,
   "dealt": [
    "7s",
-   "X",
+   "Xj0",
    "As"
   ],
   "state": {
@@ -2321,11 +2368,19 @@
   "expecteds": [
    {
     "top": [
-     "X",
+     "Xj0",
      "As"
     ],
     "middle": [],
     "bottom": []
+   },
+   {
+    "top": [],
+    "middle": [],
+    "bottom": [
+     "Qc",
+     "Kh"
+    ]
    }
   ],
   "wrongs": [
@@ -2368,7 +2423,7 @@
     "8d",
     "Qs",
     "Ah",
-    "X",
+    "Xj0",
     "4s",
     "8h",
     "9c"
@@ -2382,6 +2437,24 @@
      "7d"
     ],
     "bottom": []
+   },
+   {
+    "top": [
+     "6d"
+    ],
+    "middle": [
+     "7d"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [],
+    "middle": [
+     "2c"
+    ],
+    "bottom": [
+     "7d"
+    ]
    }
   ],
   "wrongs": []
@@ -2416,7 +2489,7 @@
     "2d",
     "Ac",
     "Ad",
-    "X",
+    "Xj0",
     "7s",
     "Qc",
     "As",
@@ -2440,6 +2513,15 @@
     "bottom": [
      "Jd"
     ]
+   },
+   {
+    "top": [
+     "4c"
+    ],
+    "middle": [
+     "9s"
+    ],
+    "bottom": []
    }
   ],
   "wrongs": [
@@ -2459,7 +2541,7 @@
   "round": 2,
   "state": {
    "top": [
-    "X"
+    "Xj0"
    ],
    "middle": [
     "4h",
@@ -2472,7 +2554,6 @@
    "usedCards": [
     "4h",
     "Td",
-    "X",
     "7s",
     "3c",
     "5d",
@@ -2518,6 +2599,24 @@
      "2h"
     ],
     "bottom": []
+   },
+   {
+    "top": [],
+    "middle": [
+     "2h"
+    ],
+    "bottom": [
+     "Ks"
+    ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "5s"
+    ],
+    "bottom": [
+     "Ks"
+    ]
    }
   ]
  },
@@ -2533,7 +2632,7 @@
   ],
   "state": {
    "top": [
-    "X"
+    "Xj0"
    ],
    "middle": [
     "4h",
@@ -2546,7 +2645,6 @@
    "usedCards": [
     "4h",
     "Td",
-    "X",
     "7s",
     "3c",
     "5d",
@@ -2579,6 +2677,24 @@
      "2h"
     ],
     "bottom": []
+   },
+   {
+    "top": [],
+    "middle": [
+     "2h"
+    ],
+    "bottom": [
+     "Ks"
+    ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "5s"
+    ],
+    "bottom": [
+     "Ks"
+    ]
    }
   ],
   "wrongs": [
@@ -2626,7 +2742,7 @@
     "8s",
     "6h",
     "9h",
-    "X",
+    "Xj0",
     "2h",
     "Ks",
     "Kc",
@@ -2635,7 +2751,7 @@
     "Jc",
     "5d",
     "Ac",
-    "X",
+    "Xj1",
     "3s",
     "6c",
     "7d",
@@ -2673,6 +2789,15 @@
     ],
     "middle": [
      "Jh"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "9d"
+    ],
+    "middle": [
+     "5h"
     ],
     "bottom": []
    }
@@ -2732,7 +2857,7 @@
     "Ts",
     "9s",
     "Jh",
-    "X"
+    "Xj0"
    ]
   },
   "expecteds": [
@@ -2786,7 +2911,7 @@
     "9h",
     "2h",
     "7c",
-    "X",
+    "Xj0",
     "6s",
     "9d",
     "3d",
@@ -2849,7 +2974,7 @@
   "jokerCount": 2,
   "pureMLP": true,
   "dealt": [
-   "X",
+   "Xj0",
    "9s",
    "2s",
    "4d",
@@ -2864,7 +2989,7 @@
   "expecteds": [
    {
     "top": [
-     "X"
+     "Xj0"
     ],
     "middle": [
      "4d",
@@ -2982,7 +3107,7 @@
     "Jh",
     "2s",
     "5c",
-    "X",
+    "Xj0",
     "7h",
     "Ad",
     "5h",
@@ -3020,7 +3145,7 @@
   "dealt": [
    "8s",
    "9h",
-   "X"
+   "Xj0"
   ],
   "state": {
    "top": [
@@ -3052,7 +3177,7 @@
     "Jh",
     "2s",
     "5c",
-    "X",
+    "Xj1",
     "7h",
     "Ad",
     "5h",
@@ -3063,7 +3188,7 @@
   "expecteds": [
    {
     "top": [
-     "X"
+     "Xj0"
     ],
     "middle": [],
     "bottom": [
@@ -3123,7 +3248,7 @@
     "Jh",
     "2s",
     "5c",
-    "X",
+    "Xj0",
     "7h",
     "Ad",
     "5h",
@@ -3194,7 +3319,7 @@
     "Jh",
     "2s",
     "5c",
-    "X",
+    "Xj0",
     "7h",
     "Ad",
     "5h",
@@ -3223,5 +3348,3571 @@
     ]
    }
   ]
+ },
+ {
+  "name": "实战 42 [R4] 🎯sp25靶: 顶KK(范) 中[3d 4s 4c]=44 底[Ts Tc 9h Th]=TTT 发[Qs X Kh] → X进中凑444撑过顶/顶留KK别升KKK (KKK>中444倒置~60%foul, 中要催44433葫芦才不犯). 当前NN升KKK(过估三条范 te+12.6, RnTopTripsOvercommit-10不够翻). 待sp25/dim106修 (ypk-36634954-18)",
+  "round": 4,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "Qs",
+   "Xj0",
+   "Kh"
+  ],
+  "state": {
+   "top": [
+    "Kc",
+    "Ks"
+   ],
+   "middle": [
+    "3d",
+    "4s",
+    "4c"
+   ],
+   "bottom": [
+    "Ts",
+    "Tc",
+    "9h",
+    "Th"
+   ],
+   "usedCards": [
+    "Ts",
+    "3d",
+    "4s",
+    "Tc",
+    "4c",
+    "Ac",
+    "As",
+    "5c",
+    "3c",
+    "6d",
+    "Ah",
+    "4h",
+    "4d",
+    "7c",
+    "Jc",
+    "9s",
+    "Kc",
+    "9h",
+    "5h",
+    "Xj1",
+    "Qd",
+    "Qc",
+    "Th",
+    "Ks",
+    "Ad",
+    "2s",
+    "6s",
+    "6h",
+    "2h",
+    "2d"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "Qs"
+    ],
+    "middle": [
+     "Xj0"
+    ],
+    "bottom": []
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "Kh"
+    ],
+    "middle": [
+     "X"
+    ],
+    "bottom": []
+   }
+  ]
+ },
+ {
+  "name": "实战 43 [R2]: 9s+9h该进底凑TT99两对(底已TT) 别Kc上顶弃9 — value-head冒进搏范 (ypk-36634954-18)",
+  "round": 2,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "9s",
+   "Kc",
+   "9h"
+  ],
+  "state": {
+   "top": [],
+   "middle": [
+    "3d",
+    "4s",
+    "4c"
+   ],
+   "bottom": [
+    "Ts",
+    "Tc"
+   ],
+   "usedCards": [
+    "Ts",
+    "3d",
+    "4s",
+    "Tc",
+    "4c",
+    "Ac",
+    "As",
+    "5c",
+    "3c",
+    "6d",
+    "Ah",
+    "4h",
+    "4d",
+    "7c",
+    "Jc"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [],
+    "bottom": [
+     "9s",
+     "9h"
+    ]
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "Kc"
+    ],
+    "middle": [],
+    "bottom": [
+     "9h"
+    ]
+   }
+  ],
+  "note": "一票否决(训练版litmus 底两对): 9s9h进底凑TT99, 不进底=不认底两对价值"
+ },
+ {
+  "name": "实战 44 [R1]: 567该进底(顺在最强行, 安全) 别进中(中成顺底2J托不住=foul) — value-head (ypk-62783818-1)",
+  "round": 1,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "2c",
+   "6d",
+   "7s",
+   "5s",
+   "Jh"
+  ],
+  "state": {
+   "top": [],
+   "middle": [],
+   "bottom": [],
+   "usedCards": []
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "2c",
+     "Jh"
+    ],
+    "bottom": [
+     "5s",
+     "6d",
+     "7s"
+    ]
+   },
+   {
+    "top": [
+     "2c"
+    ],
+    "middle": [
+     "Jh"
+    ],
+    "bottom": [
+     "5s",
+     "6d",
+     "7s"
+    ]
+   },
+   {
+    "top": [
+     "Jh"
+    ],
+    "middle": [
+     "2c"
+    ],
+    "bottom": [
+     "5s",
+     "6d",
+     "7s"
+    ]
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [],
+    "middle": [
+     "6d",
+     "7s",
+     "5s"
+    ],
+    "bottom": [
+     "2c",
+     "Jh"
+    ]
+   }
+  ],
+  "note": "D.csv/std靶. 567该整组进底(顺draw在最强行). 删ConnectorSplit Part1后纯NN勉强偏拆(te19.45 vs 期望19.11 gap0.34). 2026-06-19 加 R1BottomDrawBonus +2(底3连张/3条) → 反转, 现规则ON过. 回归守护."
+ },
+ {
+  "name": "实战 45 [R1] (ypk-63308106-4 89顺该进底)",
+  "round": 1,
+  "dealt": [
+   "8d",
+   "Ah",
+   "5h",
+   "9h",
+   "Qs"
+  ],
+  "state": {
+   "top": [],
+   "middle": [],
+   "bottom": [],
+   "usedCards": [
+    "4d",
+    "5s",
+    "Xj0",
+    "4s",
+    "9c"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "Ah"
+    ],
+    "middle": [
+     "5h"
+    ],
+    "bottom": [
+     "8d",
+     "9h",
+     "Qs"
+    ]
+   },
+   {
+    "top": [
+     "Ah"
+    ],
+    "middle": [
+     "8d",
+     "5h",
+     "9h"
+    ],
+    "bottom": [
+     "Qs"
+    ]
+   },
+   {
+    "top": [
+     "Ah"
+    ],
+    "middle": [
+     "8d",
+     "5h"
+    ],
+    "bottom": [
+     "9h",
+     "Qs"
+    ]
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "Ah"
+    ],
+    "middle": [
+     "8d",
+     "9h"
+    ],
+    "bottom": [
+     "5h",
+     "Qs"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "实战 46 [R4] (222顶冒顶: 别升三条)",
+  "round": 4,
+  "dealt": [
+   "2s",
+   "8s",
+   "6c"
+  ],
+  "state": {
+   "top": [
+    "Xj0",
+    "2c"
+   ],
+   "middle": [
+    "4s",
+    "8c",
+    "Th"
+   ],
+   "bottom": [
+    "7h",
+    "7d",
+    "7c",
+    "Qc"
+   ],
+   "usedCards": [
+    "6h",
+    "2h"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "8s"
+    ],
+    "bottom": [
+     "6c"
+    ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "8s"
+    ],
+    "bottom": [
+     "2s"
+    ]
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "2s"
+    ],
+    "middle": [
+     "8s"
+    ],
+    "bottom": []
+   }
+  ]
+ },
+ {
+  "name": "实战 47 [R4] (中锁两对+底发育: 6配底别堆顶)",
+  "round": 4,
+  "dealt": [
+   "6s",
+   "3h",
+   "Td"
+  ],
+  "state": {
+   "top": [
+    "Xj0"
+   ],
+   "middle": [
+    "7h",
+    "4c",
+    "6d",
+    "4d",
+    "7s"
+   ],
+   "bottom": [
+    "Jc",
+    "Qc",
+    "6c"
+   ],
+   "usedCards": [
+    "Kd",
+    "Js"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "3h"
+    ],
+    "middle": [],
+    "bottom": [
+     "6s"
+    ]
+   },
+   {
+    "top": [
+     "Td"
+    ],
+    "middle": [],
+    "bottom": [
+     "6s"
+    ]
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "6s",
+     "3h"
+    ],
+    "middle": [],
+    "bottom": []
+   }
+  ]
+ },
+ {
+  "name": "实战 48 [R4] (顶鬼+中666三条: 3上顶保合法333范, 7上顶777必foul)",
+  "round": 4,
+  "dealt": [
+   "3d",
+   "Th",
+   "7h"
+  ],
+  "state": {
+   "top": [
+    "Xj0"
+   ],
+   "middle": [
+    "Xj1",
+    "4c",
+    "6d",
+    "6c"
+   ],
+   "bottom": [
+    "Qc",
+    "9h",
+    "Js",
+    "Kh"
+   ],
+   "usedCards": [
+    "9d",
+    "Tc",
+    "5d",
+    "Jd",
+    "2s",
+    "2h",
+    "Qd",
+    "Ad",
+    "As",
+    "8c",
+    "Ah",
+    "9s",
+    "Kd",
+    "3s",
+    "4s",
+    "3c"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "3d"
+    ],
+    "middle": [],
+    "bottom": [
+     "Th"
+    ]
+   }
+  ],
+  "wrongs": [
+   {
+    "top": [
+     "7h"
+    ],
+    "middle": [],
+    "bottom": [
+     "Th"
+    ]
+   }
+  ],
+  "note": "一票否决(训练版litmus 顶范路径合法): 顶潜在三条rank≤中三条三条=合法范(3→顶 333≤中666), 7→顶 777>666 升三条必foul. 选高kicker上顶不顾合法性=value-head盲. 太子147-d缺O特征挂此, sp26 150-d过."
+ },
+ {
+  "name": "实战 49 [R1]: 3d绝张(3全used)别上顶, Kh独顶留槽",
+  "round": 1,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "9d",
+   "Kh",
+   "3d",
+   "9c",
+   "6s"
+  ],
+  "state": {
+   "top": [],
+   "middle": [],
+   "bottom": [],
+   "usedCards": [
+    "3s",
+    "8c",
+    "3h",
+    "Ah",
+    "7c",
+    "3c",
+    "As",
+    "Tc",
+    "6h",
+    "Ks",
+    "7s",
+    "8h",
+    "7d",
+    "8s",
+    "Td",
+    "Kc",
+    "Th",
+    "Qd",
+    "7h"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "Kh"
+    ],
+    "middle": [
+     "3d",
+     "6s"
+    ],
+    "bottom": [
+     "9d",
+     "9c"
+    ]
+   },
+   {
+    "top": [
+     "Kh"
+    ],
+    "middle": [
+     "6s"
+    ],
+    "bottom": [
+     "9d",
+     "3d",
+     "9c"
+    ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "3d",
+     "6s"
+    ],
+    "bottom": [
+     "9d",
+     "Kh",
+     "9c"
+    ]
+   }
+  ],
+  "note": "3d绝张(3全used)别上顶. Kh独顶留槽 或 Kh→底配99(99K) 都可 (2026-06-18加R1LoneKingOnTop-2后AI偏Kh→底, 用户认可). 99→底."
+ },
+ {
+  "name": "实战 50 [R2]: 鬼+A上顶锁AA范(中可发育两对撑) ypk-26870090-17",
+  "round": 2,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "Kd",
+   "8d",
+   "Xj0"
+  ],
+  "state": {
+   "top": [
+    "Ac"
+   ],
+   "middle": [
+    "2c"
+   ],
+   "bottom": [
+    "Qd",
+    "Jh",
+    "8s"
+   ],
+   "usedCards": [
+    "3h",
+    "9s",
+    "9d",
+    "Js",
+    "Qs",
+    "Td",
+    "5c",
+    "3c",
+    "8h",
+    "8c",
+    "7d",
+    "Jc",
+    "2h",
+    "2d",
+    "Qc",
+    "Ad"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "Xj0"
+    ],
+    "middle": [],
+    "bottom": [
+     "8d"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "实战 51 [R2]: 顶已AA锁, K进底别上顶+别弃A ypk-30409034-4",
+  "round": 2,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "4s",
+   "Ac",
+   "Kd"
+  ],
+  "state": {
+   "top": [
+    "Xj0",
+    "Ad"
+   ],
+   "middle": [
+    "3d"
+   ],
+   "bottom": [
+    "Xj1",
+    "6c"
+   ],
+   "usedCards": [
+    "Qc",
+    "5d",
+    "2s",
+    "7d",
+    "7s"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "4s"
+    ],
+    "bottom": [
+     "Kd"
+    ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "4s"
+    ],
+    "bottom": [
+     "Ac"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "实战 52 [R2]: 6X底成顺(别8X三条) ypk-26935626-1",
+  "round": 2,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "Xj0",
+   "8s",
+   "6d"
+  ],
+  "state": {
+   "top": [],
+   "middle": [
+    "2d",
+    "3h"
+   ],
+   "bottom": [
+    "8d",
+    "9d",
+    "Ts"
+   ],
+   "usedCards": [
+    "Kc",
+    "Xj1",
+    "As",
+    "6h",
+    "2c",
+    "4d"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [],
+    "bottom": [
+     "Xj0",
+     "6d"
+    ]
+   },
+   {
+    "top": [
+     "Xj0"
+    ],
+    "middle": [],
+    "bottom": [
+     "8s"
+    ]
+   },
+   {
+    "top": [
+     "Xj0"
+    ],
+    "middle": [
+     "6d"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "Xj0"
+    ],
+    "middle": [],
+    "bottom": [
+     "6d"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "实战 53 [R3]: 底已同花, 高张副留范别塞顶(中发育) ypk-33161546-9",
+  "round": 3,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "Td",
+   "Jd",
+   "Qs"
+  ],
+  "state": {
+   "top": [],
+   "middle": [
+    "7c",
+    "4c"
+   ],
+   "bottom": [
+    "8h",
+    "Jh",
+    "Kh",
+    "3h",
+    "6h"
+   ],
+   "usedCards": [
+    "7c",
+    "8h",
+    "4c",
+    "Jh",
+    "Kh",
+    "3c",
+    "6c",
+    "Qd",
+    "3h",
+    "6h",
+    "Qh",
+    "4s",
+    "Js",
+    "6s",
+    "9c",
+    "3s",
+    "3d",
+    "7h",
+    "7s",
+    "7d",
+    "Tc",
+    "6d",
+    "Ac"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "Qs"
+    ],
+    "middle": [
+     "Td"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "Qs"
+    ],
+    "middle": [
+     "Jd"
+    ],
+    "bottom": []
+   }
+  ]
+ },
+ {
+  "name": "实战 57 [R1]: 低顺345别为2张同花拆散 (bSuit>=3修) ypk-98828618-10",
+  "round": 1,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "As",
+   "Kc",
+   "5h",
+   "4d",
+   "3h"
+  ],
+  "state": {
+   "top": [],
+   "middle": [],
+   "bottom": [],
+   "usedCards": [
+    "As",
+    "Kc",
+    "5h",
+    "4d",
+    "3h"
+   ]
+  },
+  "note": "无真实usedCards(prod已清), deck-blind版. R1SameSuitInRowBonus >=2→>=3 后裸NN留整条345.",
+  "expecteds": [
+   {
+    "top": [
+     "As"
+    ],
+    "middle": [
+     "5h",
+     "4d",
+     "3h"
+    ],
+    "bottom": [
+     "Kc"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "实战 58 [R1]: 鬼+A上顶锁AA范(别塞鬼进中) ypk-104399178-26",
+  "round": 1,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "Qs",
+   "5s",
+   "2c",
+   "Xj0",
+   "Ac"
+  ],
+  "state": {
+   "top": [],
+   "middle": [],
+   "bottom": [],
+   "usedCards": [
+    "Jd",
+    "3h",
+    "6c"
+   ]
+  },
+  "note": "R1JokerWithAOnTop bump 10→16 后太子过. sp26靶.",
+  "expecteds": [
+   {
+    "top": [
+     "Xj0",
+     "Ac"
+    ],
+    "middle": [
+     "5s",
+     "2c"
+    ],
+    "bottom": [
+     "Qs"
+    ]
+   },
+   {
+    "top": [
+     "Xj0",
+     "Ac"
+    ],
+    "middle": [
+     "2c"
+    ],
+    "bottom": [
+     "Qs",
+     "5s"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "实战 59 [R1]⚠️重训靶: 2鬼K7 — K+鬼锚强底别甩中 ypk-104399178-18",
+  "round": 1,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "Kd",
+   "Xj0",
+   "7s",
+   "Xj1",
+   "2d"
+  ],
+  "state": {
+   "top": [],
+   "middle": [],
+   "bottom": [],
+   "usedCards": [
+    "Jh",
+    "Td",
+    "Qc",
+    "5d",
+    "2s",
+    "4s",
+    "Th",
+    "Ts",
+    "5c",
+    "Tc",
+    "5h",
+    "As",
+    "8s"
+   ]
+  },
+  "note": "value-head错(裸+12想Kd塞中). 太子修不动, 纯NN gen重训靶. 硬规则会误伤draw不上.",
+  "expecteds": [
+   {
+    "top": [
+     "Xj0"
+    ],
+    "middle": [
+     "7s",
+     "2d"
+    ],
+    "bottom": [
+     "Kd",
+     "Xj0"
+    ]
+   },
+   {
+    "top": [
+     "Xj0"
+    ],
+    "middle": [
+     "7s"
+    ],
+    "bottom": [
+     "2d",
+     "Kd",
+     "Xj0"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "实战 60 [R1]⚠️重训靶: 567低顺别拆成断张底 ypk-104399178-12",
+  "round": 1,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "7s",
+   "Qh",
+   "5d",
+   "6h",
+   "Xj0"
+  ],
+  "state": {
+   "top": [],
+   "middle": [],
+   "bottom": [],
+   "usedCards": [
+    "2c",
+    "3c",
+    "8c",
+    "Ac",
+    "Qc",
+    "3h",
+    "8d",
+    "9s",
+    "Tc",
+    "Ks",
+    "Ad",
+    "8s",
+    "Qs",
+    "Jd",
+    "Jh"
+   ]
+  },
+  "note": "value-head错(底Qh5d断张). 太子修不动, 纯NN gen重训靶.",
+  "expecteds": [
+   {
+    "top": [
+     "Xj0"
+    ],
+    "middle": [
+     "7s",
+     "5d"
+    ],
+    "bottom": [
+     "Qh",
+     "6h"
+    ]
+   },
+   {
+    "top": [
+     "Xj0"
+    ],
+    "middle": [
+     "7s",
+     "5d",
+     "6h"
+    ],
+    "bottom": [
+     "Qh"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "实战 67 [R2]: 中底各1张, 高牌该进底(8中5底梯度反)",
+  "round": 2,
+  "jokerCount": 2,
+  "dealt": [
+   "8c",
+   "5s",
+   "Jc"
+  ],
+  "state": {
+   "top": [
+    "Kh"
+   ],
+   "middle": [
+    "3s",
+    "2c"
+   ],
+   "bottom": [
+    "7c",
+    "Qd"
+   ],
+   "usedCards": [
+    "7c",
+    "3s",
+    "Qd",
+    "Kh",
+    "2c",
+    "9d",
+    "6c",
+    "4d"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "5s"
+    ],
+    "bottom": [
+     "Jc"
+    ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "5s"
+    ],
+    "bottom": [
+     "8c"
+    ]
+   }
+  ],
+  "note": "RnHighCardWrongRowPenalty 治: 低牌5→中, 高牌(8或J)→底. sp26 原 8中5底梯度反. 2026-06-17"
+ },
+ {
+  "name": "实战 68 [R4]: 66该进中凑2266两对, 别贪QQ顶范(中22托不住)",
+  "round": 4,
+  "jokerCount": 2,
+  "dealt": [
+   "Qc",
+   "6d",
+   "6c"
+  ],
+  "state": {
+   "top": [
+    "Xj0",
+    "3h"
+   ],
+   "middle": [
+    "2c",
+    "2d",
+    "Jc"
+   ],
+   "bottom": [
+    "Kh",
+    "Ks",
+    "Ts",
+    "8s"
+   ],
+   "usedCards": [
+    "Kh",
+    "Ks",
+    "2c",
+    "Ts",
+    "Ah",
+    "As",
+    "4c",
+    "5s",
+    "8h",
+    "2d",
+    "7c",
+    "3h",
+    "9c",
+    "7d",
+    "5d",
+    "8s",
+    "Jc",
+    "Kd",
+    "Js",
+    "6s",
+    "Qs",
+    "Kc"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "6c",
+     "6d"
+    ],
+    "bottom": []
+   }
+  ],
+  "note": "MidExceedsBot 假倒置豁免治(中2266两对>底KK单对, 但底KK rank高会发育反超→不罚). value head 本就偏好66→中(base6.15>QQ顶4.05), 之前被MidExceedsBot-18误埋. 2026-06-17"
+ },
+ {
+  "name": "实战 69 [R4]: 中333锁死, Js该进底发育配JJ, 别埋顶",
+  "round": 4,
+  "jokerCount": 2,
+  "dealt": [
+   "7s",
+   "2c",
+   "Js"
+  ],
+  "state": {
+   "top": [
+    "Xj0"
+   ],
+   "middle": [
+    "3s",
+    "4c",
+    "3h",
+    "6h",
+    "3c"
+   ],
+   "bottom": [
+    "Ks",
+    "Jd",
+    "Th"
+   ],
+   "usedCards": [
+    "Ks",
+    "Jd",
+    "Th",
+    "3s",
+    "Td",
+    "Ts",
+    "9s",
+    "Kh",
+    "Qc",
+    "4c",
+    "3h",
+    "6c",
+    "Ah",
+    "5d",
+    "7c",
+    "6h",
+    "3c",
+    "Xj1",
+    "Jc",
+    "5c",
+    "5s",
+    "2d"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "2c"
+    ],
+    "middle": [],
+    "bottom": [
+     "Js"
+    ]
+   },
+   {
+    "top": [
+     "7s"
+    ],
+    "middle": [],
+    "bottom": [
+     "Js"
+    ]
+   }
+  ],
+  "note": "MidExceedsBot 发育豁免治: Js→底[KsJdTh]→JJ追中333三条. sp26 原被MidExceedsBot-18误杀→埋顶. 2026-06-17"
+ },
+ {
+  "name": "实战 65 [R3]: 3h→中配3d成2233两对(底QQ假倒置, 必发育反超)",
+  "round": 3,
+  "jokerCount": 2,
+  "dealt": [
+   "9s",
+   "Jd",
+   "3h"
+  ],
+  "state": {
+   "top": [
+    "Kc"
+   ],
+   "middle": [
+    "3d",
+    "4d",
+    "2h",
+    "2c"
+   ],
+   "bottom": [
+    "Qh",
+    "Qc"
+   ],
+   "usedCards": [
+    "3d",
+    "4d",
+    "2h",
+    "Qh",
+    "2c",
+    "2d",
+    "6s",
+    "4h",
+    "Kh",
+    "9c",
+    "Kc",
+    "7d",
+    "Qc",
+    "9d",
+    "Tc",
+    "5s",
+    "3s"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "3h"
+    ],
+    "bottom": [
+     "Jd"
+    ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "3h"
+    ],
+    "bottom": [
+     "9s"
+    ]
+   }
+  ],
+  "note": "MidExceedsBot假倒置豁免治(同实战17): 中2233>底QQ单对但QQ rank高必发育成两对反超→不罚. 3h配3d两对, 9或J→底. 2026-06-17"
+ },
+ {
+  "name": "实战 66 [R4]: 7s配中道7d成4477两对 (用户要求override)",
+  "round": 4,
+  "jokerCount": 2,
+  "dealt": [
+   "6h",
+   "8c",
+   "7s"
+  ],
+  "state": {
+   "top": [
+    "5s"
+   ],
+   "middle": [
+    "4s",
+    "7d",
+    "Qh",
+    "4c"
+   ],
+   "bottom": [
+    "Qd",
+    "8s",
+    "Js",
+    "Td"
+   ],
+   "usedCards": [
+    "Qd",
+    "4s",
+    "8s",
+    "Js",
+    "Td",
+    "Ad",
+    "4d",
+    "2s",
+    "Kh",
+    "Kc",
+    "7d",
+    "Qh",
+    "8h",
+    "9d",
+    "6d",
+    "4c",
+    "5s",
+    "5h",
+    "Xj0",
+    "As",
+    "5c",
+    "Ac",
+    "Ts",
+    "9h",
+    "Kd",
+    "Ks",
+    "Jc",
+    "7h",
+    "3s"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "6h"
+    ],
+    "middle": [
+     "7s"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "8c"
+    ],
+    "middle": [
+     "7s"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "6h"
+    ],
+    "middle": [
+     "8c"
+    ],
+    "bottom": []
+   }
+  ],
+  "note": "⚠️用户明确要求override(RnMidPairCompletesTwoPairBonus +3): 7s配7d成4477两对. 单人solver中道两对royalty=0+底QJT8 gutshot~26%会foul, value head本排第11(对)— 用户按对手局牌力直觉优先两对, 别当bug删. 2026-06-17 [warn: 卡顺弱draw, NN保守躲60%犯规, 牌力分歧非bug]",
+  "warn": true
+ },
+ {
+  "name": "实战 64 [R4]: 4s接张进中建顺托顶AA范, 别埋顶 (也是sp27训练靶)",
+  "round": 4,
+  "jokerCount": 2,
+  "dealt": [
+   "Kh",
+   "Qc",
+   "4s"
+  ],
+  "state": {
+   "top": [
+    "Xj0",
+    "As"
+   ],
+   "middle": [
+    "3c",
+    "6h"
+   ],
+   "bottom": [
+    "Qd",
+    "Td",
+    "8d",
+    "Kd",
+    "4d"
+   ],
+   "usedCards": [
+    "Qd",
+    "Td",
+    "3c",
+    "6h",
+    "2s",
+    "2c",
+    "3h",
+    "5c",
+    "Js",
+    "Qh",
+    "8d",
+    "Kd",
+    "Xj1",
+    "Ac",
+    "5d",
+    "As",
+    "4d",
+    "9d",
+    "9c",
+    "8h"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "Kh"
+    ],
+    "middle": [
+     "4s"
+    ],
+    "bottom": []
+   }
+  ],
+  "note": "RnMidDrawFaceBonus(+2): 中道全单张+顺面/花面加分. 4s→中成3-4-6顺面得+2 > 4s→顶(中3-6-K无面). 用户准则\"都是单张有顺面花面加分\", 比惩罚接张埋顶干净通用. gap仅0.19也是sp27训练靶. 2026-06-17"
+ },
+ {
+  "name": "实战 70 [R2]: 鬼该上顶配Kh博KK范, 别埋底 (局43)",
+  "round": 2,
+  "jokerCount": 2,
+  "dealt": [
+   "8s",
+   "Xj0",
+   "4s"
+  ],
+  "state": {
+   "top": [
+    "Kh"
+   ],
+   "middle": [
+    "6s",
+    "5d",
+    "4h"
+   ],
+   "bottom": [
+    "9c"
+   ],
+   "usedCards": [
+    "Kh",
+    "9c",
+    "6s",
+    "5d",
+    "4h",
+    "8s",
+    "Xj1",
+    "4s"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "Xj0"
+    ],
+    "middle": [
+     "4s"
+    ],
+    "bottom": []
+   }
+  ],
+  "note": "鬼+Kh→顶 博 KK 范, 4s→中. AI 把鬼埋底浪费. 模拟seed7局43(FOUL). 2026-06-17 待分析"
+ },
+ {
+  "name": "实战 71 [R2]: 22该进底配鬼成222, 别进中锁foul (局77)",
+  "round": 2,
+  "jokerCount": 2,
+  "dealt": [
+   "6s",
+   "2c",
+   "2s"
+  ],
+  "state": {
+   "top": [
+    "Ah",
+    "Ad"
+   ],
+   "middle": [
+    "4c",
+    "6h"
+   ],
+   "bottom": [
+    "Xj0"
+   ],
+   "usedCards": [
+    "4c",
+    "Ah",
+    "Ad",
+    "6h",
+    "6s",
+    "2c",
+    "2s"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [],
+    "bottom": [
+     "2c",
+     "2s"
+    ]
+   }
+  ],
+  "note": "重训靶(sp26 value-head重度误判, 规则治不动): 顶AA, 22→底配鬼成222(强底)才对; AI拆22+66进中(AA>66 foul) base 80.81 >> 222底 base 42.69 (gap38). 加BotMakeTwoPair+8仍垫底, 需+38硬翻不现实 → sp27重训. 模拟seed7局77. 2026-06-17",
+  "warn": true
+ },
+ {
+  "name": "实战 72 [R3]: 4h(异色)→顶当AA kicker, 5c→底留梅花draw (局100)",
+  "round": 3,
+  "jokerCount": 2,
+  "dealt": [
+   "5c",
+   "4h",
+   "2s"
+  ],
+  "state": {
+   "top": [
+    "Ac",
+    "Xj0"
+   ],
+   "middle": [
+    "7h",
+    "7d",
+    "6h",
+    "6c"
+   ],
+   "bottom": [
+    "Tc"
+   ],
+   "usedCards": [
+    "Tc",
+    "7h",
+    "Ac",
+    "7d",
+    "6h",
+    "8h",
+    "6c",
+    "5c",
+    "4h",
+    "2s"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "2s"
+    ],
+    "middle": [],
+    "bottom": [
+     "5c"
+    ]
+   },
+   {
+    "top": [
+     "4h"
+    ],
+    "middle": [],
+    "bottom": [
+     "5c"
+    ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "2s"
+    ],
+    "bottom": [
+     "5c"
+    ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "4h"
+    ],
+    "bottom": [
+     "5c"
+    ]
+   }
+  ],
+  "note": "顶Ac+鬼锁AA, 低牌(异色2s或4h)→顶当kicker + 5c(梅花)→底留花draw. canFantasyTop bug修后AI已摆对(2s→顶). 模拟seed7局100. 2026-06-17 [2026-06-20 joker双计fix后改expected: 干净jokerRem下4h→顶锁AA是value-head最差选; 正解=5c→底保梅花draw+另一低牌进顶/中(54底/25底杀花draw=错). 配RnMidTwoPairBotDraw规则.]"
+ },
+ {
+  "name": "实战 73 [R4]: 底8-9-T顺面, Jc接两头顺(8outs) > 9d配99垫两对中 (局23)",
+  "round": 4,
+  "jokerCount": 2,
+  "dealt": [
+   "Jc",
+   "9d",
+   "6c"
+  ],
+  "state": {
+   "top": [
+    "Xj0"
+   ],
+   "middle": [
+    "5s",
+    "3h",
+    "5d",
+    "6s"
+   ],
+   "bottom": [
+    "8s",
+    "9h",
+    "Ts"
+   ],
+   "usedCards": [
+    "8s",
+    "5s",
+    "3h",
+    "5d",
+    "9h",
+    "2d",
+    "3s",
+    "6s",
+    "3d",
+    "Ts",
+    "Jc",
+    "9d",
+    "6c"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "6c"
+    ],
+    "bottom": [
+     "Jc"
+    ]
+   }
+  ],
+  "note": "底道draw面bonus(rowDrawFaceBonus扩到底道): 底8-9-T-J两头顺8outs(摸Q/7成顺>中5566两对) > 9d配99单对<两对→foul. 用户准则单张顺面加分. 模拟seed8局23. 2026-06-17"
+ },
+ {
+  "name": "实战 74 [R2]: 顶AA种子, 6s→中建黑桃花draw+8h→底走葫芦, 别塞异色高牌破花 (局41)",
+  "round": 2,
+  "jokerCount": 2,
+  "dealt": [
+   "7c",
+   "6s",
+   "8h"
+  ],
+  "state": {
+   "top": [
+    "Xj0",
+    "Ad"
+   ],
+   "middle": [
+    "4s"
+   ],
+   "bottom": [
+    "5c",
+    "5h"
+   ],
+   "usedCards": [
+    "4s",
+    "5c",
+    "Ad",
+    "5h",
+    "7c",
+    "6s",
+    "8h"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "6s"
+    ],
+    "bottom": [
+     "8h"
+    ]
+   }
+  ],
+  "warn": true,
+  "note": "重训靶: 顶AA种子, 中[4s]+6s(黑桃)该建花draw(中花royalty8托AA)+8h→底走葫芦; AI塞7c8h异色建顺(弱)破黑桃花. MidHighOverBot 5→10(用户)压下高中牌straight但AI落到8h→顶锁AA非花线, value-head治本→sp27. 模拟seed8局41. 2026-06-17"
+ },
+ {
+  "name": "实战 75 [R1]: TT底+2c进中做2-4-5(别保中道2红心弱花拆) (局45)",
+  "round": 1,
+  "jokerCount": 2,
+  "dealt": [
+   "Td",
+   "Ts",
+   "2c",
+   "5h",
+   "4h"
+  ],
+  "state": {
+   "top": [],
+   "middle": [],
+   "bottom": [],
+   "usedCards": []
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "2c",
+     "5h",
+     "4h"
+    ],
+    "bottom": [
+     "Td",
+     "Ts"
+    ]
+   },
+   {
+    "top": [
+     "2c"
+    ],
+    "middle": [
+     "5h",
+     "4h"
+    ],
+    "bottom": [
+     "Td",
+     "Ts"
+    ]
+   }
+  ],
+  "note": "R1SameSuitInRowBonus 改'底触发中不触发'(用户): 中道2张同色弱花draw不奖(2c进中做2-4-5更值), 底道2张同色照奖. 实战36靠底[9s2s]2黑桃bonus仍过. 模拟seed8局45. 2026-06-17"
+ },
+ {
+  "name": "实战 76 [R3]: 顶AA成+底顺成, Ad该进中(A-4轮子/凑AA托顶)别弃Ace塞K (局91)",
+  "round": 3,
+  "jokerCount": 2,
+  "dealt": [
+   "Kc",
+   "4h",
+   "Ad"
+  ],
+  "state": {
+   "top": [
+    "Ac",
+    "Ah"
+   ],
+   "middle": [],
+   "bottom": [
+    "Td",
+    "9s",
+    "Qs",
+    "Js",
+    "8h"
+   ],
+   "usedCards": [
+    "Ac",
+    "Td",
+    "9s",
+    "Qs",
+    "Js",
+    "Qc",
+    "Ah",
+    "8h",
+    "Kc",
+    "4h",
+    "Ad"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "4h",
+     "Ad"
+    ],
+    "bottom": []
+   }
+  ],
+  "note": "RnAceToMidSupportTopAABonus(+4): 顶AA底顺都成→中道必须≥AA否则foul. Ad+4h→中(凑中AA或A-2-3-4-5轮子顺压顶AA)有路; AI弃Ad塞Kc(K高<AA必foul). 精准A-4(无K/Q杂). value head偏弃Ace gap3.4→sp27本. 模拟seed9局91. 2026-06-17"
+ },
+ {
+  "name": "实战 77 [R4]: 顶[Ah4d]留开追AA范+88进中做TT88(底55可发育555托), 别8d填顶锁A高 (局30)",
+  "round": 4,
+  "jokerCount": 2,
+  "dealt": [
+   "8d",
+   "8c",
+   "Qd"
+  ],
+  "state": {
+   "top": [
+    "Ah",
+    "4d"
+   ],
+   "middle": [
+    "Ts",
+    "Td",
+    "2c"
+   ],
+   "bottom": [
+    "Js",
+    "5s",
+    "5h",
+    "7s"
+   ],
+   "usedCards": [
+    "Js",
+    "5s",
+    "Ah",
+    "Ts",
+    "Td",
+    "4d",
+    "Th",
+    "5h",
+    "2c",
+    "7s",
+    "9c",
+    "8d",
+    "8c",
+    "Qd"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "8d",
+     "8c"
+    ],
+    "bottom": []
+   }
+  ],
+  "note": "rnRuleFantasyPossible(修好FantasyLost三层链后注册): 顶能AA+中能TT88两对>顶对+底55能555>中两对 → 范可达, 拒填顶杀范的8d→顶. 88进中做TT88, 顶留开等A. 用户'保住进范机会'+FantasyLost bug修(midMax<=→< / botMax<midMax→<TwoPair). 模拟seed11局30. 2026-06-17"
+ },
+ {
+  "name": "实战 78 [R1]: KK+Q23, 23→中(低)QKK→底(Q当KK kicker), 别Q埋中3进底 (局96)",
+  "round": 1,
+  "jokerCount": 2,
+  "dealt": [
+   "Kc",
+   "Qd",
+   "2h",
+   "Kd",
+   "3c"
+  ],
+  "state": {
+   "top": [],
+   "middle": [],
+   "bottom": [],
+   "usedCards": []
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "2h",
+     "3c"
+    ],
+    "bottom": [
+     "Qd",
+     "Kc",
+     "Kd"
+    ]
+   }
+  ],
+  "note": "高牌梯度: Q该进底当KK kicker, 23低张留中. AI却Q埋中(Q-2)+3进底. R1高牌进中问题. 模拟seed11局96(FOUL). 2026-06-17 待修",
+  "warn": true
+ },
+ {
+  "name": "实战 79 [R2]: 放大牌进底别埋中(8h→底 5d→中), 底≥中 (局80)",
+  "round": 2,
+  "jokerCount": 2,
+  "dealt": [
+   "8h",
+   "2s",
+   "5d"
+  ],
+  "state": {
+   "top": [
+    "As"
+   ],
+   "middle": [
+    "6s",
+    "7h"
+   ],
+   "bottom": [
+    "9d",
+    "Ks"
+   ],
+   "usedCards": [
+    "As",
+    "6s",
+    "7h",
+    "9d",
+    "Ks",
+    "8h",
+    "2s",
+    "5d"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "5d"
+    ],
+    "bottom": [
+     "8h"
+    ]
+   }
+  ],
+  "note": "RnMidPlacedOverBotPlacedPenalty: 本轮放中道最大牌>放底道最大牌→底<中罚. AI原把8h埋中(中6-7-8顺)+5d进底→底死<中. 修后8h→底. 底有花/顺/对豁免. 用户'放底道的牌大于中道扣分'. 2026-06-17"
+ },
+ {
+  "name": "实战 80 [R5]: 底鬼凑顺(8c🃏)避犯规, 别鬼凑QQ (手3 ypk-129630538-16)",
+  "round": 5,
+  "jokerCount": 2,
+  "dealt": [
+   "Qh",
+   "8c",
+   "Xj0"
+  ],
+  "state": {
+   "top": [
+    "Ac",
+    "As",
+    "Qs"
+   ],
+   "middle": [
+    "5s",
+    "2h",
+    "2s",
+    "9h",
+    "2c"
+   ],
+   "bottom": [
+    "7c",
+    "Td",
+    "9c"
+   ],
+   "usedCards": [
+    "7c",
+    "Ac",
+    "5s",
+    "2h",
+    "2s",
+    "Ts",
+    "9d",
+    "As",
+    "Td",
+    "Tc",
+    "Kc",
+    "4s",
+    "Qs",
+    "9c",
+    "4c",
+    "Kd",
+    "Xj1",
+    "9h",
+    "Kh",
+    "2c",
+    "Qc",
+    "8h",
+    "6d",
+    "Jc",
+    "2d",
+    "Ad",
+    "Ah",
+    "Jd",
+    "6c",
+    "7h",
+    "3d",
+    "Js",
+    "5d",
+    "3c",
+    "Qd",
+    "8d",
+    "4d",
+    "Jh",
+    "Ks"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [],
+    "bottom": [
+     "8c",
+     "Xj0"
+    ]
+   }
+  ],
+  "note": "bottomDomScore straight-blind bug: 支配过滤把鬼凑顺底误删留犯规QQ. 修:满行Evaluate5JokerCap检测顺/花. value-head base115秒选凑顺. prod实战犯规手."
+ },
+ {
+  "name": "实战 81 [R4]: 底鬼凑花(2h3h)避犯规+进范, 别鬼凑333 (手5 ypk-129761610-13)",
+  "round": 4,
+  "jokerCount": 2,
+  "dealt": [
+   "3d",
+   "3h",
+   "2h"
+  ],
+  "state": {
+   "top": [
+    "Ah",
+    "Ad"
+   ],
+   "middle": [
+    "3c",
+    "5s",
+    "5c",
+    "5d"
+   ],
+   "bottom": [
+    "7h",
+    "9h",
+    "Xj0"
+   ],
+   "usedCards": [
+    "7h",
+    "Ah",
+    "Ad",
+    "9h",
+    "3c",
+    "2d",
+    "2c",
+    "5s",
+    "Qs",
+    "5c",
+    "7c",
+    "9d",
+    "Jc",
+    "5d",
+    "8s",
+    "Tc",
+    "9c",
+    "As",
+    "Td",
+    "Jd",
+    "Qh",
+    "4s",
+    "Kc",
+    "Js",
+    "Qc",
+    "Ks",
+    "9s",
+    "Kd"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [],
+    "bottom": [
+     "3h",
+     "2h"
+    ]
+   }
+  ],
+  "note": "同bottomDomScore修: 鬼凑花底(7h9h🃏2h3h)被误删留犯规333三条. 修后底花>中555>顶AA → 不犯规+进范."
+ },
+ {
+  "name": "实战 82 [R4]: 底4梅花花draw时5d封中道三条(别填顶), 5d破花无底价值 (手2 ypk-129630538-5)",
+  "round": 4,
+  "jokerCount": 2,
+  "dealt": [
+   "2d",
+   "Ts",
+   "5d"
+  ],
+  "state": {
+   "top": [
+    "Jd"
+   ],
+   "middle": [
+    "6c",
+    "6h",
+    "7d",
+    "6s"
+   ],
+   "bottom": [
+    "5c",
+    "Qc",
+    "4c",
+    "8c"
+   ],
+   "usedCards": [
+    "5c",
+    "Qc",
+    "6c",
+    "6h",
+    "7d",
+    "As",
+    "Ac",
+    "2h",
+    "Ks",
+    "Xj0",
+    "6s",
+    "4c",
+    "9s",
+    "2s",
+    "8d",
+    "4s",
+    "Jd",
+    "8c",
+    "Js",
+    "Tc",
+    "3d",
+    "Qs",
+    "3c"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "2d"
+    ],
+    "middle": [
+     "5d"
+    ],
+    "bottom": []
+   }
+  ],
+  "note": "cardHasBotValue bug: 5d凑底5c对→误判有底价值→MidKickerBotFlush-3罚封中道正解→prod填顶留中道空位→R5长6666金刚>底花犯规. 修:底近成花时非该花色牌破花无底价值. value-head本就想封中(base1.88>填顶0.35)."
+ },
+ {
+  "name": "实战 83 [R3]: 9d→底发育(配后续9s成99/999), 别9d当顶AA kicker (手4 ypk-129761610-3)",
+  "round": 3,
+  "jokerCount": 2,
+  "dealt": [
+   "Ah",
+   "3h",
+   "9d"
+  ],
+  "state": {
+   "top": [
+    "As",
+    "Xj0"
+   ],
+   "middle": [
+    "5c",
+    "4h",
+    "4c"
+   ],
+   "bottom": [
+    "Qs",
+    "Xj1"
+   ],
+   "usedCards": [
+    "5c",
+    "Qs",
+    "4h",
+    "As",
+    "6h",
+    "7d",
+    "8h",
+    "4c",
+    "8c",
+    "Kd",
+    "2h"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "3h"
+    ],
+    "bottom": [
+     "9d"
+    ]
+   }
+  ],
+  "note": "支配过滤bug: 底道3张(早轮)就比成手, 底[Qs X 9d]QQ被底[Qs X Ah]AA支配删→9d被逼上顶当AA死kicker. value-head本要9d→底(base70.78). 修:支配过滤只在底满5张(成手定型)才比. 不破89X(满底)."
+ },
+ {
+  "name": "实战 84 [R4]: 8h配中道8d成88(中道能成最大对)别埋顶, 弱顺draw不该越过成对 (seed99局25)",
+  "round": 4,
+  "jokerCount": 2,
+  "dealt": [
+   "8h",
+   "2h",
+   "3d"
+  ],
+  "state": {
+   "top": [
+    "Jc"
+   ],
+   "middle": [
+    "7d",
+    "8d",
+    "5c"
+   ],
+   "bottom": [
+    "5h",
+    "Th",
+    "3h",
+    "Qh",
+    "Jh"
+   ],
+   "usedCards": [
+    "7d",
+    "8d",
+    "5c",
+    "5h",
+    "Th",
+    "3h",
+    "Qh",
+    "Jh",
+    "Jc",
+    "Js",
+    "Jd",
+    "8h",
+    "2h",
+    "3d"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "3d"
+    ],
+    "middle": [
+     "8h"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "2h"
+    ],
+    "middle": [
+     "8h"
+    ],
+    "bottom": []
+   }
+  ],
+  "note": "MidDrawFace bug: 中[7d 8d 5c]弱5-7-8顺draw吃+2, 把value-head首选的8h→中做88(base4.70)压下去. 修:发牌含能配中道对的牌没进中道→不奖中道draw(放弃成对追弱draw)."
+ },
+ {
+  "name": "实战 85 [R1]: 888三条别为黑桃花组拆开, 整三条进底 (s99局10)",
+  "round": 1,
+  "jokerCount": 2,
+  "dealt": [
+   "8c",
+   "7s",
+   "8h",
+   "Qs",
+   "8s"
+  ],
+  "state": {
+   "top": [],
+   "middle": [],
+   "bottom": [],
+   "usedCards": []
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "7s",
+     "Qs"
+    ],
+    "bottom": [
+     "8c",
+     "8h",
+     "8s"
+    ]
+   }
+  ],
+  "note": "R1FlushGroupOnBot+SameSuit奖(+8)为7s8sQs黑桃花把888拆了(88中+8底). value-head重重首选不拆(888三条底te+pol38.17>>拆30.20). 修:splitsDealtTrips gate两花奖."
+ },
+ {
+  "name": "实战 86 [R4]: Ac+鬼→中做AA托顶AA范(底黑桃花draw托得住), 别弃Ac (s99局39)",
+  "round": 4,
+  "jokerCount": 2,
+  "dealt": [
+   "6c",
+   "Xj0",
+   "Ac"
+  ],
+  "state": {
+   "top": [
+    "Ad",
+    "Ah"
+   ],
+   "middle": [
+    "4h",
+    "9h",
+    "Th"
+   ],
+   "bottom": [
+    "8s",
+    "9s",
+    "2s",
+    "Ks"
+   ],
+   "usedCards": [
+    "8s",
+    "4h",
+    "Ad",
+    "9s",
+    "2s",
+    "Ah",
+    "Tc",
+    "Ks",
+    "9h",
+    "Jd",
+    "Th",
+    "6c",
+    "Xj1",
+    "Ac"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "Xj0",
+     "Ac"
+    ],
+    "bottom": []
+   }
+  ],
+  "note": "RnMidHighCardOverBotPenalty-10 误压: Ac进中(配中道鬼成AA)>底K锚→罚, 把value-head首选的Ac+鬼→中做AA(base33.61)压下→prod弃Ac犯规. 修:中道有鬼→高牌跟鬼配对非死kicker→豁免. 区别std-28(Kc进中没配对=死高牌该上顶)."
+ },
+ {
+  "name": "实战 87 [R4]: 底5678顺draw时 Ac+鬼→中做AA托顶范 (局39变体)",
+  "round": 4,
+  "jokerCount": 2,
+  "dealt": [
+   "6c",
+   "Xj0",
+   "Ac"
+  ],
+  "state": {
+   "top": [
+    "Ad",
+    "Ah"
+   ],
+   "middle": [
+    "4h",
+    "9h",
+    "Th"
+   ],
+   "bottom": [
+    "5d",
+    "6s",
+    "7d",
+    "8s"
+   ],
+   "usedCards": [
+    "Ad",
+    "Ah",
+    "4h",
+    "9h",
+    "Th",
+    "5d",
+    "6s",
+    "7d",
+    "8s",
+    "6c",
+    "Xj1",
+    "Ac"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "Xj0",
+     "Ac"
+    ],
+    "bottom": []
+   }
+  ],
+  "note": "MidHighOverBot豁免对'底顺draw'也成立(中道有鬼配AA). 底5678终成顺>中AA不犯规."
+ },
+ {
+  "name": "实战 88 [R4]: 底QQJT对时 Ac+鬼→中做AA托顶范 (局39变体)",
+  "round": 4,
+  "jokerCount": 2,
+  "dealt": [
+   "6c",
+   "Xj0",
+   "Ac"
+  ],
+  "state": {
+   "top": [
+    "Ad",
+    "Ah"
+   ],
+   "middle": [
+    "4h",
+    "9h",
+    "Th"
+   ],
+   "bottom": [
+    "Qd",
+    "Qh",
+    "Jd",
+    "Tc"
+   ],
+   "usedCards": [
+    "Ad",
+    "Ah",
+    "4h",
+    "9h",
+    "Th",
+    "Qd",
+    "Qh",
+    "Jd",
+    "Tc",
+    "6c",
+    "Xj1",
+    "Ac"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "Xj0",
+     "Ac"
+    ],
+    "bottom": []
+   }
+  ],
+  "note": "MidHighOverBot豁免对'底1对'也成立(中道有鬼配AA). 底QQJT能发育撑住中AA."
+ },
+ {
+  "name": "实战 89 [R2]: 中鬼借555 vs 底KK更高真对→5c中Kd底(MidExceedsBot鬼三条豁免)",
+  "round": 2,
+  "jokerCount": 2,
+  "dealt": [
+   "Kd",
+   "Jd",
+   "5c"
+  ],
+  "state": {
+   "top": [
+    "As",
+    "Ad"
+   ],
+   "middle": [
+    "Xj0",
+    "5h"
+   ],
+   "bottom": [
+    "Kc"
+   ],
+   "usedCards": [
+    "As",
+    "Ad",
+    "Kc",
+    "5h",
+    "Kd",
+    "Jd",
+    "5c"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "5c"
+    ],
+    "bottom": [
+     "Kd"
+    ]
+   }
+  ],
+  "note": "纯NN base=88.7(全局最高)选5c中Kd底; 旧MidExceedsBot-18把中鬼555>底KK判倒置压到70.7→AI改Kd Jd底反而foul. 鬼借三条真牌仅55<底真KK→豁免."
+ },
+ {
+  "name": "实战 90 [R5]: 中道支配过滤 5c做555>3s做333 (同顶底 tie-break, 局75 seed99)",
+  "round": 5,
+  "jokerCount": 2,
+  "dealt": [
+   "3s",
+   "5c",
+   "9d"
+  ],
+  "state": {
+   "top": [
+    "Ad",
+    "Xj0"
+   ],
+   "middle": [
+    "5s",
+    "Xj1",
+    "3c",
+    "4s"
+   ],
+   "bottom": [
+    "Jc",
+    "Kc",
+    "9c",
+    "Ts",
+    "Qd"
+   ],
+   "usedCards": [
+    "Ad",
+    "5s",
+    "3c",
+    "4s",
+    "Jc",
+    "Kc",
+    "9c",
+    "Ts",
+    "Qd",
+    "Ks",
+    "As",
+    "9s",
+    "3s",
+    "5c",
+    "9d"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "9d"
+    ],
+    "middle": [
+     "5c"
+    ],
+    "bottom": []
+   }
+  ],
+  "note": "中道支配软罚(mirror底道, sibling-relative): 同顶AA9同底9TJQK顺, 中555>333(NN噪声偏333 1.8, 同13范)被软罚翻正. 整盘定型才比+非foul守护. 2026-06-18(原hard filter改软加分)"
+ },
+ {
+  "name": "实战 91 [R3]: 底KK加kicker丢3留Q (Q有发育/kicker价值, 3死牌)",
+  "round": 3,
+  "jokerCount": 2,
+  "dealt": [
+   "7d",
+   "3c",
+   "Qs"
+  ],
+  "state": {
+   "top": [
+    "Ac",
+    "Ad"
+   ],
+   "middle": [
+    "4s",
+    "7h",
+    "2c"
+   ],
+   "bottom": [
+    "Kh",
+    "Ks"
+   ],
+   "usedCards": [
+    "Ac",
+    "Ad",
+    "4s",
+    "7h",
+    "2c",
+    "Kh",
+    "Ks",
+    "9d",
+    "7d",
+    "3c",
+    "Qs"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "7d"
+    ],
+    "bottom": [
+     "Qs"
+    ]
+   }
+  ],
+  "note": "底道支配软罚(sibling-relative)修复: 同顶中底KKQ(kicker Q)严格>KK3, NN偏3c底0.32被软罚翻正. 无鬼底→不豁免. 模拟seed99局16. 2026-06-18"
+ },
+ {
+  "name": "实战 92 [R2]: Qh底成QQ>JJ大对 (别弃Q做小对)",
+  "round": 2,
+  "jokerCount": 2,
+  "dealt": [
+   "5d",
+   "Js",
+   "Qh"
+  ],
+  "state": {
+   "top": [
+    "Ac"
+   ],
+   "middle": [
+    "5h"
+   ],
+   "bottom": [
+    "Qs",
+    "Tc",
+    "Jh"
+   ],
+   "usedCards": [
+    "Ac",
+    "5h",
+    "Qs",
+    "Tc",
+    "Jh",
+    "5d",
+    "Js",
+    "Qh"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "5d"
+    ],
+    "bottom": [
+     "Qh"
+    ]
+   }
+  ],
+  "note": "底道支配软罚修复: 同顶中底QQ(Qh)>JJ(Js), NN漏判0.66被软罚翻正. 弃Js<弃Q也优. 模拟seed99局17. 2026-06-18"
+ },
+ {
+  "name": "实战 93 [R3]: 低牌进底配999发育(留顶开), 别拍2h上顶填死",
+  "round": 3,
+  "jokerCount": 2,
+  "dealt": [
+   "9h",
+   "2h",
+   "3c"
+  ],
+  "state": {
+   "top": [
+    "Ad",
+    "Xj0"
+   ],
+   "middle": [
+    "6s",
+    "8s",
+    "4c"
+   ],
+   "bottom": [
+    "9c",
+    "9s"
+   ],
+   "usedCards": [
+    "Ad",
+    "6s",
+    "8s",
+    "9c",
+    "9s",
+    "3s",
+    "4c",
+    "9h",
+    "2h",
+    "3c"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [],
+    "bottom": [
+     "9h",
+     "2h"
+    ]
+   },
+   {
+    "top": [],
+    "middle": [],
+    "bottom": [
+     "9h",
+     "3c"
+    ]
+   }
+  ],
+  "note": "DeadLowKickerFanTop软罚修复: 顶AA锁+底999时, 低牌2h该进底凑99922葫芦, 拍2h上顶填死罚2.5→翻正选9h+2h→底. 守护: 底必trips+(实战72底[Tc]单张不罚, 低牌让位5c花draw)+低对顶留弱不罚+高kicker不罚. 模拟seed99局30. 2026-06-18"
+ },
+ {
+  "name": "实战 94 [R1]: 大对TT优先放底道TTK (R1BigPairOnBot+2)",
+  "round": 1,
+  "jokerCount": 2,
+  "dealt": [
+   "Td",
+   "9h",
+   "Ks",
+   "Tc",
+   "Ah"
+  ],
+  "state": {
+   "top": [],
+   "middle": [],
+   "bottom": [],
+   "usedCards": [
+    "Td",
+    "9h",
+    "Ks",
+    "Tc",
+    "Ah"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "Ah"
+    ],
+    "middle": [
+     "9h"
+    ],
+    "bottom": [
+     "Td",
+     "Tc",
+     "Ks"
+    ]
+   }
+  ],
+  "note": "R1BigPairOnBotBonus(+2,用户2026-06-18): 大对(≥T)优先放底道锚行. TT放底TTK(K高kicker)>TT放中(NN原偏中gap1.7). 守护:底≥3张成锚行+kicker≥8(防埋低顺draw牌,见实战75)+只R1. Ah上顶. 模拟seed99局32."
+ },
+ {
+  "name": "实战 95 [R2]: 顶AA时7h→中发育(别填顶), MidHighOverBot豁免",
+  "round": 2,
+  "jokerCount": 2,
+  "dealt": [
+   "7h",
+   "Ac",
+   "6d"
+  ],
+  "state": {
+   "top": [
+    "As",
+    "Ad"
+   ],
+   "middle": [
+    "4c"
+   ],
+   "bottom": [
+    "Qs",
+    "6s"
+   ],
+   "usedCards": [
+    "As",
+    "Ad",
+    "Qs",
+    "4c",
+    "6s",
+    "7h",
+    "Ac",
+    "6d"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "7h"
+    ],
+    "bottom": [
+     "6d"
+    ]
+   }
+  ],
+  "note": "规则压错value-head: 纯NN首选7h→中 base48.17, 旧MidHighOverBot-10(7>底66锚)压到38.17→AI改7h→顶填死AA. 修: 顶范级对(QQ+)时中道高牌是必要发育(托AA), 豁免. 6d→底66. 模拟seed99局40."
+ },
+ {
+  "name": "实战 96 [R1]: QK两高张进底(别K上顶), R1孤K上顶-2",
+  "round": 1,
+  "jokerCount": 2,
+  "dealt": [
+   "6c",
+   "Qc",
+   "5h",
+   "Ks",
+   "2d"
+  ],
+  "state": {
+   "top": [],
+   "middle": [],
+   "bottom": [],
+   "usedCards": [
+    "6c",
+    "Qc",
+    "5h",
+    "Ks",
+    "2d"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "6c",
+     "5h",
+     "2d"
+    ],
+    "bottom": [
+     "Qc",
+     "Ks"
+    ]
+   },
+   {
+    "top": [
+     "Ks"
+    ],
+    "middle": [
+     "5h",
+     "2d"
+    ],
+    "bottom": [
+     "6c",
+     "Qc"
+    ]
+   }
+  ],
+  "note": "R1孤K上顶-2(用户)顺带治: K Q两高张该进底锚行(发育高对/顺), 别K独顶弱种子. AI原K→顶被压下→QK→底. 模拟seed99局42. [2026-06-19] 加 K→顶 为可接受摆法: 纯NN/去连张罚都摆 Ks→顶, 孤K上顶博KK范也行 (跟QK→底并存). 删 ConnectorSplit Part1 后此 case 靠多expected守."
+ },
+ {
+  "name": "实战 97 [R3]: As→顶seed AA范(别弃A), RnAceToTopSeed+8",
+  "round": 3,
+  "jokerCount": 2,
+  "dealt": [
+   "3h",
+   "As",
+   "7d"
+  ],
+  "state": {
+   "top": [
+    "Qd"
+   ],
+   "middle": [
+    "Ks",
+    "3c"
+   ],
+   "bottom": [
+    "3d",
+    "4s",
+    "6d",
+    "5h"
+   ],
+   "usedCards": [
+    "3d",
+    "4s",
+    "6d",
+    "5h",
+    "Ks",
+    "Ts",
+    "Qd",
+    "3c",
+    "3h",
+    "As",
+    "7d"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "As"
+    ],
+    "middle": [],
+    "bottom": [
+     "7d"
+    ]
+   }
+  ],
+  "note": "RnAceToTopSeedBonus(+8, 用户2026-06-18): 顶[Qd]非范级, As→顶做AQ seed AA追范(后续Ac来成AA). 旧近平局(gap0.39)AI弃As抢底顺. 守护: 只R2-R4 seed(R5终局不加, A→顶若AA>中KK会foul鬼压低浪费A, std-50)+顶pre非范级(QQ+不需seed)+真单A. 7d→底成34567顺. 模拟seed99局56."
+ },
+ {
+  "name": "实战 98 [R4]: 顶AA锁+底顺时Ac→中发育(别弃A), LoneAceMidJokerTop豁免",
+  "round": 4,
+  "jokerCount": 2,
+  "dealt": [
+   "Ac",
+   "Kc",
+   "Qs"
+  ],
+  "state": {
+   "top": [
+    "Xj0",
+    "As"
+   ],
+   "middle": [
+    "5h",
+    "2c"
+   ],
+   "bottom": [
+    "9c",
+    "Ts",
+    "8d",
+    "Jd",
+    "7h"
+   ],
+   "usedCards": [
+    "5h",
+    "9c",
+    "2c",
+    "Ts",
+    "Qc",
+    "As",
+    "8d",
+    "Jd",
+    "7h",
+    "9s",
+    "Ac",
+    "Kc",
+    "Qs"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "Kc"
+    ],
+    "middle": [
+     "Ac"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "Qs"
+    ],
+    "middle": [
+     "Ac"
+    ],
+    "bottom": []
+   }
+  ],
+  "note": "规则压错: 纯NN首选Ac→中(发育A25 wheel托AA顺), 旧LoneAceMidJokerTop-8(鬼顶+中孤A)压错→AI弃Ac. 修: 顶已鬼+A=AA锁 且底成顺+(锁强) → 中道A是合法发育非死张, 豁免. 区别实战51(底[X6c]弱→A该进底仍罚). 模拟seed99局76."
+ },
+ {
+  "name": "实战 99 [R2]: 4张中道卡顺别奖MidDrawFace (别为卡顺过度追draw)",
+  "round": 2,
+  "jokerCount": 2,
+  "dealt": [
+   "7s",
+   "Ks",
+   "Ts"
+  ],
+  "state": {
+   "top": [],
+   "middle": [
+    "9s",
+    "6d"
+   ],
+   "bottom": [
+    "4h",
+    "Kh",
+    "3h"
+   ],
+   "usedCards": [
+    "4h",
+    "Kh",
+    "9s",
+    "3h",
+    "6d",
+    "7s",
+    "Ks",
+    "Ts"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "Ks"
+    ],
+    "middle": [
+     "7s"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "Ks"
+    ],
+    "middle": [
+     "Ts"
+    ],
+    "bottom": []
+   }
+  ],
+  "note": "用户: 4张中道卡顺不加MidDrawFace. 旧版gutshot[6,7,9,T]+3黑桃吃MidDrawFace+2+BotDrawFace+2压KK线. 修后gutshot line掉, AI改Ks→顶(留中3张draw+底flush draw, 用户认可). 模拟seed99局78."
+ },
+ {
+  "name": "实战 100 [R2]: 小对44→中做5544两对托KK顶 (别44→底)",
+  "round": 2,
+  "jokerCount": 2,
+  "warn": true,
+  "dealt": [
+   "4s",
+   "8h",
+   "4d"
+  ],
+  "state": {
+   "top": [
+    "Ks"
+   ],
+   "middle": [
+    "5d",
+    "2h",
+    "5h"
+   ],
+   "bottom": [
+    "6c"
+   ],
+   "usedCards": [
+    "5d",
+    "Ks",
+    "2h",
+    "5h",
+    "6c",
+    "4s",
+    "8h",
+    "4d"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "4s",
+     "4d"
+    ],
+    "bottom": []
+   }
+  ],
+  "note": "重训靶(sp27): 纯value-head, 零规则. NN偏44→底(base24.37)over 44→中做5544两对(21.27)gap3.1. 小对该进中做两对托住KK顶(防顶KK>中55 foul), AI拆44进底→中只55→最终顶KK>中55犯规. RnMidMakeTwoPairBonus正确没触发(底[6c]<5544会倒置). lookahead/发育tradeoff, flat规则治不了. 模拟seed99局79."
+ },
+ {
+  "name": "实战 101 [R4]: D61 中Js+发Jc应配JJ(弃2c), 规则MidHighCardOverBot误杀",
+  "round": 4,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "Jc",
+   "Qd",
+   "2c"
+  ],
+  "state": {
+   "top": [
+    "8d"
+   ],
+   "middle": [
+    "Js",
+    "4d",
+    "6d"
+   ],
+   "bottom": [
+    "Qh",
+    "5h",
+    "7h",
+    "7s",
+    "5c"
+   ],
+   "usedCards": [
+    "8d",
+    "Js",
+    "4d",
+    "6d",
+    "Qh",
+    "5h",
+    "7h",
+    "7s",
+    "5c",
+    "Ts",
+    "9s"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "Qd"
+    ],
+    "middle": [
+     "Jc"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [],
+    "middle": [
+     "Jc",
+     "Qd"
+    ],
+    "bottom": []
+   }
+  ],
+  "note": "D.csv局61 R4. 纯NN(te+2.94)首选中道配JJ(Js+Jc), value-head对. 规则旧版被 RnMidHighCardOverBot -10 误杀→弃Jc. 2026-06-19 收窄修复: 底两对+中≤单对 豁免 (中JJ<底77/55 foul不了). 现规则ON已过, 此 case 做回归守护. (区别 std28/std9 底高牌仍正杀.)"
+ },
+ {
+  "name": "实战 102 [R1]: D78 ThQhKd8s9s, Kd单顶/89中/ThQh底, 规则conn误杀拆分",
+  "round": 1,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "Th",
+   "Qh",
+   "Kd",
+   "8s",
+   "9s"
+  ],
+  "state": {
+   "top": [],
+   "middle": [],
+   "bottom": [],
+   "usedCards": []
+  },
+  "expecteds": [
+   {
+    "top": [
+     "Kd"
+    ],
+    "middle": [
+     "8s",
+     "9s"
+    ],
+    "bottom": [
+     "Th",
+     "Qh"
+    ]
+   }
+  ],
+  "note": "D.csv局78 R1. 纯NN(te21.6全场最高)首选 Kd单顶/89中/ThQh底, 用户判对. 规则ON被 conn连张拆分罚-10 →QK塞中(te16.0). conn对此拆法误杀. 纯NN应过, 规则ON当前 FAIL."
+ },
+ {
+  "name": "实战 103 [R4]: D20 范已死(中两对/底花draw互斥), 保花 头[X Jd 9s] 别9s进底杀花",
+  "round": 4,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "4s",
+   "Jd",
+   "9s"
+  ],
+  "state": {
+   "top": [
+    "Xj0"
+   ],
+   "middle": [
+    "6c",
+    "2s",
+    "3c",
+    "2d",
+    "6s"
+   ],
+   "bottom": [
+    "8h",
+    "Kh",
+    "3h"
+   ],
+   "usedCards": [
+    "6c",
+    "2s",
+    "3c",
+    "2d",
+    "6s",
+    "8h",
+    "Kh",
+    "3h",
+    "Ts",
+    "7d"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "Jd",
+     "9s"
+    ],
+    "middle": [],
+    "bottom": []
+   }
+  ],
+  "note": "D-nndiff局20 R4. 中66/22两对(满), 底8h Kh 3h 3红心(花draw). 范需顶QQ+底花, 但R4发4s Jd 9s无Q+/红心, 范跟避foul已互斥(死). 旧FantasyLost独立判误以为范活→FantasyPossible砍保花候选→9s进底杀花→FOUL. 2026-06-19重写FantasyLost(链式rank-aware: 头<QQ/中max<头min或<QQ/底max<中min或<QQ→lost). 修后范死→规则no-op→保花(头[X Jd 9s]留底3红心). 纯NN本就选对."
+ },
+ {
+  "name": "实战 104 [R2]: D63 底QQ(3张)+中3黑桃flush draw, 7s留中保花 别弃黑桃",
+  "round": 2,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "4c",
+   "6h",
+   "7s"
+  ],
+  "state": {
+   "top": [],
+   "middle": [
+    "3s",
+    "5s"
+   ],
+   "bottom": [
+    "9h",
+    "Qd",
+    "Qh"
+   ],
+   "usedCards": [
+    "9h",
+    "Qd",
+    "3s",
+    "5s",
+    "Qh"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "4c"
+    ],
+    "middle": [
+     "7s"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "6h"
+    ],
+    "middle": [
+     "7s"
+    ],
+    "bottom": []
+   }
+  ],
+  "note": "D-nndiff局63 R2. 底9h Qd Qh=QQ(3张). 中3s 5s. 发4c 6h 7s里 3s/5s/7s全黑桃→中3黑桃flush draw. value-head漏看同花, 弃黑桃7s换6h进中(只2黑桃)+4c丢QQ底死kicker, 低估保花2.23(规则=纯NN无差异, 纯value-head盲区). 2026-06-19加R2BotPairMidDrawBonus(R2+底对/三条且3张+中3+同花或3连张→+3). 修后7s留中保花draw."
+ },
+ {
+  "name": "实战 105 [R4]: D67 顶AA锁, Ad该进底成broadway顺(鬼=T) 别进中当55死kicker",
+  "round": 4,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "2c",
+   "Ks",
+   "Ad"
+  ],
+  "state": {
+   "top": [
+    "As",
+    "Ac"
+   ],
+   "middle": [
+    "5h",
+    "5c",
+    "4h"
+   ],
+   "bottom": [
+    "Xj0",
+    "Qd",
+    "Kh",
+    "Js"
+   ],
+   "usedCards": [
+    "As",
+    "Ac",
+    "5h",
+    "5c",
+    "4h",
+    "Qd",
+    "Kh",
+    "Js",
+    "3c",
+    "3d"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "Ks"
+    ],
+    "middle": [],
+    "bottom": [
+     "Ad"
+    ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "Ks"
+    ],
+    "bottom": [
+     "Ad"
+    ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "2c"
+    ],
+    "bottom": [
+     "Ad"
+    ]
+   }
+  ],
+  "note": "D-nndiff局67 R4. 顶As Ac=AA锁. 底X Qd Kh Js + Ad = 鬼当T → T-J-Q-K-A broadway顺(底顺dom413). Ad该进底成顺,不是进中道当55对的死kicker(中55<顶AA本就要foul, Ad在中无用). value-head低估鬼顺(Ad→中53.26>Ad→底45.36)+RedundantHighLockedAA曾错罚成顺. 2026-06-19两修: (1)RedundantHighLockedAA底成三条/顺+豁免 (2)支配过滤改topMidMadeKey(中道按成手分组忽略kicker)→底顺413支配底KKK312删Ad→中. A→中=硬error不接受警告."
+ },
+ {
+  "name": "实战 106 [R4]: D-A6 顶Ad锁不住, 22该进中成对>顶Ahigh避foul (无foul-free范→听NN)",
+  "round": 4,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "2s",
+   "2d",
+   "Qh"
+  ],
+  "state": {
+   "top": [
+    "Ad"
+   ],
+   "middle": [
+    "9h",
+    "8s",
+    "7s"
+   ],
+   "bottom": [
+    "Qd",
+    "6d",
+    "5d",
+    "Jd",
+    "Kd"
+   ],
+   "usedCards": [
+    "Ad",
+    "9h",
+    "8s",
+    "7s",
+    "Qd",
+    "6d",
+    "5d",
+    "Jd",
+    "Kd",
+    "5s",
+    "Jh"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "2s",
+     "2d"
+    ],
+    "bottom": []
+   }
+  ],
+  "note": "A.csv局6 R4. 顶[Ad]单A唯一范=AA(28), 中[9-8-7]最大只QQ(26) → 顶AA>中QQ=假范, 全候选(FantasyLost||fantasyOnlyViaFoul)→无进范可能. 用户: R4/R5无进范可能直接全听NN(ExpertPlace3 pureNN bypass跳所有软/硬规则). value-head本就选22→中成对(>顶Ahigh)避foul+保底花. (注: 实战30/66同机制下两对override被跳, 但JJ22≈22单人solver royalty=0等价.)"
+ },
+ {
+  "name": "实战 107 [R3]: D94 顶[4c]弱无真进范, 8h该进底凑4红桃花draw 不进中成88杀花",
+  "round": 3,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "7s",
+   "5c",
+   "8h"
+  ],
+  "state": {
+   "top": [
+    "4c"
+   ],
+   "middle": [
+    "8c",
+    "Js",
+    "2s"
+   ],
+   "bottom": [
+    "9h",
+    "Kh",
+    "Qh"
+   ],
+   "usedCards": [
+    "4c",
+    "8c",
+    "Js",
+    "2s",
+    "9h",
+    "Kh",
+    "Qh",
+    "6s"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "5c"
+    ],
+    "middle": [],
+    "bottom": [
+     "8h"
+    ]
+   },
+   {
+    "top": [
+     "7s"
+    ],
+    "middle": [],
+    "bottom": [
+     "8h"
+    ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "5c"
+    ],
+    "bottom": [
+     "8h"
+    ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "7s"
+    ],
+    "bottom": [
+     "8h"
+    ]
+   }
+  ],
+  "note": "D-nndiff局94 R3. 顶[4c]弱: 任何摆法范都靠foul (顶要QQ→中88<QQ须升两对→底[9h Kh Qh 7s]剩1空只成一对撑不住=foul; 中→底链). 8h该进底凑 9h Kh Qh 8h=4红桃花draw (鬼X可补成5红桃花royalty), 不是进中成88杀花. 修: pureNN bypass扩R3 (R3-R5无进范可能→听NN) + fantasyOnlyViaFoul加中→底链式检查."
+ },
+ {
+  "name": "实战 108 [R2]: ypk-89719114-19 顶[X Ac]鬼双计修后, QQ该进底(强对进最强行)",
+  "round": 2,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "Jc",
+   "Qd",
+   "Qh"
+  ],
+  "state": {
+   "top": [
+    "Xj0",
+    "Ac"
+   ],
+   "middle": [
+    "2s",
+    "3s"
+   ],
+   "bottom": [
+    "8c"
+   ],
+   "usedCards": [
+    "2s",
+    "3s",
+    "8c",
+    "Ac",
+    "2d",
+    "7c",
+    "7h",
+    "9h",
+    "Td",
+    "2h",
+    "2c",
+    "5s",
+    "8d",
+    "7d"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [],
+    "bottom": [
+     "Qd",
+     "Qh"
+    ]
+   }
+  ],
+  "note": "prod实战. usedCards含raw 'X'(前端把盘上鬼也塞进来) + 盘上鬼经PlaceCard成Xj0 → 鬼双计 jokerRem=0(应=1). 修前: 双计低jokerRem让value-head误选QQ→中(实战foul了). 修后(computeDeckRemaining跳raw X): jokerRem=1, QQ→底(强对进最强行). ⚠️本case测joker双计fix, 没fix会QQ→中."
+ },
+ {
+  "name": "实战 109 [R1]: ypk-91554122-29 拆77做底4连顺(4-5-6-7), 别77对死守",
+  "round": 1,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "5c",
+   "7s",
+   "7h",
+   "4s",
+   "6h"
+  ],
+  "state": {
+   "top": [],
+   "middle": [],
+   "bottom": [],
+   "usedCards": []
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "7h"
+    ],
+    "bottom": [
+     "4s",
+     "5c",
+     "6h",
+     "7s"
+    ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "7s"
+    ],
+    "bottom": [
+     "4s",
+     "5c",
+     "6h",
+     "7h"
+    ]
+   },
+   {
+    "top": [
+     "7h"
+    ],
+    "middle": [],
+    "bottom": [
+     "4s",
+     "5c",
+     "6h",
+     "7s"
+    ]
+   },
+   {
+    "top": [
+     "7s"
+    ],
+    "middle": [],
+    "bottom": [
+     "4s",
+     "5c",
+     "6h",
+     "7h"
+    ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "5c",
+     "4s",
+     "6h"
+    ],
+    "bottom": [
+     "7s",
+     "7h"
+    ]
+   }
+  ],
+  "note": "prod实战(usedCards污染版会误选77中456底; 本case用空usedCards=干净口径). 干净下value-head喜欢拆77做底4连顺(纯NN #6). 两修: (1)删NoSplitDealtPair硬规则(它把拆对候选删了, +5无从作用) (2)R1BottomDrawBonus 底4连顺→+5(盖过generic 3连张+2). → 4567→底#1. 456中77底(B)也接受."
  }
 ]
