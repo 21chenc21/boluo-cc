@@ -69,3 +69,13 @@ func TestMidExceedsBot_Fire_JokerTripsBotLowerPair(t *testing.T) {
 		t.Fatalf("中鬼借三条 vs 底更低对(22) 应罚18, got %v", got)
 	}
 }
+
+// 2026-06-22 ypk-84869450-8 R3: 中JJ+3h(成手仍JJ没变强) + 底66发育(高牌→对,未满) → 底能成KK66反超 → 豁免不罚
+func TestMidExceedsBot_MidKickerBotDevelop_Exempt(t *testing.T){
+	mk:=func(ss ...string)[]Card{var r []Card;for _,s:=range ss{c,_:=ParseCard(s);r=append(r,c)};return r}
+	st:=func(mid,bot []string)*GameState{g:=NewGameState(2);g.Round=3
+		for _,c:=range mk("Qc"){g.PlaceCard(c,RowTop)};for _,c:=range mk(mid...){g.PlaceCard(c,RowMiddle)};for _,c:=range mk(bot...){g.PlaceCard(c,RowBottom)};return g}
+	post:=st([]string{"Js","4c","Jd","3h"},[]string{"2d","6d","Kd","6h"})
+	pre:=st([]string{"Js","4c","Jd"},[]string{"2d","6d","Kd"})
+	if v:=RnMidExceedsBotPenalty(post,pre);v!=0{t.Fatalf("中JJ加kicker+底66发育 应豁免0, 得%v",v)}
+}

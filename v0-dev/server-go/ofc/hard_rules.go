@@ -660,7 +660,24 @@ func FantasyLost(state *GameState) bool {
 	}
 	midMin := madeHandCmp(state.Middle)
 	botMax := maxAchievableCmp(state.Bottom, 5-len(state.Bottom), rankRem, suitRem, jokerRem)
-	if botMax < midMin || botMax < qq {
+	// 2026-06-22 (用户 ypk-84869450-8 R3): 进范顶必≥QQ → 中也必≥QQ. 中已有对P(<Q)要≥QQ 只能升两对
+	//   (high=P, = HtTwoPair+P), 底要撑的是这个升级后的中, 不是中当前 midMin. 旧 ③ 用 midMin 漏判:
+	//   6622-play 底36 ≥ 中JJ对25 误判可进范, 实则中需升 JJ两对41 > 底36 倒置 = 真不可进范.
+	midFanNeed := midMin
+	if midFanNeed < qq {
+		midPairRank := -1
+		for pr := range midPairedRanks(state.Middle) {
+			if pr > midPairRank {
+				midPairRank = pr
+			}
+		}
+		if midPairRank >= 0 {
+			midFanNeed = int(HtTwoPair)*16 + midPairRank // 中有对 → 升两对(high=P)
+		} else {
+			midFanNeed = qq // 中无对 → 单对Q
+		}
+	}
+	if botMax < midFanNeed {
 		return true // ③
 	}
 	return false
@@ -729,9 +746,25 @@ func fantasyOnlyViaFoul(state *GameState) bool {
 			continue
 		}
 		// ③ 中→底链: 中为达 ≥pair-r 的最弱手牌, 底必须撑得住.
-		midNeed := pairCmp // 中能单对到r → 中≈pair-r, 底需≥pair-r
-		if !midCanSinglePairAtLeast(state, r) {
-			midNeed = int(HtTwoPair) * 16 // 中单对够不着r → 必须升两对, 底需≥两对
+		// 2026-06-22 (用户 ypk-84869450-8 R3): 中已有对 P 时, 再配任何对成"两对(high≥P)"非单对 →
+		//   底要撑 P-两对 不是单 pair-r. 旧 midCanSinglePairAtLeast 没看中已有对 → midNeed 低估漏判.
+		midCur := madeHandCmp(state.Middle)
+		midPairRank := -1
+		for pr := range midPairedRanks(state.Middle) {
+			if pr > midPairRank {
+				midPairRank = pr
+			}
+		}
+		var midNeed int
+		switch {
+		case midCur >= pairCmp:
+			midNeed = midCur // 中现成手已 ≥pair-r → 底需 ≥ 中现手
+		case midPairRank >= 0:
+			midNeed = int(HtTwoPair)*16 + midPairRank // 中有对P(<r) → 升两对(high≥P), 底需 ≥ P-两对
+		case midCanSinglePairAtLeast(state, r):
+			midNeed = pairCmp // 中无对, 能成单对r → 底需 ≥ pair-r
+		default:
+			midNeed = int(HtTwoPair) * 16 // 中无对且单对够不着r → 升最低两对
 		}
 		if botMax >= midNeed {
 			return false // foul-free 范在 (顶pair-r ≤ 中 ≤ 底)
@@ -2015,9 +2048,11 @@ func RnMidExceedsBotPenalty(postState, preState *GameState) float32 {
 		return 0
 	}
 	// 2026-06-17 实战18(ypk-111870282-18): 中333锁死, 本轮 Js→底[KsJdTh]→[KsJdTh Js]=JJ 真牌发育追赶中道.
-	//   中道本轮未动(锁死) + 底未满 + 底道 rank 类型本轮提升(高牌→对) → 是"底道发育"不是"中道膨胀超底", 不罚.
-	//   (vs KK→中 倒置: 底没变 preBot.Type==bot.Type, 仍罚. 推广实战1 鬼豁免到无鬼真牌发育.)
-	if len(postState.Bottom) < 5 && len(postState.Middle) == len(preState.Middle) &&
+	//   中道本轮**成手没变强**(锁死, 或只加 kicker) + 底未满 + 底道 rank 类型本轮提升(高牌→对) → 是"底道发育"
+	//   不是"中道膨胀超底", 不罚. (vs KK→中 倒置: 中道膨胀 madeHandCmp↑, 仍罚.)
+	//   2026-06-22 (用户 ypk-84869450-8 R3): 旧版要求中 len 不变, 漏了"中加 kicker 但成手没变"(中JJ+3h still JJ);
+	//     正解 3中6底(底66发育能成KK66反超JJ) 被这条 -18 误压(NN base 4.44 全局最高). 放宽成 madeHandCmp 不增.
+	if len(postState.Bottom) < 5 && madeHandCmp(postState.Middle) <= madeHandCmp(preState.Middle) &&
 		bot.Type > partialEvalTP(preState.Bottom).Type {
 		return 0
 	}

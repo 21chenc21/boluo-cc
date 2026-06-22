@@ -7211,5 +7211,145 @@
    }
   ],
   "note": "顶Jc真牌(无鬼). dealt无J配不成对 → NN自然留Jc开口(67/69中)是对的(留R5成JJ royalty6或JJJ trips范). 对比113(顶7c被7h配77就贪对): NN懂\"有现成对才拿\". JJJ≤中葫芦=有条件trips范种子(当前bonus不fire因JJJ>中当前666; 扩maxAchievable+鬼浪费守护则该+25). 2026-06-22"
+ },
+ {
+  "name": "实战 116 [R3] ypk-84869450-8: 顶Qc中JJ底66, 不可进范(JJ升两对>底66倒置), 6底+2/3中",
+  "round": 3,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "state": {
+   "top": [
+    "Qc"
+   ],
+   "middle": [
+    "Js",
+    "4c",
+    "Jd"
+   ],
+   "bottom": [
+    "2d",
+    "6d",
+    "Kd"
+   ],
+   "usedCards": [
+    "Kh",
+    "5h",
+    "4d",
+    "2c",
+    "Jc",
+    "Ah",
+    "5s",
+    "6c",
+    "8s",
+    "Qd",
+    "Th",
+    "Xj0",
+    "3c",
+    "8d",
+    "7d",
+    "6s",
+    "3d"
+   ]
+  },
+  "dealt": [
+   "2s",
+   "3h",
+   "6h"
+  ],
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "2s"
+    ],
+    "bottom": [
+     "6h"
+    ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "3h"
+    ],
+    "bottom": [
+     "6h"
+    ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "3h"
+    ],
+    "bottom": [
+     "2s"
+    ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "6h"
+    ],
+    "bottom": [
+     "2s"
+    ]
+   }
+  ],
+  "note": "prod ypk-84869450-8 R3. 顶Qc中JJ底66Kd=不可进范(FantasyLost③修 commit13715d0: 进范中需升JJ两对>底66两对倒置). 正确: 2/3→中+6→底, 或 3/6→中+2→底 (低张进中无害+另一低张进底发育, 别焊死弱两对). AI当前 2s→顶/3h→中/弃6h 已避开6622 foul死局但非最优 → warn. 2026-06-22",
+  "warn": true
+ },
+ {
+  "name": "实战 117 [R3] ypk-84869450-8变体(中3c): 3h配3c成JJ-33两对该进中",
+  "round": 3,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "state": {
+   "top": [
+    "Qc"
+   ],
+   "middle": [
+    "Js",
+    "3c",
+    "Jd"
+   ],
+   "bottom": [
+    "2d",
+    "6d",
+    "Kd"
+   ],
+   "usedCards": [
+    "Kh",
+    "5h",
+    "4d",
+    "2c",
+    "Jc",
+    "Ah",
+    "5s",
+    "6c",
+    "8s",
+    "Qd",
+    "Th",
+    "Xj0",
+    "8d",
+    "7d",
+    "6s",
+    "3d"
+   ]
+  },
+  "dealt": [
+   "2s",
+   "3h",
+   "6h"
+  ],
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "3h",
+     "6h"
+    ],
+    "bottom": []
+   }
+  ],
+  "note": "116变体: 中4c→3c. 3h配中3c成真JJ-33两对 → 3h+6h都进中做成手(弃2s), 底留2d6dKd 2空位(还能发育KK66撑范). 对比116(中4c无法成对→3中6底). 验证MidExceedsBot对\"底非对\"正确不罚(bot.Type<Pair→0). 用户2026-06-22确认正确."
  }
 ]

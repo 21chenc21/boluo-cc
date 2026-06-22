@@ -110,7 +110,8 @@ SCRIPT_VERSION="2026-06-17-purenn"
 #     - Mark cases 35/37/40/45 as warn (AI 选合理但不在 expecteds)
 #     - sp17 iter-1 r1 deployed 8002, bench: 59通过/4警告/0 真错.
 #     - DATA_VERSION → i147-sp18 (rollout policy 含 sp17 best, 数据 fresh).
-DATA_VERSION="i150-purenn"  # 2026-06-17 纯NN gen (DISABLE_HARD_RULES): rollout 真foul, 标签携真实代价. warm-start sp26. fresh dataset.
+DATA_VERSION="i161-purenn"  # 2026-06-22 sp28: 161-d (+死牌Z 154-156 +draw强度Z2 157-159 +顶trips种子Z3 160, jokerEffRank修, W组rescale). warm-start auto-pad新dim. fresh dataset.
+# 旧: i150-purenn (2026-06-17 纯NN gen DISABLE_HARD_RULES: rollout 真foul 标签携真实代价).
 # ====================================================================
 
 set -e
@@ -140,8 +141,9 @@ BENCH3_BIN="$BIN_DIR/bench-3metric"
 #    导致 "std /63 + gc /" 显示为空. 用后读 $BENCH_TOTAL 拿总分.
 bench_total_tc() {
     local ck="$1" o1 o2
-    o1=$(DISABLE_MCTS=1 "$BENCH_BIN" -ckpt "$ck" -cases cases/all-tests-expanded.json -workers 0 2>&1 | grep 结果 | tail -1)
-    o2=$(DISABLE_MCTS=1 "$BENCH_BIN" -ckpt "$ck" -cases cases/game-cases.json -workers 0 2>&1 | grep 结果 | tail -1)
+    # 2026-06-20 (用户): gate 改纯NN (DISABLE_HARD+SOFT, 含支配过滤) — 之前规则全开掩盖 value-head 没长进 (i154白训).
+    o1=$(DISABLE_MCTS=1 DISABLE_HARD_RULES=1 DISABLE_SOFT_RULES=1 "$BENCH_BIN" -ckpt "$ck" -cases cases/all-tests-expanded.json -workers 0 2>&1 | grep 结果 | tail -1)
+    o2=$(DISABLE_MCTS=1 DISABLE_HARD_RULES=1 DISABLE_SOFT_RULES=1 "$BENCH_BIN" -ckpt "$ck" -cases cases/game-cases.json -workers 0 2>&1 | grep 结果 | tail -1)
     BENCH_STD_LINE="$o1"; BENCH_GC_LINE="$o2"
     BENCH_TC_STD=$(echo "$o1" | grep -oE "[0-9]+通过" | head -1 | grep -oE "[0-9]+"); [ -z "$BENCH_TC_STD" ] && BENCH_TC_STD=0
     BENCH_TC_GC=$(echo "$o2" | grep -oE "[0-9]+通过" | head -1 | grep -oE "[0-9]+"); [ -z "$BENCH_TC_GC" ] && BENCH_TC_GC=0
@@ -155,7 +157,7 @@ litmus_ok() {
     local ck="$1" veto fails
     veto=$(python3 -c "import json,re;ns=[];[ns.append('实战 '+re.match(r'实战 (\\d+)',c['name']).group(1)+' ') for c in json.load(open('cases/game-cases.json')) if '一票否决' in c.get('note','') and re.match(r'实战 (\\d+)',c['name'])];print('|'.join(ns))" 2>/dev/null)
     [ -z "$veto" ] && { echo "OK"; return 0; }
-    fails=$(DISABLE_HARD_RULES=1 DISABLE_MCTS=1 "$BENCH_BIN" -ckpt "$ck" -cases cases/game-cases.json -workers 0 2>&1 | grep "✗" | grep -E "$veto")
+    fails=$(DISABLE_HARD_RULES=1 DISABLE_SOFT_RULES=1 DISABLE_MCTS=1 "$BENCH_BIN" -ckpt "$ck" -cases cases/game-cases.json -workers 0 2>&1 | grep "✗" | grep -E "$veto")
     if [ -n "$fails" ]; then echo "FAIL"; echo "$fails" >&2; return 1; fi
     echo "OK"; return 0
 }
@@ -287,10 +289,10 @@ for ((iter=1; iter<=ITERS; iter++)); do
 
     # Phase A: gen samples — SELF-PLAY: rollout policy = 当前 BEST_CKPT (动态)
     # 跟 distillation 区别: 这里 BEST_CKPT 每 iter 都换, NN 跟自己玩.
-    echo "[iter $iter] Phase A: gen $GAMES games (rollouts=100, indim 150, SELF-PLAY + exploration)..." | tee -a "$LOG"
+    echo "[iter $iter] Phase A: gen $GAMES games (rollouts=100, indim 161, SELF-PLAY + exploration)..." | tee -a "$LOG"
     GEN_ARGS=(-num-games "$GAMES" -jokers 2 -rollouts 100 -r1-cap 30
-              -phantom-opponents 2 -indim 150
-              -foul-cost 6 -fan-bonus-qq 20 -fan-bonus-kk 40 -fan-bonus-aa 120 -fan-bonus-trips 160
+              -phantom-opponents 2 -indim 161
+              -foul-cost 3 -fan-bonus-qq 10 -fan-bonus-kk 30 -fan-bonus-aa 100 -fan-bonus-trips 140
               -out-dir "$GEN_OUT")
     if [ -n "$BEST_CKPT" ] && [ -f "$BEST_CKPT" ]; then
         GEN_ARGS+=(-weights "$BEST_CKPT")
@@ -299,7 +301,8 @@ for ((iter=1; iter<=ITERS; iter++)); do
         echo "[iter $iter]   rollout policy = embed default (cold start)" | tee -a "$LOG"
     fi
     # 用 PIPESTATUS[0] 拿 gen 的真实退出码 (bash 3.2 pipefail + tee 不可靠, 见 sp7).
-    DISABLE_HARD_RULES=1 "$GEN_BIN" "${GEN_ARGS[@]}" 2>&1 | tee -a "$LOG" || true
+    # 2026-06-20 (用户): gen 加 DISABLE_SOFT_RULES=1 — 之前只关硬规则, 软bonus/penalty 还在影响 rollout 策略 → silver-label EV 带软规则偏置. 现 gen 全纯NN (硬+软+支配全关).
+    DISABLE_HARD_RULES=1 DISABLE_SOFT_RULES=1 "$GEN_BIN" "${GEN_ARGS[@]}" 2>&1 | tee -a "$LOG" || true
     GEN_EXIT=${PIPESTATUS[0]}
     if [ "$GEN_EXIT" -ne 0 ]; then
         echo "[iter $iter] FATAL: gen 失败 (exit=$GEN_EXIT)" | tee -a "$LOG"
@@ -314,12 +317,12 @@ for ((iter=1; iter<=ITERS; iter++)); do
     # Phase B: train (warm-start from best)
     echo "[iter $iter] Phase B: train V3..." | tee -a "$LOG"
     # sp11: warm-lr-mult 0.2 (warm 0.0002). 折中 sp9 0.1 vs sp10 0.3, 稳一点.
-    # foul-cost=6 保留 (用户设计: 追 fan 优先级 > 避 foul).
+    # sp28: foul-cost 6→3 (更敢追范), fan-bonus QQ10/KK30/AA100/trips140 (用户设计: 追 fan > 避 foul).
     TRAIN_ARGS=(-dataset-dir "$DATASET_ROOT" -dataset-keep-warm-start -hours 1 -round-min 30
-                -outdim 4 -h1 512 -h2 256 -h3 128 -indim 150
+                -outdim 4 -h1 512 -h2 256 -h3 128 -indim 161
                 -epochs 30 -lr 0.001 -warm-lr-mult 0.2 -y-recompute
-                -fan-bonus-qq 20 -fan-bonus-kk 40 -fan-bonus-aa 120 -fan-bonus-trips 160
-                -foul-cost 6 -fan-w 0.40 -foul-w 0.10 -policy-w 0.30
+                -fan-bonus-qq 10 -fan-bonus-kk 30 -fan-bonus-aa 100 -fan-bonus-trips 140
+                -foul-cost 3 -fan-w 0.40 -foul-w 0.10 -policy-w 0.30
                 -ckpt-dir "$TRAIN_OUT" -policy "v0-v3-sp-iter$iter")
     if [ -n "$BEST_CKPT" ] && [ -f "$BEST_CKPT" ]; then
         TRAIN_ARGS+=(-init-from-ckpt "$BEST_CKPT")
@@ -374,7 +377,7 @@ for ((iter=1; iter<=ITERS; iter++)); do
     if [ -n "$BEST_CKPT" ] && [ -f "$BEST_CKPT" ] && [ "$NEW_CKPT" != "$BEST_CKPT" ]; then
         echo "[iter $iter] 3-metric duel: new vs best, $DUEL_GAMES games same-hand..." | tee -a "$LOG"
         # || true 防 bench-3metric 任何非 0 退出码触发 set -e 杀脚本 (2026-05-19 fix)
-        DUEL_OUT=$("$BENCH3_BIN" -new "$NEW_CKPT" -best "$BEST_CKPT" -games $DUEL_GAMES -workers 0 2>&1 || true)
+        DUEL_OUT=$(DISABLE_HARD_RULES=1 DISABLE_SOFT_RULES=1 "$BENCH3_BIN" -new "$NEW_CKPT" -best "$BEST_CKPT" -games $DUEL_GAMES -workers 0 2>&1 || true)
         echo "$DUEL_OUT" | tee -a "$LOG"
         NEW_FAN=$(echo "$DUEL_OUT" | grep "^NEW_FAN=" | cut -d= -f2)
         BEST_FAN=$(echo "$DUEL_OUT" | grep "^BEST_FAN=" | cut -d= -f2)
@@ -414,10 +417,11 @@ for ((iter=1; iter<=ITERS; iter++)); do
         REASON="testcase/fantasy/score 均未严格优于 best"
     fi
 
-    # 纯NN gen litmus 硬门禁: 挂任一 veto(同花/两对/R1行序/顶范合法) → 阻止 promote
-    if [ "$SHOULD_PROMOTE" -eq 1 ] && [ "$(litmus_ok "$NEW_CKPT")" != "OK" ]; then
+    # 纯NN gen litmus 门禁: 2026-06-22 (用户) 放宽 — testcase↑ 就 promote, litmus veto 不阻止.
+    #   litmus 只卡"非 testcase↑"(fantasy/score-only stable 优化)的 promote, 防它们偷偷退 veto case.
+    if [ "$SHOULD_PROMOTE" -eq 1 ] && [ "$NEW_TC" -le "$BEST_TC" ] && [ "$(litmus_ok "$NEW_CKPT")" != "OK" ]; then
         SHOULD_PROMOTE=0
-        REASON="$REASON BUT litmus veto 挂 → 阻止 promote (见上 ✗)"
+        REASON="$REASON BUT litmus veto 挂 → 阻止 promote (非testcase↑, 见上 ✗)"
     fi
 
     if [ "$SHOULD_PROMOTE" -eq 1 ]; then
