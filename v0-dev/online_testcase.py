@@ -11,6 +11,9 @@ def normcard(c):
 def sk(cards):
     return ",".join(sorted(normcard(c) for c in (cards or [])))
 
+def rk(cards):  # rank-only (suitFree 用): 去花色, 鬼归一
+    return ",".join(sorted("X" if (c == "X" or c.startswith("X")) else c[:-1] for c in (cards or [])))
+
 def solve(case):
     rnd = case["round"]
     dealt = case["dealt"]
@@ -36,9 +39,10 @@ def solve(case):
 
 def match(layout, exps):
     for e in exps:
-        if (sk(layout.get("top")) == sk(e.get("top"))
-                and sk(layout.get("middle")) == sk(e.get("middle"))
-                and sk(layout.get("bottom")) == sk(e.get("bottom"))):
+        cmp = rk if e.get("suitFree") else sk  # 认 suitFree: 按 rank 比, 忽略花色
+        if (cmp(layout.get("top")) == cmp(e.get("top"))
+                and cmp(layout.get("middle")) == cmp(e.get("middle"))
+                and cmp(layout.get("bottom")) == cmp(e.get("bottom"))):
             return True
     return False
 

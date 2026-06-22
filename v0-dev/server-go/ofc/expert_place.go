@@ -551,6 +551,7 @@ func rnSoftScore(action *RoundNAction, dealt []Card, gs, state *GameState, trace
 	add("LoneSubQTop", -RnLoneSubQOnTopPenalty(gs, state))
 	add("RedundantHighLockedAA", -RnRedundantHighOnLockedAAPenalty(gs, state))
 	add("DeadLowKickerFanTop", -RnDeadLowKickerOnFanTopPenalty(gs, state))
+	add("R4TripsFanReach", RnR4TripsFantasyReachableBonus(gs, state))
 	add("AceToTopSeed", RnAceToTopSeedBonus(gs, state))
 	add("R2BotPairMidDraw", R2BotPairMidDrawBonus(gs, state))
 	add("MidKickerBotFlush", -RnMidKickerShouldBotFlushPenalty(action, gs, state))

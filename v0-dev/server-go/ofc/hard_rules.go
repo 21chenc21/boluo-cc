@@ -1769,6 +1769,89 @@ func RnDeadLowKickerOnFanTopPenalty(postState, preState *GameState) float32 {
 	return 4.0 // 2026-06-20: 2.5→4 (鬼jokerRem修干净后, 实战93 2h→顶base更高需更强罚)
 }
 
+// RnR4TripsFantasyReachableBonus — 正向版 (用户 2026-06-22, 实战110/48; 取代旧 RnLowCardOnLockedTop 罚版):
+//   R4 + 中道恰=三条(rank M) + 底>中(盘锁死) 时, 若顶 placement 后**仍能成 ≤M 的合法 trips 范**
+//   (顶范种子没被占死) → +25. 奖"留鬼/留低种子保合法trips范" 而非罚"占死".
+//   留鬼(110: 顶[鬼]+空位能配≤6低对成 trips≤6) → +25;
+//   3d种(48: 顶[鬼3]能成333≤6 合法范) → +25;
+//   7h占顶(110: 顶[鬼7h]只能成777>6 倒置 foul) → 0 (输给留鬼25分).
+func RnR4TripsFantasyReachableBonus(postState, preState *GameState) float32 {
+	if postState.Round != 4 {
+		return 0
+	}
+	midV := partialEvalTP(postState.Middle)
+	if midV.Type != TypeThreeOfAKind {
+		return 0 // 中道非恰三条 → 顶trips范语境不成立
+	}
+	if !HandExceeds5(partialEvalTP(postState.Bottom), midV) {
+		return 0 // 底未>中 (盘未锁)
+	}
+	var midRC [13]int
+	midJokers := 0
+	for _, c := range postState.Middle {
+		if c.IsJoker() {
+			midJokers++
+		} else {
+			midRC[int(c.Rank())]++
+		}
+	}
+	M := -1
+	for r := 12; r >= 0; r-- {
+		if midRC[r]+midJokers >= 3 {
+			M = r
+			break
+		}
+	}
+	if M < 0 {
+		return 0
+	}
+	var topRC [13]int
+	topJokers := 0
+	for _, c := range postState.Top {
+		if c.IsJoker() {
+			topJokers++
+		} else {
+			topRC[int(c.Rank())]++
+		}
+	}
+	slots := 3 - len(postState.Top)
+	rankRem, _, _ := computeDeckRemaining(postState)
+	// 顶成 trips RRR 要求所有真牌同 rank R (异rank真牌挡死单一trips); R≤M 才合法不倒置.
+	canReach := func(r int) bool {
+		if r > M {
+			return false
+		}
+		need := 3 - topRC[r] - topJokers
+		if need <= 0 {
+			return true // 已是 ≤M 的 trips
+		}
+		return slots >= need && rankRem[r] >= need
+	}
+	distinctReal := 0
+	theRank := -1
+	for r := 0; r < 13; r++ {
+		if topRC[r] > 0 {
+			distinctReal++
+			theRank = r
+		}
+	}
+	if distinctReal >= 2 {
+		return 0 // 顶 2+ 不同真牌 → 成不了单一 trips
+	}
+	if distinctReal == 1 {
+		if canReach(theRank) {
+			return 25
+		}
+		return 0
+	}
+	for r := 0; r <= M; r++ { // 顶全鬼/空: 任一 r≤M 可凑
+		if canReach(r) {
+			return 25
+		}
+	}
+	return 0
+}
+
 // RnLoneSubQOnTopPenalty — 太子专属 (2026-06-14, 实战28 ypk-185336138-28): 本轮起手往**空顶**放
 // 1 张 **≥中道最大真牌 且 <Q** 的牌, 而底道已成对+未满 → 罚 -2. 该牌在顶**零范路径 + foul险**:
 // ① 自配对 < QQ 不是对范; ② 升三条范又会犯规(需 mid ≥ 该三条, 弱中托不住);
@@ -2299,6 +2382,10 @@ func RnMidPlacedOverBotPlacedPenalty(postState, preState *GameState) float32 {
 		return 0 // 中底本轮没都放真牌 → 不比
 	}
 	if midMax > botMax {
+		// 2026-06-22 (用户): 中道该最大真牌若成对(含鬼 joker+A=AA) → 合理成对摆放非威胁, 豁免.
+		if midPairedRanks(postState.Middle)[midMax] {
+			return 0
+		}
 		return 2 // 本轮放中道的最大真牌 > 放底道的最大真牌 → 底<中
 	}
 	return 0
@@ -3441,6 +3528,33 @@ func isFourConsecutive(cs []Card) bool {
 // 2026-05-13 加 (跨行 gap=1 only)
 // 2026-05-15 扩到 gap≤4 + 加 mid>bot per-pair 罚
 // 2026-05-20 sp15: 跳过 lower rank<Rank6 + 罚值减 (8→5/3→2/5→3) — case 15 R1 误罚 3-4 split
+// midPairedRanks — 中道哪些真牌 rank 算"成对": ≥2 同rank真牌, 或 1真牌+鬼(鬼配最高真牌).
+// 2026-06-22 (用户): 中道成对(含鬼 joker+A=AA)是合理布局, 非被拆散的散连张 → 不算"中>底"威胁,
+//   CSP / MidPlacedOverBot 对该 rank 豁免不罚 (底可发育追上). 治 4条A手 R1 等.
+func midPairedRanks(midCards []Card) map[int]bool {
+	cnt := make(map[int]int)
+	jokers := 0
+	maxReal := -1
+	for _, c := range midCards {
+		if c.IsJoker() {
+			jokers++
+			continue
+		}
+		r := int(c.Rank())
+		cnt[r]++
+		if r > maxReal {
+			maxReal = r
+		}
+	}
+	res := make(map[int]bool)
+	for r, n := range cnt {
+		if n >= 2 || (jokers >= 1 && r == maxReal) {
+			res[r] = true
+		}
+	}
+	return res
+}
+
 func ConnectorSplitPenalty(p Placement, cards []Card) float32 {
 	if DisabledRules["ConnectorSplit"] {
 		return 0
@@ -3495,7 +3609,19 @@ func ConnectorSplitPenalty(p Placement, cards []Card) float32 {
 	if botStraightRun {
 		return penalty // 底顺 → 不按 raw rank 罚中>底
 	}
+	var midCards []Card
+	for i, c := range cards {
+		if p[i] == RowMiddle {
+			midCards = append(midCards, c)
+		}
+	}
+	midPaired := midPairedRanks(midCards)
 	for _, mr := range midRanks {
+		// 2026-06-22 (用户): 中道成对(含鬼 joker+A=AA)的 rank = 合理成对摆放, 非被拆散连张;
+		//   该牌"中>底"不算威胁 (底可发育追上). 治 4条A手 R1 (中AA vs 底孤3h 旧误罚6). 中道单张仍罚.
+		if midPaired[mr] {
+			continue
+		}
 		// 2026-06-14: mid>bot hierarchy 只在"真威胁"时罚, 不再每张两两比.
 		//   (a) 中牌 > 底道最强张(botMax) → 中道可能整体压过底道 (std21: 中9h>底7).
 		//   (b) 中牌 > 底道某"成对"的牌 → 威胁 made pair = 真 foul 险 (case26/std26: 中5>底33).

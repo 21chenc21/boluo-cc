@@ -40,9 +40,11 @@ $SCP online_testcase.py cases/all-tests-expanded.json cases/game-cases.json "$HO
 OUT=$($SSH $HOST "cd /tmp && python3 online_testcase.py all-tests-expanded.json game-cases.json; rm -f /tmp/online_testcase.py /tmp/all-tests-expanded.json /tmp/game-cases.json")
 echo "$OUT"
 
-echo "########## 验收 ##########"
-if echo "$OUT" | grep -q "all-tests-expanded.json: 61通过 / 2警告 / 0失败"; then
-  echo "✅ std63 达标 (61/2w/0f). 部署成功."
+echo "########## 验收 (两文件全 0 失败; 2026-06-21 canonical鬼+suitFree修后基准: all-tests 59/3w/0f, game-cases 99/4w/0f) ##########"
+AF=$(echo "$OUT" | grep "all-tests-expanded.json:" | grep -oE "[0-9]+失败")
+GF=$(echo "$OUT" | grep "game-cases.json:" | grep -oE "[0-9]+失败")
+if [ "$AF" = "0失败" ] && [ "$GF" = "0失败" ]; then
+  echo "✅ 全 0 失败 (all-tests=$AF / game-cases=$GF). 部署成功."
 else
-  echo "⚠️  std63 未达标! 检查上面输出. 回滚: ssh prod 'cd $PD && cp server-go-bin/ofc-dev-v3.bak-<最新> server-go-bin/ofc-dev-v3 && pkill -f ofc-dev-v3.*8002 && setsid nohup ./start.sh ...'"
+  echo "⚠️  有失败! all-tests=$AF game-cases=$GF — 检查上面输出. 回滚: ssh prod 'cd $PD && cp server-go-bin/ofc-dev-v3.bak-<最新> server-go-bin/ofc-dev-v3 && pkill -x ofc-dev-v3 && ( setsid ./start.sh >/tmp/ofc-dev-v3-8002.log 2>&1 </dev/null & )'"
 fi

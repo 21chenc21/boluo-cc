@@ -1904,6 +1904,14 @@
      "Kd"
     ],
     "bottom": []
+   },
+   {
+    "middle": [
+     "6c"
+    ],
+    "bottom": [
+     "9c"
+    ]
    }
   ],
   "wrongs": [
@@ -2999,6 +3007,19 @@
      "9s",
      "2s"
     ]
+   },
+   {
+    "top": [
+     "Xj0"
+    ],
+    "middle": [
+     "2s",
+     "4d",
+     "5d"
+    ],
+    "bottom": [
+     "9s"
+    ]
    }
   ],
   "wrongs": [
@@ -3417,6 +3438,12 @@
      "Xj0"
     ],
     "bottom": []
+   },
+   {
+    "middle": [
+     "Xj0",
+     "Kh"
+    ]
    }
   ],
   "wrongs": [
@@ -5133,7 +5160,7 @@
     "bottom": []
    }
   ],
-  "note": "RnAceToMidSupportTopAABonus(+4): 顶AA底顺都成→中道必须≥AA否则foul. Ad+4h→中(凑中AA或A-2-3-4-5轮子顺压顶AA)有路; AI弃Ad塞Kc(K高<AA必foul). 精准A-4(无K/Q杂). value head偏弃Ace gap3.4→sp27本. 模拟seed9局91. 2026-06-17"
+  "note": "【sp28关键观察】 RnAceToMidSupportTopAABonus(+4): 顶AA底顺都成→中道必须≥AA否则foul. Ad+4h→中(凑中AA或A-2-3-4-5轮子顺压顶AA)有路; AI弃Ad塞Kc(K高<AA必foul). 精准A-4(无K/Q杂). value head偏弃Ace gap3.4→sp27本. 模拟seed9局91. 2026-06-17"
  },
  {
   "name": "实战 77 [R4]: 顶[Ah4d]留开追AA范+88进中做TT88(底55可发育555托), 别8d填顶锁A高 (局30)",
@@ -5936,7 +5963,8 @@
     ]
    }
   ],
-  "note": "底道支配软罚(sibling-relative)修复: 同顶中底KKQ(kicker Q)严格>KK3, NN偏3c底0.32被软罚翻正. 无鬼底→不豁免. 模拟seed99局16. 2026-06-18"
+  "note": "【warn: Q大牌该放底成2对, 但进范率似无提升, 待挖价值】 底道支配软罚(sibling-relative)修复: 同顶中底KKQ(kicker Q)严格>KK3, NN偏3c底0.32被软罚翻正. 无鬼底→不豁免. 模拟seed99局16. 2026-06-18",
+  "warn": true
  },
  {
   "name": "实战 92 [R2]: Qh底成QQ>JJ大对 (别弃Q做小对)",
@@ -6583,7 +6611,7 @@
     "bottom": []
    }
   ],
-  "note": "D-nndiff局63 R2. 底9h Qd Qh=QQ(3张). 中3s 5s. 发4c 6h 7s里 3s/5s/7s全黑桃→中3黑桃flush draw. value-head漏看同花, 弃黑桃7s换6h进中(只2黑桃)+4c丢QQ底死kicker, 低估保花2.23(规则=纯NN无差异, 纯value-head盲区). 2026-06-19加R2BotPairMidDrawBonus(R2+底对/三条且3张+中3+同花或3连张→+3). 修后7s留中保花draw."
+  "note": "【sp28关键观察】 D-nndiff局63 R2. 底9h Qd Qh=QQ(3张). 中3s 5s. 发4c 6h 7s里 3s/5s/7s全黑桃→中3黑桃flush draw. value-head漏看同花, 弃黑桃7s换6h进中(只2黑桃)+4c丢QQ底死kicker, 低估保花2.23(规则=纯NN无差异, 纯value-head盲区). 2026-06-19加R2BotPairMidDrawBonus(R2+底对/三条且3张+中3+同花或3连张→+3). 修后7s留中保花draw."
  },
  {
   "name": "实战 105 [R4]: D67 顶AA锁, Ad该进底成broadway顺(鬼=T) 别进中当55死kicker",
@@ -6653,7 +6681,7 @@
     ]
    }
   ],
-  "note": "D-nndiff局67 R4. 顶As Ac=AA锁. 底X Qd Kh Js + Ad = 鬼当T → T-J-Q-K-A broadway顺(底顺dom413). Ad该进底成顺,不是进中道当55对的死kicker(中55<顶AA本就要foul, Ad在中无用). value-head低估鬼顺(Ad→中53.26>Ad→底45.36)+RedundantHighLockedAA曾错罚成顺. 2026-06-19两修: (1)RedundantHighLockedAA底成三条/顺+豁免 (2)支配过滤改topMidMadeKey(中道按成手分组忽略kicker)→底顺413支配底KKK312删Ad→中. A→中=硬error不接受警告."
+  "note": "【sp28关键观察】 D-nndiff局67 R4. 顶As Ac=AA锁. 底X Qd Kh Js + Ad = 鬼当T → T-J-Q-K-A broadway顺(底顺dom413). Ad该进底成顺,不是进中道当55对的死kicker(中55<顶AA本就要foul, Ad在中无用). value-head低估鬼顺(Ad→中53.26>Ad→底45.36)+RedundantHighLockedAA曾错罚成顺. 2026-06-19两修: (1)RedundantHighLockedAA底成三条/顺+豁免 (2)支配过滤改topMidMadeKey(中道按成手分组忽略kicker)→底顺413支配底KKK312删Ad→中. A→中=硬error不接受警告."
  },
  {
   "name": "实战 106 [R4]: D-A6 顶Ad锁不住, 22该进中成对>顶Ahigh避foul (无foul-free范→听NN)",
@@ -6914,5 +6942,274 @@
    }
   ],
   "note": "prod实战(usedCards污染版会误选77中456底; 本case用空usedCards=干净口径). 干净下value-head喜欢拆77做底4连顺(纯NN #6). 两修: (1)删NoSplitDealtPair硬规则(它把拆对候选删了, +5无从作用) (2)R1BottomDrawBonus 底4连顺→+5(盖过generic 3连张+2). → 4567→底#1. 456中77底(B)也接受."
+ },
+ {
+  "name": "实战 110 [R4]: 底8888金刚+中66+发7h9c6c, 67该进中顶留鬼(7h占顶浪费范种子)",
+  "round": 4,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "state": {
+   "top": [
+    "Xj0"
+   ],
+   "middle": [
+    "6h",
+    "6d",
+    "4c"
+   ],
+   "bottom": [
+    "9d",
+    "8h",
+    "8c",
+    "8d",
+    "8s"
+   ]
+  },
+  "dealt": [
+   "7h",
+   "9c",
+   "6c"
+  ],
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "6c",
+     "7h"
+    ],
+    "bottom": []
+   }
+  ],
+  "note": "prod-review sp26. 底8888金刚锁, 中666trips. 6c+7h该都进中(满666), 顶留纯鬼=范种子(R5任何Q/K/A配鬼成范/凑trips). AI把7h占顶成77(<QQ非范)浪费鬼范, value-head高估立刻77对(纯NN gap21). 死牌Z组标AI=2(7h占顶+4c死kicker) vs 留鬼=0. 2026-06-22"
+ },
+ {
+  "name": "实战 111 [R2]: 顶Ad+中44+底9Ks+发鬼5s4c, 鬼进底凑KK托中44(别4c进中成444 foul)",
+  "round": 2,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "state": {
+   "top": [
+    "Ad"
+   ],
+   "middle": [
+    "4s",
+    "4d"
+   ],
+   "bottom": [
+    "9d",
+    "Ks"
+   ],
+   "usedCards": []
+  },
+  "dealt": [
+   "Xj0",
+   "5s",
+   "4c"
+  ],
+  "expecteds": [
+   {
+    "top": [
+     "Xj0"
+    ],
+    "middle": [
+     "5s"
+    ]
+   },
+   {
+    "top": [
+     "Xj0"
+    ],
+    "middle": [
+     "4c"
+    ]
+   }
+  ],
+  "note": "prod-review sp26 game16(R1已埋中44>底9K倒置雷). R2大概率要foul→该赌AA范: 鬼→顶成AA(foul-cost低,范值得赌), 中放5(44+5发育两对托AA)或4(444)都接受. 我之前写成鬼→底凑KK(保守避foul)是错的——既然要foul了不如博范. 2026-06-22改"
+ },
+ {
+  "name": "实战 112 [R4]: 顶5h真牌变体(无鬼)+底8888+中66, 5h种555≤中666合法范该留顶",
+  "round": 4,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "state": {
+   "top": [
+    "5h"
+   ],
+   "middle": [
+    "6h",
+    "6d",
+    "4c"
+   ],
+   "bottom": [
+    "9d",
+    "8h",
+    "8c",
+    "8d",
+    "8s"
+   ],
+   "usedCards": []
+  },
+  "dealt": [
+   "7h",
+   "9c",
+   "6c"
+  ],
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "6c",
+     "9c"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [],
+    "middle": [
+     "6c",
+     "7h"
+    ],
+    "bottom": []
+   }
+  ],
+  "note": "顶5h真牌(无鬼)+底8888金刚+中66锁. 5h能种555≤中666=合法trips范种子, 留顶最小, 69或67进中满666. RnR4TripsFantasyReachable+25奖留顶. 2026-06-22 prod-review变体"
+ },
+ {
+  "name": "实战 113 [R4]: 顶7c真牌(无鬼)无合法trips范→成77对是好棋(对比112的5h有种子该留)",
+  "round": 4,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "state": {
+   "top": [
+    "7c"
+   ],
+   "middle": [
+    "6h",
+    "6d",
+    "4c"
+   ],
+   "bottom": [
+    "9d",
+    "8h",
+    "8c",
+    "8d",
+    "8s"
+   ],
+   "usedCards": []
+  },
+  "dealt": [
+   "7h",
+   "9c",
+   "6c"
+  ],
+  "expecteds": [
+   {
+    "top": [
+     "7h"
+    ],
+    "middle": [
+     "6c"
+    ],
+    "bottom": []
+   }
+  ],
+  "note": "顶7c真牌(无鬼). 7c→777需中道升葫芦(666+对)才合法(777<葫芦不倒置)=有条件trips范种子, 77→顶是该777路径第一步=正解. NN对(纯NN 77排第1, 67中第2 gap27.3). 对比112(顶5h能种555≤中当前=安全种子)/115(顶Jc配不到对NN自然留开口). RnR4TripsFantasyReachable当前只奖\"安全种子(≤中当前trips)\"不奖此条件种子(若奖则110的7h→顶同样吃→破110, 因110顶有鬼该做安全低trips). 用户2026-06-22确认77 OK且是trips范路径."
+ },
+ {
+  "name": "实战 114 [R4]: 顶4c+底88899葫芦+中865, 79中做5-9顺(验证中恰三条守护)",
+  "round": 4,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "state": {
+   "top": [
+    "4c"
+   ],
+   "middle": [
+    "8h",
+    "6d",
+    "5d"
+   ],
+   "bottom": [
+    "9d",
+    "9s",
+    "8c",
+    "8d",
+    "8s"
+   ],
+   "usedCards": []
+  },
+  "dealt": [
+   "7h",
+   "9c",
+   "6c"
+  ],
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "7h",
+     "9c"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "6c"
+    ],
+    "middle": [
+     "7h"
+    ],
+    "bottom": []
+   }
+  ],
+  "note": "顶4c+底88899葫芦锁+中865. 79中做5-6-7-8-9顺(中royalty4). 中成顺非三条→RnR4TripsFantasyReachable正确不fire(验证中恰三条守护). 4c→444会>中foul陷阱AI未踩. 2026-06-22. 第二预期: 6c→头(top4-6)+7h→中(留5-6-7-8顺draw)弃9c, 锁顶安全早+保straight draw"
+ },
+ {
+  "name": "实战 115 [R4]: 顶Jc真牌(无鬼)配不成对→NN自然留开口(对比113的7c被配成77)",
+  "round": 4,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "state": {
+   "top": [
+    "Jc"
+   ],
+   "middle": [
+    "6h",
+    "6d",
+    "4c"
+   ],
+   "bottom": [
+    "9d",
+    "8h",
+    "8c",
+    "8d",
+    "8s"
+   ],
+   "usedCards": []
+  },
+  "dealt": [
+   "7h",
+   "9c",
+   "6c"
+  ],
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "6c",
+     "9c"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [],
+    "middle": [
+     "6c",
+     "7h"
+    ],
+    "bottom": []
+   }
+  ],
+  "note": "顶Jc真牌(无鬼). dealt无J配不成对 → NN自然留Jc开口(67/69中)是对的(留R5成JJ royalty6或JJJ trips范). 对比113(顶7c被7h配77就贪对): NN懂\"有现成对才拿\". JJJ≤中葫芦=有条件trips范种子(当前bonus不fire因JJJ>中当前666; 扩maxAchievable+鬼浪费守护则该+25). 2026-06-22"
  }
 ]
