@@ -7351,5 +7351,173 @@
    }
   ],
   "note": "116变体: 中4c→3c. 3h配中3c成真JJ-33两对 → 3h+6h都进中做成手(弃2s), 底留2d6dKd 2空位(还能发育KK66撑范). 对比116(中4c无法成对→3中6底). 验证MidExceedsBot对\"底非对\"正确不罚(bot.Type<Pair→0). 用户2026-06-22确认正确."
+ },
+ {
+  "name": "实战 118 [R3] ypk-93192522-6: 中666底888顶joker, 6死牌该弃/顶留joker保XXX范",
+  "round": 3,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "state": {
+   "top": [],
+   "middle": [
+    "6c",
+    "6d",
+    "6s"
+   ],
+   "bottom": [
+    "8s",
+    "Jd",
+    "8c",
+    "8h"
+   ],
+   "usedCards": [
+    "Kd",
+    "Qh",
+    "As",
+    "Tc",
+    "5d",
+    "7h",
+    "2d",
+    "Ac",
+    "4s",
+    "3h",
+    "9d",
+    "5h",
+    "4d",
+    "7s",
+    "2h",
+    "8d",
+    "9s",
+    "Kc",
+    "5s",
+    "Ah",
+    "2s",
+    "7c",
+    "2c"
+   ]
+  },
+  "dealt": [
+   "Xj0",
+   "6h",
+   "Th"
+  ],
+  "expecteds": [
+   {
+    "top": [
+     "Xj0"
+    ],
+    "middle": [
+     "Th"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "Xj0"
+    ],
+    "middle": [],
+    "bottom": [
+     "Th"
+    ]
+   }
+  ],
+  "note": "prod ypk-93192522-6 R3. 中666(trips)底888(>中)顶空. joker顶单张=升XXX trips范种子(joker+未来一对). 6h死牌(4张6用光: 6cds在中): 不能顶(堵XXX范)/不能中(6666金刚>底888倒置) → 该弃. Th活牌→中或底. RnR4TripsFantasyReachable开R3+bump30治(原R4-only漏判, NN死种子盲高估6h顶90.99). 用户2026-06-23."
+ },
+ {
+  "name": "实战 119 [R3] ypk-93192522-2: 底梅花花+中89, Td进中建89T顺draw(别弃)",
+  "round": 3,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "state": {
+   "top": [],
+   "middle": [
+    "8h",
+    "9h"
+   ],
+   "bottom": [
+    "5c",
+    "Jc",
+    "Tc",
+    "Qc",
+    "7c"
+   ],
+   "usedCards": [
+    "7d"
+   ]
+  },
+  "dealt": [
+   "3c",
+   "Xj0",
+   "Td"
+  ],
+  "expecteds": [
+   {
+    "top": [
+     "Xj0"
+    ],
+    "middle": [
+     "Td"
+    ],
+    "bottom": []
+   }
+  ],
+  "note": "prod ypk-93192522-2 R3. 底5cJcTcQc7c=梅花花(锁死强底). 中8h9h. Td→中建89T顺draw(中顺royalty + 花底托得住), 别3c→中+弃Td. MidDrawFace加\"底花+(>=flush)+中顺draw再+5\"治(NN弃高draw牌artifact压Td). 不含底顺(底顺可能<中顺倒置). 用户2026-06-23."
+ },
+ {
+  "name": "实战 120 [R4] 底葫芦>中三条边界: joker顶保trips范+死6弃 (i161验证靶)",
+  "round": 4,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "state": {
+   "top": [],
+   "middle": [
+    "6c",
+    "6d",
+    "6s",
+    "5c"
+   ],
+   "bottom": [
+    "8s",
+    "8h",
+    "8c",
+    "2d",
+    "2c"
+   ],
+   "usedCards": [
+    "Jd",
+    "9s",
+    "Kc",
+    "Qh",
+    "As",
+    "7h",
+    "4d",
+    "3s",
+    "Ah",
+    "Kd",
+    "9h",
+    "Qc",
+    "4s",
+    "7d",
+    "5h",
+    "2s"
+   ]
+  },
+  "dealt": [
+   "Xj0",
+   "6h",
+   "Th"
+  ],
+  "expecteds": [
+   {
+    "top": [
+     "Xj0"
+    ],
+    "middle": [
+     "Th"
+    ],
+    "bottom": []
+   }
+  ],
+  "note": "合成边界case(测底>中跨牌型). 中666三条+底88822葫芦(type高,即便底三条若6<中亦>中, madeHandCmp 100>54). 底葫芦>中 → RnR4TripsFantasyReachable fire+30: joker顶单张保XXX trips范, 6h死牌(4张6用光)弃, Th→中. 验证 madeHandCmp 跨牌型底>中正确(原HandExceeds5(partialEvalTP)满5张跨编码bug已修). i161(Z3)日后验证同款. 2026-06-23."
  }
 ]

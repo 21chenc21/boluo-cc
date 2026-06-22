@@ -1809,14 +1809,19 @@ func RnDeadLowKickerOnFanTopPenalty(postState, preState *GameState) float32 {
 //   3d种(48: 顶[鬼3]能成333≤6 合法范) → +25;
 //   7h占顶(110: 顶[鬼7h]只能成777>6 倒置 foul) → 0 (输给留鬼25分).
 func RnR4TripsFantasyReachableBonus(postState, preState *GameState) float32 {
-	if postState.Round != 4 {
+	// 2026-06-23 (用户): R4-only → 开 R3 (ypk-93192522-6 R3: 中666底888顶joker, 6h压顶堵XXX范种子).
+	//   R5 不开 (末轮无未来发育, joker trips种子无意义).
+	if postState.Round != 3 && postState.Round != 4 {
 		return 0
 	}
 	midV := partialEvalTP(postState.Middle)
 	if midV.Type != TypeThreeOfAKind {
 		return 0 // 中道非恰三条 → 顶trips范语境不成立
 	}
-	if !HandExceeds5(partialEvalTP(postState.Bottom), midV) {
+	// 2026-06-23 (用户发现bug): 旧用 HandExceeds5(partialEvalTP) — 底满5张 partialEvalTP 走 Evaluate5JokerCap
+	//   (makeValue 15^4编码), 中<5张走 partialEval *15编码, 跨编码比 → 底666<中888 误判底>中 返30该0.
+	//   改 madeHandCmp(type*16+rank 一致编码).
+	if madeHandCmp(postState.Bottom) <= madeHandCmp(postState.Middle) {
 		return 0 // 底未>中 (盘未锁)
 	}
 	var midRC [13]int
@@ -1871,15 +1876,21 @@ func RnR4TripsFantasyReachableBonus(postState, preState *GameState) float32 {
 	if distinctReal >= 2 {
 		return 0 // 顶 2+ 不同真牌 → 成不了单一 trips
 	}
+	// 2026-06-23 (用户): 底4张 + 中4张 (都发育中, 各留1空位) → 再+5, 偏好平衡发育摆法
+	//   (手1: Th→中 使 中666Th+底888J 各4张, 优于 Th→底 锁底5留中3).
+	bonus := float32(30)
+	if len(postState.Bottom) == 4 && len(postState.Middle) == 4 {
+		bonus += 5
+	}
 	if distinctReal == 1 {
 		if canReach(theRank) {
-			return 25
+			return bonus
 		}
 		return 0
 	}
 	for r := 0; r <= M; r++ { // 顶全鬼/空: 任一 r≤M 可凑
 		if canReach(r) {
-			return 25
+			return bonus
 		}
 	}
 	return 0
@@ -2376,6 +2387,31 @@ func RnMidDrawFaceGated(dealt []Card, gs *GameState) float32 {
 		}
 		if midRank[c.Rank()] {
 			return 0
+		}
+	}
+	// 2026-06-23 (用户, 手2 ypk-93192522-2): 底已成花+(花/葫芦/金刚/同花顺) + 中道有【纯顺draw】→ 再+5.
+	//   不含底顺: 底顺时中道draw成顺可能比底顺大 → 倒置; 花+必>任何中道顺, 才安心建中顺draw(89T).
+	//   ⚠️中道是花draw(≥3同花)时不给: 中往花发育可能 > 底花 = 倒置 (2h4h6h 既顺窗又花draw, 排除).
+	if botMadeTier(gs.Bottom) >= TypeFlush {
+		var mr []int
+		var seen [13]bool
+		var suitCnt [4]int
+		flushDraw := false
+		for _, c := range gs.Middle {
+			if c.IsJoker() {
+				continue
+			}
+			suitCnt[c.Suit()]++
+			if suitCnt[c.Suit()] >= 3 {
+				flushDraw = true
+			}
+			if !seen[c.Rank()] {
+				seen[c.Rank()] = true
+				mr = append(mr, int(c.Rank()))
+			}
+		}
+		if has3InStraightWindow(mr) && !flushDraw {
+			return b + 5
 		}
 	}
 	return b
