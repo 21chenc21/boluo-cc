@@ -3952,26 +3952,9 @@ func rnRuleJokerOnTop_IfSpace(a *RoundNAction, cards []Card, state *GameState) b
 	return false
 }
 
-// rnRuleKK_OnTop_NoA — dealt 含 KK pair AND state 无可用 A → KK 必上顶 (锁 fantasy)
-func rnRuleKK_OnTop_NoA(a *RoundNAction, cards []Card, state *GameState) bool {
-	pairs := detectDealtPairs(cards)
-	cnt, ok := pairs[RankK]
-	if !ok || cnt < 2 {
-		return true
-	}
-	if !noAvailableAces(state) {
-		return true
-	}
-	// kept 中所有 K 必须 placement = top
-	for i, c := range a.Kept {
-		if !c.IsJoker() && c.Rank() == RankK {
-			if a.Placement[i] != RowTop {
-				return false
-			}
-		}
-	}
-	return true
-}
+// "KK_OnTop_NoA" DELETED 2026-06-23: 规则冗余 — 裸NN(硬软全关)在"dealt KK+无A+顶无种子"3场景
+//   全自己把KK上顶追范, 规则没增量. 而且原版"所有keptK必上顶"在顶槽不够时(顶Ac+鬼仅1空)强制弃1K+
+//   另一张进中 → QQQ22葫芦>底顺=爆牌 (prod ypk-100467018-5 R5). 治0个case, 删. 用户拍板.
 
 // rnRuleKK_OnBot_WithA — DELETED 2026-05-31. dealt KK + deck 还有 A → KK 必下底 规则.
 // 压抑 NN 判断: R2 dealt[Kh Kc 8d] empty state, NN top-1 = KK 上 mid (score 30.75),
@@ -4157,7 +4140,7 @@ func ApplyHardRulesRN(candidates []RNCand, cards []Card, state *GameState) []RNC
 		// "NoDiscardAce" DELETED 2026-05-31: NN 自然不弃 A, 规则冗余.
 		// "NoDiscardPairMember" DELETED 2026-05-31: dealt ≥T 高对强迫不弃, R5 mid/bot 满时 top 加 pair → cap chain 必 foul. case ypk-180814154-1.
 		// "NoSplitKeptPair" DELETED 2026-05-31: NN 自然不拆 pair, 规则冗余.
-		{"KK_OnTop_NoA", rnRuleKK_OnTop_NoA},
+		// "KK_OnTop_NoA" DELETED 2026-06-23: NN自然追KK范, 规则冗余且顶槽不够时致爆牌 (ypk-100467018-5 R5).
 		// "KK_OnBot_WithA" DELETED 2026-05-31: 压抑 NN — R2 dealt[KK 8d] NN 想 KK 上 mid (score 30.75), 规则强制 KK 上 bot (score 27.92).
 		// "JokerWithA_OnTop" DELETED 2026-05-31: 不看 state.top 已有 A → 强迫 X+A 都上头变 trips foul. case ypk-159252810-11.
 		{"TopMustAllowFantasy", rnRuleTopMustAllowFantasy}, // 2026-05-20 sp15: 仅 R2-R3 触发, R4-R5 skip

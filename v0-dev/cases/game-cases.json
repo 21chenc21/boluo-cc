@@ -7519,5 +7519,111 @@
    }
   ],
   "note": "合成边界case(测底>中跨牌型). 中666三条+底88822葫芦(type高,即便底三条若6<中亦>中, madeHandCmp 100>54). 底葫芦>中 → RnR4TripsFantasyReachable fire+30: joker顶单张保XXX trips范, 6h死牌(4张6用光)弃, Th→中. 验证 madeHandCmp 跨牌型底>中正确(原HandExceeds5(partialEvalTP)满5张跨编码bug已修). i161(Z3)日后验证同款. 2026-06-23."
+ },
+ {
+  "name": "实战 121 [R5] ypk-100467018-5: 顶Ac鬼 中QQ22 底顺, KhKd必上顶bug致Qs进中爆QQQ22",
+  "round": 5,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "state": {
+   "top": [
+    "Ac",
+    "Xj0"
+   ],
+   "middle": [
+    "2c",
+    "Qd",
+    "2h",
+    "Qh"
+   ],
+   "bottom": [
+    "8d",
+    "7h",
+    "Tc",
+    "6h",
+    "9h"
+   ],
+   "usedCards": [
+    "5d",
+    "8c",
+    "3d",
+    "Jc",
+    "Jd",
+    "7s",
+    "3s",
+    "6c",
+    "3c",
+    "Xj1",
+    "Ah",
+    "9s",
+    "4c",
+    "9c",
+    "6d",
+    "Td",
+    "8h",
+    "As",
+    "2s",
+    "5s",
+    "5c",
+    "Js",
+    "Ts",
+    "Th",
+    "9d",
+    "4d",
+    "Qc",
+    "8s",
+    "6s",
+    "Ks",
+    "3h",
+    "5h",
+    "Ad",
+    "Kc",
+    "Jh"
+   ]
+  },
+  "dealt": [
+   "Kh",
+   "Qs",
+   "Kd"
+  ],
+  "expecteds": [
+   {
+    "top": [
+     "Qs"
+    ],
+    "middle": [
+     "Kd"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "Qs"
+    ],
+    "middle": [
+     "Kh"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "Kd"
+    ],
+    "middle": [
+     "Kh"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "Kh"
+    ],
+    "middle": [
+     "Kd"
+    ],
+    "bottom": []
+   }
+  ],
+  "note": "prod实战爆牌. rnRuleKK_OnTop_NoA bug+冗余已删(2026-06-23): dealt KhKd+deck无A时旧规则\"所有keptK必上顶\", 顶Ac+鬼仅1空→强制弃1K+Qs进中→QQQ22葫芦>底6789T顺=倒置爆. 验证裸NN自然追KK范故删. 删后AI摆Qs→顶(joker+Ac=AA范)Kd→中(QQ22两对). 接受任何非\"Qs进中\"的合法摆法."
  }
 ]
