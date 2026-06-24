@@ -7625,5 +7625,55 @@
    }
   ],
   "note": "prod实战爆牌. rnRuleKK_OnTop_NoA bug+冗余已删(2026-06-23): dealt KhKd+deck无A时旧规则\"所有keptK必上顶\", 顶Ac+鬼仅1空→强制弃1K+Qs进中→QQQ22葫芦>底6789T顺=倒置爆. 验证裸NN自然追KK范故删. 删后AI摆Qs→顶(joker+Ac=AA范)Kd→中(QQ22两对). 接受任何非\"Qs进中\"的合法摆法."
+ },
+ {
+  "name": "实战 122 [R2] ypk-19398986-5: 顶Ac鬼=AA锁→中底都须越AA且底≥中, R2该装底(78放底或7T放底)留中道可控, 别8c→中",
+  "round": 2,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "Tc",
+   "8c",
+   "7d"
+  ],
+  "state": {
+   "top": [
+    "Ac",
+    "Xj1"
+   ],
+   "middle": [
+    "6c",
+    "4d"
+   ],
+   "bottom": [
+    "7s"
+   ],
+   "usedCards": [
+    "Ac",
+    "Xj1",
+    "6c",
+    "4d",
+    "7s"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [],
+    "bottom": [
+     "7d",
+     "8c"
+    ]
+   },
+   {
+    "top": [],
+    "middle": [],
+    "bottom": [
+     "7d",
+     "Tc"
+    ]
+   }
+  ],
+  "note": "prod ypk-19398986-5 R2. 顶Ac+鬼=AA已锁→中/底都须越AA(两对+)且底≥中=窄squeeze. 8c→中让中道早早朝两对发育→到R4必撞双向foul死局(R4 8中2底是被R2逼死, 没错). 正解装底: 78放底(7d8c→底 弃Tc)或7T放底(7d Tc→底 弃8c), 中道留[6c4d]可控底道领跑. 【2026-06-23 已修】MidDrawFace thin-bot 卡顺-2: 底2张对7+中放8c(8>7)+中道4-6-8卡顺(顺面非连张) → 罚-2, 把错招8c→中从#1(43.37)压到#3(39.37), 78放底升#1. value-head裸分仍偏8c→中(41.366), 此为软规则兜底; 治本仍待sp28."
  }
 ]

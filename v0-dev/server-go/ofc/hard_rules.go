@@ -2279,6 +2279,23 @@ func has3InStraightWindow(ranks []int) bool {
 	return false
 }
 
+// has3ConsecutiveRanks — distinct ranks 里是否有 3 张相连 (A 可当低 A-2-3). 用于区分"连张顺面"(返true) vs "卡顺"(返false).
+func has3ConsecutiveRanks(ranks []int) bool {
+	seen := map[int]bool{}
+	for _, r := range ranks {
+		seen[r] = true
+		if r == RankA {
+			seen[-1] = true // A 当低
+		}
+	}
+	for lo := -1; lo <= int(RankA)-2; lo++ {
+		if seen[lo] && seen[lo+1] && seen[lo+2] {
+			return true
+		}
+	}
+	return false
+}
+
 // rowDrawFaceBonus — 行全单张(无对无鬼) + 有顺面(3+在5-rank窗口)或花面(3+同花) → +2.
 // 2026-06-17 用户准则: "都是单张有顺面花面加分". 单张攒顺/花draw 有价值(顺/花royalty + outs多).
 // 用于中道(实战11: 4s接3-4-6顺托顶范)和底道(局23: 底8-9-T-J两头顺8outs > 配99单对垫中两对→foul).
@@ -2359,6 +2376,36 @@ func RnMidDrawFaceGated(dealt []Card, gs *GameState) float32 {
 	b := rowDrawFaceBonus(gs.Middle)
 	if b == 0 {
 		return 0
+	}
+	// 2026-06-23 (用户, ypk-19398986-5 R2): 底仅2张(刚成对) 且 底对rank < 本轮放进中道的真牌rank → 不奖.
+	//   底单薄时就拿高牌建中道draw, 中道易后续反超底道 (本局 8c→中, 底77, 8>7 → 到R4双向foul死局).
+	if len(gs.Bottom) == 2 {
+		if botPair := highestRealPairRank(gs.Bottom); botPair >= 0 {
+			midCnt := map[Card]int{}
+			for _, c := range gs.Middle {
+				midCnt[c]++
+			}
+			midPlaced := -1
+			for _, c := range dealt { // 本轮发牌进了中道的真牌, 取最大 rank
+				if !c.IsJoker() && midCnt[c] > 0 && int(c.Rank()) > midPlaced {
+					midPlaced = int(c.Rank())
+				}
+			}
+			if midPlaced >= 0 && botPair < midPlaced {
+				// 2026-06-23 (用户): 此时中道若是"卡顺"(顺面但非3连张, 如4-6-8 有内部gap) → 不止不奖,
+				//   还扣 -2 (弱 gutshot draw + 底单薄被反超, 双重坏). 连张顺面(6-7-8)仅 return 0.
+				var mr []int
+				for _, c := range gs.Middle {
+					if !c.IsJoker() {
+						mr = append(mr, int(c.Rank()))
+					}
+				}
+				if has3InStraightWindow(mr) && !has3ConsecutiveRanks(mr) {
+					return -2
+				}
+				return 0
+			}
+		}
 	}
 	// 2026-06-18 (s99局78 R2): 4张中道"卡顺"(gutshot 直draw, 且非4-flush强draw) 是弱draw, 别奖 →
 	//   防为卡顺弃KK(底). 用户: 4张中道卡顺不加. (开口顺/4-flush 仍奖.)
