@@ -543,7 +543,7 @@ func rnSoftScore(action *RoundNAction, dealt []Card, gs, state *GameState, trace
 	add("MidTwoPairBotDraw", RnMidTwoPairBotDrawBonus(gs))
 	add("JokerHighSeedTop", RnJokerHighSeedOnTopBonus(action, gs))
 	add("AceToMidVsTopAA", RnAceToMidSupportTopAABonus(action, gs))
-	add("BotMakeTwoPair", RnBotMakeTwoPairBonus(gs, state))
+	// "BotMakeTwoPair" DELETED 2026-06-23 (用户) — 见 hard_rules.go. 底凑两对+/金刚分级过火压掉鬼→顶范.
 	add("MidMakeTwoPair", RnMidMakeTwoPairBonus(gs, state))
 	add("PreserveTopAA", RnPreserveTopAAChaseBonus(gs))
 	add("MidHighOverBot", -RnMidHighCardOverBotPenalty(gs, state))

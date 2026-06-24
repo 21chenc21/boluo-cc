@@ -6250,9 +6250,18 @@
     "bottom": [
      "7d"
     ]
+   },
+   {
+    "top": [
+     "As"
+    ],
+    "middle": [
+     "3h"
+    ],
+    "bottom": []
    }
   ],
-  "note": "RnAceToTopSeedBonus(+8, 用户2026-06-18): 顶[Qd]非范级, As→顶做AQ seed AA追范(后续Ac来成AA). 旧近平局(gap0.39)AI弃As抢底顺. 守护: 只R2-R4 seed(R5终局不加, A→顶若AA>中KK会foul鬼压低浪费A, std-50)+顶pre非范级(QQ+不需seed)+真单A. 7d→底成34567顺. 模拟seed99局56."
+  "note": "RnAceToTopSeedBonus(+8, 用户2026-06-18): 顶[Qd]非范级, As→顶做AQ seed AA追范(后续Ac来成AA). 旧近平局(gap0.39)AI弃As抢底顺. 守护: 只R2-R4 seed(R5终局不加, A→顶若AA>中KK会foul鬼压低浪费A, std-50)+顶pre非范级(QQ+不需seed)+真单A. 7d→底成34567顺. 模拟seed99局56. | 2026-06-23: 加 exp As→顶 3h→中 弃7d (BotMakeTwoPair删后此摆也对, 用户确认)."
  },
  {
   "name": "实战 98 [R4]: 顶AA锁+底顺时Ac→中发育(别弃A), LoneAceMidJokerTop豁免",
@@ -7675,5 +7684,140 @@
    }
   ],
   "note": "prod ypk-19398986-5 R2. 顶Ac+鬼=AA已锁→中/底都须越AA(两对+)且底≥中=窄squeeze. 8c→中让中道早早朝两对发育→到R4必撞双向foul死局(R4 8中2底是被R2逼死, 没错). 正解装底: 78放底(7d8c→底 弃Tc)或7T放底(7d Tc→底 弃8c), 中道留[6c4d]可控底道领跑. 【2026-06-23 已修】MidDrawFace thin-bot 卡顺-2: 底2张对7+中放8c(8>7)+中道4-6-8卡顺(顺面非连张) → 罚-2, 把错招8c→中从#1(43.37)压到#3(39.37), 78放底升#1. value-head裸分仍偏8c→中(41.366), 此为软规则兜底; 治本仍待sp28."
+ },
+ {
+  "name": "实战 123 [R3] ypk-127795530-21: 鬼该放顶(fantasy种子)非放底凑四条9, 进范优先于金刚royalty",
+  "round": 3,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "Xj1",
+   "2h",
+   "9h"
+  ],
+  "state": {
+   "top": [
+    "7s"
+   ],
+   "middle": [
+    "4d",
+    "5d",
+    "6s"
+   ],
+   "bottom": [
+    "9s",
+    "Qh",
+    "9c"
+   ],
+   "usedCards": [
+    "7s",
+    "4d",
+    "5d",
+    "6s",
+    "9s",
+    "Qh",
+    "9c",
+    "5h",
+    "3s",
+    "3c",
+    "Qd",
+    "Qs",
+    "Jd",
+    "As",
+    "8s",
+    "2s"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "Xj1"
+    ],
+    "middle": [],
+    "bottom": [
+     "9h"
+    ]
+   }
+  ],
+  "note": "真凶=RnBotMakeTwoPairBonus金刚档+18过火. 鬼放底+9h→底=四条9999(base14.68被+18+MidDrawFace7抬到39.68#1), 但鬼放底杀进范. 正解鬼→顶(7s+鬼=种子, 等Q/K/A配对升QQ+进范)+9h→底(999三条). 裸NN本就排对(鬼→顶 base29.32 #1), 规则压错. 进范优先于金刚royalty(范率优先于EV). ⚠️BotMakeTwoPair删/改待用户定(删会崩case97底顺)."
+ },
+ {
+  "name": "实战 124 [R4] ypk-141164874-8: 中鬼[2s🃏2h]非锁222三条, J该放底凑JJ99(底强)别TJ堆中",
+  "round": 4,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "dealt": [
+   "Js",
+   "8h",
+   "Ts"
+  ],
+  "state": {
+   "top": [
+    "Xj1",
+    "Ah"
+   ],
+   "middle": [
+    "2s",
+    "Xj0",
+    "2h"
+   ],
+   "bottom": [
+    "8s",
+    "Jh",
+    "9h",
+    "9s"
+   ],
+   "usedCards": [
+    "Ah",
+    "2s",
+    "2h",
+    "8s",
+    "Jh",
+    "9h",
+    "9s",
+    "4h",
+    "8d",
+    "9d",
+    "Qd",
+    "2d",
+    "5h",
+    "6s",
+    "Jc",
+    "Th",
+    "7h",
+    "4s",
+    "Ad",
+    "As",
+    "Qs",
+    "5c",
+    "Kh",
+    "Tc",
+    "Kd",
+    "Qc",
+    "Td",
+    "Jd",
+    "3d"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "Ts"
+    ],
+    "bottom": [
+     "Js"
+    ]
+   },
+   {
+    "top": [],
+    "middle": [],
+    "bottom": [
+     "Js",
+     "Ts"
+    ]
+   }
+  ],
+  "note": "FantasyLost/fantasyOnlyViaFoul 误判修. 中[2s🃏2h]真牌22对, 但madeHandCmp把鬼当2读成222三条 → J→底(底JJ99两对)被判中三条>底两对=倒置 → 硬过滤删掉. 裸NN本排对(J→底 base106.48 #1). 鬼实际活的可取J/T让中道TT22/JJ22≤底JJ99不foul. 修: midMin foul-floor 用真牌成手(midMadeFloorReal), 让上层midFanNeed升级逻辑接管. 底强优先(底该最强)."
  }
 ]

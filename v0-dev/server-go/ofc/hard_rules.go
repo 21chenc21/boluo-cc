@@ -572,6 +572,24 @@ func madeHandCmp(row []Card) int {
 	return int(hv.Type)*16 + prim
 }
 
+// midMadeFloorReal — 中道 foul-floor: 鬼是活的(可压低当kicker), 不该锁成三条+. 按真牌成手算.
+//   2026-06-23 (用户 ypk-141164874-8 R4): 中[2s 🃏 2h] 真牌=22对(floor), 旧 madeHandCmp 把鬼当2读成
+//   222三条 → 底JJ99(两对)误判 < 中(三条) → FantasyLost/fantasyOnlyViaFoul 判倒置过滤掉正确的 J→底.
+//   鬼实际可取 J/T 让中道两对(TT22/JJ22)≤底JJ99 不foul. floor 用真牌, 让上层 midFanNeed 升级逻辑接管.
+//   (全真牌行 → 等于 madeHandCmp 原值, 无变化; 只 partial 含鬼行受影响.)
+func midMadeFloorReal(row []Card) int {
+	var real []Card
+	for _, c := range row {
+		if !c.IsJoker() {
+			real = append(real, c)
+		}
+	}
+	if len(real) == 0 {
+		return madeHandCmp(row) // 全鬼行(极罕见) → 退回原逻辑
+	}
+	return madeHandCmp(real)
+}
+
 // maxAchievableCmp — row+slots 能达到的最高可比手值 (rank-aware, accurate).
 //   对/两对/三条/金刚 逐rank精算 (不用会高估两对的 maxAchievableHandType); 顺/花/葫芦+ 用 tier(rank=12估).
 func maxAchievableCmp(row []Card, slots int, rankRem [13]int, suitRem [4]int, jokerRem int) int {
@@ -658,7 +676,7 @@ func FantasyLost(state *GameState) bool {
 	if midMax < topMin || midMax < qq {
 		return true // ②
 	}
-	midMin := madeHandCmp(state.Middle)
+	midMin := midMadeFloorReal(state.Middle) // 鬼活的, foul-floor 按真牌(别锁三条+) — ypk-141164874-8 R4
 	botMax := maxAchievableCmp(state.Bottom, 5-len(state.Bottom), rankRem, suitRem, jokerRem)
 	// 2026-06-22 (用户 ypk-84869450-8 R3): 进范顶必≥QQ → 中也必≥QQ. 中已有对P(<Q)要≥QQ 只能升两对
 	//   (high=P, = HtTwoPair+P), 底要撑的是这个升级后的中, 不是中当前 midMin. 旧 ③ 用 midMin 漏判:
@@ -748,7 +766,7 @@ func fantasyOnlyViaFoul(state *GameState) bool {
 		// ③ 中→底链: 中为达 ≥pair-r 的最弱手牌, 底必须撑得住.
 		// 2026-06-22 (用户 ypk-84869450-8 R3): 中已有对 P 时, 再配任何对成"两对(high≥P)"非单对 →
 		//   底要撑 P-两对 不是单 pair-r. 旧 midCanSinglePairAtLeast 没看中已有对 → midNeed 低估漏判.
-		midCur := madeHandCmp(state.Middle)
+		midCur := midMadeFloorReal(state.Middle) // 鬼活的, foul-floor 按真牌(别锁三条+) — ypk-141164874-8 R4
 		midPairRank := -1
 		for pr := range midPairedRanks(state.Middle) {
 			if pr > midPairRank {
@@ -1472,13 +1490,10 @@ func botAtLeastTwoPair(row []Card) bool {
 	return maxc+j >= 3 || pairs >= 2 // 三条+ 或 两对
 }
 
-// RnBotMakeTwoPairBonus — 本轮把底道从 <两对 做成 **≥两对** (如 QQ底 + 发KK → KKQQ) → +8.
-// 通用. 2026-06-13 (ypk-88080714-8 R2): KK 该放底凑 KKQQ 强底, 别去丢 K 保 AA 顶干净.
-// 关键全靠 pre-guard: 底已 ≥两对(含三条/葫芦, 如实战16/17 底TTT)→ 不奖 (非本轮新做).
-//
-//	→ 实战16/17 底TTT 被 pre-guard 挡(到不了 post); case44 底顺draw无对不触发.
-//
-// post 用 ≥两对 (不限恰两对): 否则奖两对、不奖葫芦/金刚 = 不对称, 可能把更强的成葫芦摆法比下去.
+// "RnBotMakeTwoPairBonus" DELETED 2026-06-23 (用户): 底凑两对+/分级(金刚18/葫芦14/其它8) 过火 —
+//   对"鬼放底凑四条" over-reward, 压掉"鬼→顶 fantasy 种子"正解 (ypk-127795530-21 R3, gamecase 123).
+//   进范优先于金刚 royalty; 裸 NN 自纠. case97(底顺)已加 exp 接受删后摆法.
+// (下面 helpers highestRealPairRank/botMadeTier 保留 — RnMidExceedsBot/MidDrawFace 等其它规则在用.)
 // highestRealPairRank — row 里最高的"真对子"(cnt>=2) rank; 不把 joker 凑的对算进去
 // (joker 凑对/三条由外层 botAtLeastTwoPair 处理); 无真对返回 -1.
 func highestRealPairRank(row []Card) int {
@@ -1534,51 +1549,6 @@ func botMadeTier(row []Card) int {
 		return TypeTwoPair
 	default:
 		return TypePair
-	}
-}
-
-func RnBotMakeTwoPairBonus(postState, preState *GameState) float32 {
-	if botAtLeastTwoPair(preState.Bottom) {
-		return 0 // 底已 ≥两对, 非本轮新做
-	}
-	if !botAtLeastTwoPair(postState.Bottom) {
-		return 0
-	}
-	// 2026-06-14: 本意是"防高对放中倒置压底" (实战23/24: 底QQ + 发KK → KK放底凑KKQQ,
-	// 别KK→中成KK..两对压底QQ). 只有当新对 > 原底对(新对若进中会倒置)时才该奖.
-	// 底已有"高对" + 本轮塞"更低的对"当 kicker 凑两对 (底KK + 33 → KK33): 33进中不倒置,
-	// 反而给中道 made pair 更值 → 不奖 (ypk 头空中5d4d 底KKK8h 发33).
-	tier := botMadeTier(postState.Bottom)
-	// bury-guard: 原高对之下新增更低 rank 的对 (埋低 kicker, 无倒置可防) 且 post 仅两对 → 不奖.
-	// 同 rank 升三条+ (88→888) 不算埋低对 → 照常奖.
-	prePairMax := highestRealPairRank(preState.Bottom)
-	if prePairMax >= 0 && tier <= TypeTwoPair {
-		var cntPre, cntPost [13]int
-		for _, c := range preState.Bottom {
-			if !c.IsJoker() {
-				cntPre[c.Rank()]++
-			}
-		}
-		for _, c := range postState.Bottom {
-			if !c.IsJoker() {
-				cntPost[c.Rank()]++
-			}
-		}
-		for r := 0; r < prePairMax; r++ {
-			if cntPost[r] >= 2 && cntPre[r] < 2 {
-				return 0
-			}
-		}
-	}
-	// 2026-06-14: 按底道成手强弱分级 (原一律 +8). 葫芦/三条比两对更值, 治 value-head 低估
-	// '用现成牌锁底葫芦' (ypk-12124490-13: 底88 发8s 该进底凑888-99, 别摊去中道当死 kicker).
-	switch {
-	case tier >= TypeFourOfAKind:
-		return 18
-	case tier >= TypeFullHouse:
-		return 14
-	default:
-		return 8 // 两对/三条/顺/花 (三条不额外加: 避免压过"鬼→顶锁范", std7)
 	}
 }
 
