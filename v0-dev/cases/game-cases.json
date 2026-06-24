@@ -7819,5 +7819,57 @@
    }
   ],
   "note": "FantasyLost/fantasyOnlyViaFoul 误判修. 中[2s🃏2h]真牌22对, 但madeHandCmp把鬼当2读成222三条 → J→底(底JJ99两对)被判中三条>底两对=倒置 → 硬过滤删掉. 裸NN本排对(J→底 base106.48 #1). 鬼实际活的可取J/T让中道TT22/JJ22≤底JJ99不foul. 修: midMin foul-floor 用真牌成手(midMadeFloorReal), 让上层midFanNeed升级逻辑接管. 底强优先(底该最强)."
+ },
+ {
+  "name": "实战 125 [R4] g217(seed11): 9d Jd→底成方块花(别9s→中凑999弃Jd断花致爆)",
+  "round": 4,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "warn": true,
+  "dealt": [
+   "9s",
+   "9d",
+   "Jd"
+  ],
+  "state": {
+   "top": [
+    "Xj0",
+    "3s"
+   ],
+   "middle": [
+    "9c",
+    "Js",
+    "9h",
+    "Ts"
+   ],
+   "bottom": [
+    "Qd",
+    "8d",
+    "7d"
+   ],
+   "usedCards": [
+    "3s",
+    "9c",
+    "Js",
+    "9h",
+    "Ts",
+    "Qd",
+    "8d",
+    "7d",
+    "4c",
+    "7s"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [],
+    "bottom": [
+     "9d",
+     "Jd"
+    ]
+   }
+  ],
+  "note": "⚠️warn(非匹配计警告). value-head 系统性低估已成底同花(gamecase1同病: 6s6c mid trips lock 8d应进底留花). 底[Qd8d7d]3方块draw, 发9d Jd两方块 → 都进底=成方块花(+4 royalty 不爆, 顶X3s摸3c还能333上顶进范). 但NN把成花(base26.58)排在 9s→中999三条+4方块draw(base29.66)之下 → 弃Jd断花凑999 → R5无方块底成不了花 < 中999 = 爆. MidKickerBotFlush-3 触发但不够. sp28 value-head 治本(裸NN gap~3先训练). g203 R4 对比: 那是唯一范路径值得博foul不算错; 这里成花又安全又不丢范=纯错."
  }
 ]
