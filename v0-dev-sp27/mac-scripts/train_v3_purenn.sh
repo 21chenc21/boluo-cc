@@ -278,9 +278,9 @@ for ((iter=1; iter<=ITERS; iter++)); do
 
     # Phase A: gen samples — SELF-PLAY: rollout policy = 当前 BEST_CKPT (动态)
     # 跟 distillation 区别: 这里 BEST_CKPT 每 iter 都换, NN 跟自己玩.
-    echo "[iter $iter] Phase A: gen $GAMES games (rollouts=150, indim 161, SELF-PLAY + exploration)..." | tee -a "$LOG"
+    echo "[iter $iter] Phase A: gen $GAMES games (rollouts=150, indim 164, SELF-PLAY + exploration)..." | tee -a "$LOG"
     GEN_ARGS=(-num-games "$GAMES" -jokers 2 -rollouts 150 -r1-cap 30
-              -phantom-opponents 2 -indim 161
+              -phantom-opponents 2 -indim 164
               -foul-cost 3 -fan-bonus-qq 10 -fan-bonus-kk 30 -fan-bonus-aa 100 -fan-bonus-trips 140
               -out-dir "$GEN_OUT")
     if [ -n "$BEST_CKPT" ] && [ -f "$BEST_CKPT" ]; then
@@ -308,7 +308,7 @@ for ((iter=1; iter<=ITERS; iter++)); do
     # sp11: warm-lr-mult 0.2 (warm 0.0002). 折中 sp9 0.1 vs sp10 0.3, 稳一点.
     # sp28: foul-cost 6→3 (更敢追范), fan-bonus QQ10/KK30/AA100/trips140 (用户设计: 追 fan > 避 foul).
     TRAIN_ARGS=(-dataset-dir "$DATASET_ROOT" -dataset-keep-warm-start -hours 1 -round-min 30
-                -outdim 4 -h1 512 -h2 256 -h3 128 -indim 161
+                -outdim 4 -h1 512 -h2 256 -h3 128 -indim 164
                 -epochs 30 -lr 0.001 -warm-lr-mult 0.2 -y-recompute
                 -fan-bonus-qq 10 -fan-bonus-kk 30 -fan-bonus-aa 100 -fan-bonus-trips 140
                 -foul-cost 3 -fan-w 0.40 -foul-w 0.10 -policy-w 0.30
