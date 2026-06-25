@@ -1,0 +1,186 @@
+[
+  {
+    "name": "case 6: AA 顶 + KK 底 + 鬼中",
+    "round": 1,
+    "dealt": ["X", "Kc", "Kd", "Ah", "As"],
+    "state": {"top": [], "middle": [], "bottom": [], "usedCards": []},
+    "expected": {
+      "top": ["Ah", "As"],
+      "middle": ["X"],
+      "bottom": ["Kc", "Kd"]
+    },
+    "wrongs": [
+      {"top": ["X"], "middle": ["Kc", "Kd"], "bottom": ["Ah", "As"]},
+      {"top": ["X"], "middle": ["Ah", "As"], "bottom": ["Kc", "Kd"]},
+      {"top": ["Kc", "Kd"], "middle": ["X"], "bottom": ["Ah", "As"]}
+    ],
+    "labelValue": 200,
+    "weight": 2.0
+  },
+
+  {
+    "name": "case 10: 鬼+A 顶 + TJ♦底花",
+    "round": 1,
+    "dealt": ["X", "Td", "Jd", "As", "7c"],
+    "state": {"top": [], "middle": [], "bottom": [], "usedCards": []},
+    "expected": {
+      "top": ["X", "As"],
+      "middle": ["7c"],
+      "bottom": ["Td", "Jd"]
+    },
+    "wrongs": [
+      {"top": ["X"], "middle": ["As"], "bottom": ["Td", "Jd", "7c"]},
+      {"top": ["As"], "middle": ["X", "7c"], "bottom": ["Td", "Jd"]},
+      {"top": ["Jd", "As"], "middle": ["X", "7c"], "bottom": ["Td"]}
+    ],
+    "labelValue": 200,
+    "weight": 2.0
+  },
+
+  {
+    "name": "case 12: A+joker 应一起上顶 (As 4c 8h X 5h)",
+    "round": 1,
+    "dealt": ["As", "4c", "8h", "X", "5h"],
+    "state": {"top": [], "middle": [], "bottom": [], "usedCards": []},
+    "expected": {
+      "top": ["X", "As"],
+      "middle": ["4c", "5h"],
+      "bottom": ["8h"]
+    },
+    "wrongs": [
+      {"top": ["X"], "middle": ["As", "4c", "8h"], "bottom": ["5h"]},
+      {"top": ["As"], "middle": ["X", "4c"], "bottom": ["8h", "5h"]}
+    ],
+    "labelValue": 200,
+    "weight": 2.0
+  },
+
+  {
+    "name": "case 13: A+joker 应一起上顶 (9s 2c X 5h Ac)",
+    "round": 1,
+    "dealt": ["9s", "2c", "X", "5h", "Ac"],
+    "state": {"top": [], "middle": [], "bottom": [], "usedCards": []},
+    "expected": {
+      "top": ["X", "Ac"],
+      "middle": ["2c", "5h"],
+      "bottom": ["9s"]
+    },
+    "wrongs": [
+      {"top": ["Ac"], "middle": ["2c", "X"], "bottom": ["9s", "5h"]},
+      {"top": ["9s", "Ac"], "middle": ["2c", "5h"], "bottom": ["X"]}
+    ],
+    "labelValue": 200,
+    "weight": 2.0
+  },
+
+  {
+    "name": "case 19: 4 黑桃应底花 + Ac 顶",
+    "round": 1,
+    "dealt": ["2s", "5s", "3s", "Js", "Ac"],
+    "state": {"top": [], "middle": [], "bottom": [], "usedCards": []},
+    "expected": {
+      "top": ["Ac"],
+      "middle": [],
+      "bottom": ["2s", "5s", "3s", "Js"]
+    },
+    "wrongs": [
+      {"top": ["Ac"], "middle": ["2s"], "bottom": ["5s", "3s", "Js"]},
+      {"top": ["3s", "Ac"], "middle": [], "bottom": ["2s", "5s", "Js"]}
+    ],
+    "labelValue": 100,
+    "weight": 1.5
+  },
+
+  {
+    "name": "case 24: 鬼+A 顶 + 23 中 + K 底 (固定)",
+    "round": 1,
+    "dealt": ["X", "3h", "Ks", "As", "2d"],
+    "state": {"top": [], "middle": [], "bottom": [], "usedCards": []},
+    "expected": {
+      "top": ["X", "As"],
+      "middle": ["3h", "2d"],
+      "bottom": ["Ks"]
+    },
+    "wrongs": [
+      {"top": ["As"], "middle": ["3h", "2d"], "bottom": ["X", "Ks"]},
+      {"top": ["Ks", "As"], "middle": ["X", "2d"], "bottom": ["3h"]}
+    ],
+    "labelValue": 200,
+    "weight": 2.0
+  },
+
+  {
+    "name": "case 56: 0 A used + 鬼+K → 鬼上顶 (multi-solution)",
+    "round": 1,
+    "dealt": ["9s", "2c", "X", "5h", "Kh"],
+    "state": {"top": [], "middle": [], "bottom": [], "usedCards": []},
+    "expecteds": [
+      {"top": ["X"], "middle": ["2c", "9s"], "bottom": ["Kh", "5h"]},
+      {"top": ["X"], "middle": ["2c", "5h"], "bottom": ["9s", "Kh"]}
+    ],
+    "wrongs": [
+      {"top": ["Kh"], "middle": ["2c", "5h"], "bottom": ["9s", "X"]},
+      {"top": ["X", "Kh"], "middle": ["2c", "5h"], "bottom": ["9s"]}
+    ],
+    "labelValue": 100,
+    "weight": 1.5
+  },
+
+  {
+    "name": "case 1: 鬼孤身在顶 + KK 锁底",
+    "round": 1,
+    "dealt": ["X", "Kc", "Kd", "3h", "7s"],
+    "state": {"top": [], "middle": [], "bottom": [], "usedCards": []},
+    "expected": {
+      "top": ["X"],
+      "middle": ["3h", "7s"],
+      "bottom": ["Kc", "Kd"]
+    },
+    "wrongs": [
+      {"top": ["Kc", "Kd"], "middle": ["X", "3h"], "bottom": ["7s"]},
+      {"top": ["X"], "middle": ["Kc", "Kd"], "bottom": ["3h", "7s"]}
+    ],
+    "labelValue": 100,
+    "weight": 2.0
+  },
+
+  {
+    "name": "case 17: TT 应保留底道",
+    "round": 1,
+    "dealt": ["Td", "Th", "3h", "9s", "Ks"],
+    "state": {"top": [], "middle": [], "bottom": [], "usedCards": []},
+    "expected": {
+      "top": ["3h"],
+      "middle": ["9s", "Ks"],
+      "bottom": ["Td", "Th"]
+    },
+    "wrongs": [
+      {"top": ["3h"], "middle": ["Td", "Th"], "bottom": ["9s", "Ks"]},
+      {"top": ["Ks"], "middle": ["9s"], "bottom": ["Td", "Th", "3h"]}
+    ],
+    "labelValue": 100,
+    "weight": 1.5
+  },
+
+  {
+    "name": "case 33: R2 KK 上底 (anchor)",
+    "round": 2,
+    "dealt": ["Kh", "Ks", "4d"],
+    "state": {
+      "top": ["Qd"],
+      "middle": ["5c", "6c"],
+      "bottom": ["3h", "9s"],
+      "usedCards": ["Qd", "5c", "6c", "3h", "9s"]
+    },
+    "expected": {
+      "top": [],
+      "middle": [],
+      "bottom": ["Kh", "Ks"]
+    },
+    "wrongs": [
+      {"top": [], "middle": ["Kh", "Ks"], "bottom": []}
+    ],
+    "labelValue": 100,
+    "weight": 2.0
+  }
+]

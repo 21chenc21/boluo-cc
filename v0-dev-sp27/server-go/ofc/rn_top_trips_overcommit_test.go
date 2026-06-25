@@ -1,0 +1,49 @@
+package ofc
+
+import "testing"
+
+// 2026-06-13 RnTopTripsOvercommitPenalty — pre QQ+对升三条但中道托不住 → 罚 12 (ypk-70123850-2 R4)
+func TestRnTopOvercommit_Fire_KKK_over222(t *testing.T) {
+	pre := st([]string{"Ks", "Kh"}, []string{"3d", "2c", "2d", "2s"}, []string{"Ts", "8h", "Js", "9c"})
+	post := st([]string{"Ks", "Kh", "Kd"}, []string{"3d", "2c", "2d", "2s"}, []string{"Ts", "8h", "Js", "9c"})
+	// 2026-06-15 §10b 分级: 中222三条 rank2 < top KKK rank K → 10 + (11-0)*0.6 = 16.6
+	if got := RnTopTripsOvercommitPenalty(post, pre); got < 16.5 || got > 16.7 {
+		t.Fatalf("KKK over mid222 分级应罚 ~16.6, got %v", got)
+	}
+}
+
+func TestRnTopOvercommit_Skip_KeepKK(t *testing.T) {
+	// 保 KK 不升 (post-top 还 2 张) → 不罚
+	pre := st([]string{"Ks", "Kh"}, []string{"3d", "2c", "2d", "2s"}, []string{"Ts", "8h", "Js", "9c"})
+	post := st([]string{"Ks", "Kh"}, []string{"3d", "2c", "2d", "2s", "Kd"}, []string{"Ts", "8h", "Js", "9c"})
+	if got := RnTopTripsOvercommitPenalty(post, pre); got != 0 {
+		t.Fatalf("保KK不升 应 0, got %v", got)
+	}
+}
+
+func TestRnTopOvercommit_Skip_PairKicker(t *testing.T) {
+	// post-top = KK + 6 kicker (3张但还是对子, 没升三条) → 不罚
+	pre := st([]string{"Ks", "Kh"}, []string{"3d", "2c", "2d", "2s"}, []string{"Ts", "8h", "Js", "9c"})
+	post := st([]string{"Ks", "Kh", "6c"}, []string{"3d", "2c", "2d", "2s"}, []string{"Ts", "8h", "Js", "9c"})
+	if got := RnTopTripsOvercommitPenalty(post, pre); got != 0 {
+		t.Fatalf("对子加kicker(非三条) 应 0, got %v", got)
+	}
+}
+
+func TestRnTopOvercommit_Skip_MidSupports(t *testing.T) {
+	// mid 已是葫芦(托得住 KKK) → free upgrade, 不罚
+	pre := st([]string{"Ks", "Kh"}, []string{"Ad", "Ac", "As", "Qd", "Qc"}, []string{"Ts", "8h", "Js"})
+	post := st([]string{"Ks", "Kh", "Kd"}, []string{"Ad", "Ac", "As", "Qd", "Qc"}, []string{"Ts", "8h", "Js"})
+	if got := RnTopTripsOvercommitPenalty(post, pre); got != 0 {
+		t.Fatalf("mid葫芦托得住 应 0 (free re-fan), got %v", got)
+	}
+}
+
+func TestRnTopOvercommit_Fire_LowTripsOver222(t *testing.T) {
+	// 2026-06-15 §10b 去低对守护: 99→999 三条压中222三条 → 仍 foul 该罚. 999 rank9 - 222 rank2 = 7 → 10 + 7*0.6 = 14.2
+	pre := st([]string{"9s", "9h"}, []string{"3d", "2c", "2d", "2s"}, []string{"Ts", "8h", "Js", "9c"})
+	post := st([]string{"9s", "9h", "9d"}, []string{"3d", "2c", "2d", "2s"}, []string{"Ts", "8h", "Js", "9c"})
+	if got := RnTopTripsOvercommitPenalty(post, pre); got < 14.1 || got > 14.3 {
+		t.Fatalf("低三条999压中222 应罚 ~14.2, got %v", got)
+	}
+}
