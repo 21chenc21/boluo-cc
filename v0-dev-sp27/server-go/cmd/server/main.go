@@ -333,7 +333,7 @@ func solveCore(
 			if placedSet[c] > 0 {
 				placedSet[c]--
 			} else {
-				discards = append(discards, c.String())
+				discards = append(discards, c.ID())
 			}
 		}
 		layout := map[string][]string{
@@ -400,7 +400,7 @@ func solveCore(
 	discards := make([]string, 0)
 	for _, c := range dealt {
 		if !placedSet[c.ID()] {
-			discards = append(discards, c.String())
+			discards = append(discards, c.ID())
 		}
 	}
 
@@ -787,7 +787,7 @@ func diffCards(before, after []ofc.Card) []ofc.Card {
 func cardStrs(cards []ofc.Card) []string {
 	out := make([]string, len(cards))
 	for i, c := range cards {
-		out[i] = c.String()
+		out[i] = c.ID() // 2026-06-26 用户: 响应鬼牌带 jid (Xj0/Xj1), 客户端可精确映射. 普通牌 ID()==String().
 	}
 	return out
 }

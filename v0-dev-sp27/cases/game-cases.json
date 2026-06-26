@@ -4749,7 +4749,7 @@
    }
   ],
   "note": "⚠️用户明确要求override(RnMidPairCompletesTwoPairBonus +3): 7s配7d成4477两对. 单人solver中道两对royalty=0+底QJT8 gutshot~26%会foul, value head本排第11(对)— 用户按对手局牌力直觉优先两对, 别当bug删. 2026-06-17 [warn: 卡顺弱draw, NN保守躲60%犯规, 牌力分歧非bug]",
-  "warn": false
+  "warn": true
  },
  {
   "name": "实战 64 [R4]: 4s接张进中建顺托顶AA范, 别埋顶 (也是sp27训练靶)",
