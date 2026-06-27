@@ -1466,22 +1466,28 @@ func mlpRngForLoad() *rand.Rand {
 // 若总 sample 数 > cap, reservoir sample 到 cap.
 // 加载完 shuffle.
 func loadDatasetSamples(dir string, cap int, rng *rand.Rand) ([]Sample, error) {
-	// 收集所有 shard 路径
+	// 收集所有 shard 路径. 2026-06-27: 支持逗号分隔多目录 (EXTRA_DATA 复用旧数据集), 各目录递归收 shard.
 	var shards []string
-	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
+	for _, d := range strings.Split(dir, ",") {
+		d = strings.TrimSpace(d)
+		if d == "" {
+			continue
 		}
-		if info.IsDir() {
+		err := filepath.Walk(d, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if info.IsDir() {
+				return nil
+			}
+			if strings.HasSuffix(path, ".jsonl.gz") {
+				shards = append(shards, path)
+			}
 			return nil
+		})
+		if err != nil {
+			return nil, fmt.Errorf("walk %s: %w", d, err)
 		}
-		if strings.HasSuffix(path, ".jsonl.gz") {
-			shards = append(shards, path)
-		}
-		return nil
-	})
-	if err != nil {
-		return nil, fmt.Errorf("walk %s: %w", dir, err)
 	}
 	if len(shards) == 0 {
 		return nil, fmt.Errorf("no .jsonl.gz shards under %s", dir)

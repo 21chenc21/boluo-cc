@@ -118,8 +118,14 @@ DATA_VERSION="i164-sp29"  # 2026-06-25 sp29: 164-d (+B顺紧密度161-162 +C进�
 set -e
 
 # Ctrl-C / kill 立即真停, 不让 'set -e + continue' 把剩余 iters 也跑爆 (2026-05-19-sp6 fix)
-trap 'echo "[v3-sp] interrupted by user (SIGINT)"; exit 130' INT
-trap 'echo "[v3-sp] killed (SIGTERM)"; exit 143' TERM
+# 2026-06-27 用户: 中断时清理"当前未完成 iter"的 gen 数据集 + train 权重 (已完成 iter/dataset/best 保留).
+CUR_GEN_OUT="" ; CUR_TRAIN_OUT=""
+_cleanup_partial() {
+    if [ -n "$CUR_GEN_OUT" ] && [ -d "$CUR_GEN_OUT" ]; then rm -rf "$CUR_GEN_OUT"; echo "[v3-sp]   清理未完成 gen 数据: $CUR_GEN_OUT"; fi
+    if [ -n "$CUR_TRAIN_OUT" ] && [ -d "$CUR_TRAIN_OUT" ]; then rm -rf "$CUR_TRAIN_OUT"; echo "[v3-sp]   清理未完成 train 权重: $CUR_TRAIN_OUT"; fi
+}
+trap '_cleanup_partial; echo "[v3-sp] interrupted by user (SIGINT)"; exit 130' INT
+trap '_cleanup_partial; echo "[v3-sp] killed (SIGTERM)"; exit 143' TERM
 
 ITERS="${1:-5}"
 GAMES="${2:-200}"
@@ -275,6 +281,7 @@ for ((iter=1; iter<=ITERS; iter++)); do
     TRAIN_OUT="$TRAIN_ROOT/iter-$iter"
     mkdir -p "$GEN_OUT" "$TRAIN_OUT"
     touch "$TRAIN_OUT/.iter_started"
+    CUR_GEN_OUT="$GEN_OUT"; CUR_TRAIN_OUT="$TRAIN_OUT"  # 中断清理标记: 本iter未完成时 trap 会删这俩
 
     # Phase A: gen samples — SELF-PLAY: rollout policy = 当前 BEST_CKPT (动态)
     # 跟 distillation 区别: 这里 BEST_CKPT 每 iter 都换, NN 跟自己玩.
@@ -307,7 +314,10 @@ for ((iter=1; iter<=ITERS; iter++)); do
     echo "[iter $iter] Phase B: train V3..." | tee -a "$LOG"
     # sp11: warm-lr-mult 0.2 (warm 0.0002). 折中 sp9 0.1 vs sp10 0.3, 稳一点.
     # sp28: foul-cost 6→3 (更敢追范), fan-bonus QQ10/KK30/AA100/trips140 (用户设计: 追 fan > 避 foul).
-    TRAIN_ARGS=(-dataset-dir "$DATASET_ROOT" -dataset-keep-warm-start -hours 1 -round-min 30
+    # EXTRA_DATA: 额外旧数据集目录 (逗号可多个), train 一起读 — 复用旧 gen 数据不重采. (2026-06-27 用户)
+    DS_DIRS="$DATASET_ROOT${EXTRA_DATA:+,$EXTRA_DATA}"
+    [ -n "${EXTRA_DATA:-}" ] && echo "[iter $iter]   +EXTRA_DATA 旧数据集: $EXTRA_DATA" | tee -a "$LOG"
+    TRAIN_ARGS=(-dataset-dir "$DS_DIRS" -dataset-keep-warm-start -hours 1 -round-min 30
                 -outdim 4 -h1 512 -h2 256 -h3 128 -indim 164
                 -epochs 30 -lr 0.001 -warm-lr-mult 0.2 -y-recompute
                 -fan-bonus-qq 10 -fan-bonus-kk 30 -fan-bonus-aa 100 -fan-bonus-trips 140
@@ -383,6 +393,7 @@ for ((iter=1; iter<=ITERS; iter++)); do
         echo "[iter $iter] ✗ DISCARD: $REASON" | tee -a "$LOG"
         echo "[iter $iter]   best stays = $BEST_CKPT (tc=$BEST_TC)" | tee -a "$LOG"
     fi
+    CUR_GEN_OUT=""; CUR_TRAIN_OUT=""  # 本 iter 完成, 中断不再清理它
     echo "" | tee -a "$LOG"
 done
 
