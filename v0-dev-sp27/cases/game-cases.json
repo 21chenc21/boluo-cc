@@ -18,12 +18,6 @@
    "bottom": [
     "Xj0",
     "Jd"
-   ],
-   "usedCards": [
-    "5c",
-    "6s",
-    "6c",
-    "Jd"
    ]
   },
   "expecteds": [
@@ -69,14 +63,6 @@
     "Xj1",
     "Jh",
     "9c"
-   ],
-   "usedCards": [
-    "8c",
-    "Tc",
-    "2s",
-    "Jh",
-    "9c",
-    "3d"
    ]
   },
   "expecteds": [
@@ -509,8 +495,7 @@
   "state": {
    "top": [],
    "middle": [],
-   "bottom": [],
-   "usedCards": []
+   "bottom": []
   },
   "expecteds": [
    {
@@ -583,8 +568,7 @@
   "state": {
    "top": [],
    "middle": [],
-   "bottom": [],
-   "usedCards": []
+   "bottom": []
   },
   "expecteds": [
    {
@@ -661,8 +645,7 @@
   "state": {
    "top": [],
    "middle": [],
-   "bottom": [],
-   "usedCards": []
+   "bottom": []
   },
   "expecteds": [
    {
@@ -747,8 +730,7 @@
   "state": {
    "top": [],
    "middle": [],
-   "bottom": [],
-   "usedCards": []
+   "bottom": []
   },
   "expecteds": [
    {
@@ -836,8 +818,7 @@
   "state": {
    "top": [],
    "middle": [],
-   "bottom": [],
-   "usedCards": []
+   "bottom": []
   },
   "expecteds": [
    {
@@ -906,8 +887,7 @@
   "state": {
    "top": [],
    "middle": [],
-   "bottom": [],
-   "usedCards": []
+   "bottom": []
   },
   "expecteds": [
    {
@@ -1170,8 +1150,7 @@
   "state": {
    "top": [],
    "middle": [],
-   "bottom": [],
-   "usedCards": []
+   "bottom": []
   },
   "expecteds": [
    {
@@ -1844,18 +1823,6 @@
     "Qh",
     "Qc",
     "6h"
-   ],
-   "usedCards": [
-    "Ac",
-    "As",
-    "2s",
-    "2c",
-    "Qh",
-    "Qc",
-    "6h",
-    "2d",
-    "Ks",
-    "Kh"
    ]
   },
   "expecteds": [
@@ -1913,20 +1880,6 @@
     "Qh",
     "Qc",
     "6h"
-   ],
-   "usedCards": [
-    "Ac",
-    "As",
-    "2s",
-    "2c",
-    "3s",
-    "4c",
-    "Qh",
-    "Qc",
-    "6h",
-    "2d",
-    "8s",
-    "9h"
    ]
   },
   "expecteds": [
@@ -2493,8 +2446,7 @@
   "state": {
    "top": [],
    "middle": [],
-   "bottom": [],
-   "usedCards": []
+   "bottom": []
   },
   "expecteds": [
    {
@@ -2560,13 +2512,6 @@
     "Kh",
     "Kd",
     "8h"
-   ],
-   "usedCards": [
-    "Kh",
-    "Kd",
-    "8h",
-    "5d",
-    "4d"
    ]
   },
   "expecteds": [
@@ -2899,8 +2844,7 @@
   "state": {
    "top": [],
    "middle": [],
-   "bottom": [],
-   "usedCards": []
+   "bottom": []
   },
   "expecteds": [
    {
@@ -3053,10 +2997,6 @@
     "7d",
     "7c",
     "Qc"
-   ],
-   "usedCards": [
-    "6h",
-    "2h"
    ]
   },
   "expecteds": [
@@ -3114,10 +3054,6 @@
     "Jc",
     "Qc",
     "6c"
-   ],
-   "usedCards": [
-    "Kd",
-    "Js"
    ]
   },
   "expecteds": [
@@ -3458,14 +3394,7 @@
   "state": {
    "top": [],
    "middle": [],
-   "bottom": [],
-   "usedCards": [
-    "As",
-    "Kc",
-    "5h",
-    "4d",
-    "3h"
-   ]
+   "bottom": []
   },
   "note": "无真实usedCards(prod已清), deck-blind版. R1SameSuitInRowBonus >=2→>=3 后裸NN留整条345.",
   "expecteds": [
@@ -3955,15 +3884,6 @@
    ],
    "bottom": [
     "Xj0"
-   ],
-   "usedCards": [
-    "4c",
-    "Ah",
-    "Ad",
-    "6h",
-    "6s",
-    "2c",
-    "2s"
    ]
   },
   "expecteds": [
@@ -4001,18 +3921,6 @@
    ],
    "bottom": [
     "Tc"
-   ],
-   "usedCards": [
-    "Tc",
-    "7h",
-    "Ac",
-    "7d",
-    "6h",
-    "8h",
-    "6c",
-    "5c",
-    "4h",
-    "2s"
    ]
   },
   "expecteds": [
@@ -4113,15 +4021,6 @@
    "bottom": [
     "5c",
     "5h"
-   ],
-   "usedCards": [
-    "4s",
-    "5c",
-    "Ad",
-    "5h",
-    "7c",
-    "6s",
-    "8h"
    ]
   },
   "expecteds": [
@@ -4152,8 +4051,7 @@
   "state": {
    "top": [],
    "middle": [],
-   "bottom": [],
-   "usedCards": []
+   "bottom": []
   },
   "expecteds": [
    {
@@ -4205,19 +4103,6 @@
     "Qs",
     "Js",
     "8h"
-   ],
-   "usedCards": [
-    "Ac",
-    "Td",
-    "9s",
-    "Qs",
-    "Js",
-    "Qc",
-    "Ah",
-    "8h",
-    "Kc",
-    "4h",
-    "Ad"
    ]
   },
   "expecteds": [
@@ -4256,22 +4141,6 @@
     "5s",
     "5h",
     "7s"
-   ],
-   "usedCards": [
-    "Js",
-    "5s",
-    "Ah",
-    "Ts",
-    "Td",
-    "4d",
-    "Th",
-    "5h",
-    "2c",
-    "7s",
-    "9c",
-    "8d",
-    "8c",
-    "Qd"
    ]
   },
   "expecteds": [
@@ -4300,8 +4169,7 @@
   "state": {
    "top": [],
    "middle": [],
-   "bottom": [],
-   "usedCards": []
+   "bottom": []
   },
   "expecteds": [
    {
@@ -4340,16 +4208,6 @@
    "bottom": [
     "9d",
     "Ks"
-   ],
-   "usedCards": [
-    "As",
-    "6s",
-    "7h",
-    "9d",
-    "Ks",
-    "8h",
-    "2s",
-    "5d"
    ]
   },
   "expecteds": [
@@ -4554,22 +4412,6 @@
     "3h",
     "Qh",
     "Jh"
-   ],
-   "usedCards": [
-    "7d",
-    "8d",
-    "5c",
-    "5h",
-    "Th",
-    "3h",
-    "Qh",
-    "Jh",
-    "Jc",
-    "Js",
-    "Jd",
-    "8h",
-    "2h",
-    "3d"
    ]
   },
   "expecteds": [
@@ -4608,8 +4450,7 @@
   "state": {
    "top": [],
    "middle": [],
-   "bottom": [],
-   "usedCards": []
+   "bottom": []
   },
   "expecteds": [
    {
@@ -4689,20 +4530,6 @@
     "6s",
     "7d",
     "8s"
-   ],
-   "usedCards": [
-    "Ad",
-    "Ah",
-    "4h",
-    "9h",
-    "Th",
-    "5d",
-    "6s",
-    "7d",
-    "8s",
-    "6c",
-    "Xj1",
-    "Ac"
    ]
   },
   "expecteds": [
@@ -4741,20 +4568,6 @@
     "Qh",
     "Jd",
     "Tc"
-   ],
-   "usedCards": [
-    "Ad",
-    "Ah",
-    "4h",
-    "9h",
-    "Th",
-    "Qd",
-    "Qh",
-    "Jd",
-    "Tc",
-    "6c",
-    "Xj1",
-    "Ac"
    ]
   },
   "expecteds": [
@@ -4789,15 +4602,6 @@
    ],
    "bottom": [
     "Kc"
-   ],
-   "usedCards": [
-    "As",
-    "Ad",
-    "Kc",
-    "5h",
-    "Kd",
-    "Jd",
-    "5c"
    ]
   },
   "expecteds": [
@@ -4839,23 +4643,6 @@
     "9c",
     "Ts",
     "Qd"
-   ],
-   "usedCards": [
-    "Ad",
-    "5s",
-    "3c",
-    "4s",
-    "Jc",
-    "Kc",
-    "9c",
-    "Ts",
-    "Qd",
-    "Ks",
-    "As",
-    "9s",
-    "3s",
-    "5c",
-    "9d"
    ]
   },
   "expecteds": [
@@ -4894,19 +4681,6 @@
    "bottom": [
     "Kh",
     "Ks"
-   ],
-   "usedCards": [
-    "Ac",
-    "Ad",
-    "4s",
-    "7h",
-    "2c",
-    "Kh",
-    "Ks",
-    "9d",
-    "7d",
-    "3c",
-    "Qs"
    ]
   },
   "expecteds": [
@@ -4943,16 +4717,6 @@
     "Qs",
     "Tc",
     "Jh"
-   ],
-   "usedCards": [
-    "Ac",
-    "5h",
-    "Qs",
-    "Tc",
-    "Jh",
-    "5d",
-    "Js",
-    "Qh"
    ]
   },
   "expecteds": [
@@ -4990,18 +4754,6 @@
    "bottom": [
     "9c",
     "9s"
-   ],
-   "usedCards": [
-    "Ad",
-    "6s",
-    "8s",
-    "9c",
-    "9s",
-    "3s",
-    "4c",
-    "9h",
-    "2h",
-    "3c"
    ]
   },
   "expecteds": [
@@ -5038,14 +4790,7 @@
   "state": {
    "top": [],
    "middle": [],
-   "bottom": [],
-   "usedCards": [
-    "Td",
-    "9h",
-    "Ks",
-    "Tc",
-    "Ah"
-   ]
+   "bottom": []
   },
   "expecteds": [
    {
@@ -5084,16 +4829,6 @@
    "bottom": [
     "Qs",
     "6s"
-   ],
-   "usedCards": [
-    "As",
-    "Ad",
-    "Qs",
-    "4c",
-    "6s",
-    "7h",
-    "Ac",
-    "6d"
    ]
   },
   "expecteds": [
@@ -5123,14 +4858,7 @@
   "state": {
    "top": [],
    "middle": [],
-   "bottom": [],
-   "usedCards": [
-    "6c",
-    "Qc",
-    "5h",
-    "Ks",
-    "2d"
-   ]
+   "bottom": []
   },
   "expecteds": [
    {
@@ -5183,19 +4911,6 @@
     "4s",
     "6d",
     "5h"
-   ],
-   "usedCards": [
-    "3d",
-    "4s",
-    "6d",
-    "5h",
-    "Ks",
-    "Ts",
-    "Qd",
-    "3c",
-    "3h",
-    "As",
-    "7d"
    ]
   },
   "expecteds": [
@@ -5244,21 +4959,6 @@
     "8d",
     "Jd",
     "7h"
-   ],
-   "usedCards": [
-    "5h",
-    "9c",
-    "2c",
-    "Ts",
-    "Qc",
-    "As",
-    "8d",
-    "Jd",
-    "7h",
-    "9s",
-    "Ac",
-    "Kc",
-    "Qs"
    ]
   },
   "expecteds": [
@@ -5302,16 +5002,6 @@
     "4h",
     "Kh",
     "3h"
-   ],
-   "usedCards": [
-    "4h",
-    "Kh",
-    "9s",
-    "3h",
-    "6d",
-    "7s",
-    "Ks",
-    "Ts"
    ]
   },
   "expecteds": [
@@ -5357,16 +5047,6 @@
    ],
    "bottom": [
     "6c"
-   ],
-   "usedCards": [
-    "5d",
-    "Ks",
-    "2h",
-    "5h",
-    "6c",
-    "4s",
-    "8h",
-    "4d"
    ]
   },
   "expecteds": [
@@ -5406,19 +5086,6 @@
     "7h",
     "7s",
     "5c"
-   ],
-   "usedCards": [
-    "8d",
-    "Js",
-    "4d",
-    "6d",
-    "Qh",
-    "5h",
-    "7h",
-    "7s",
-    "5c",
-    "Ts",
-    "9s"
    ]
   },
   "expecteds": [
@@ -5457,8 +5124,7 @@
   "state": {
    "top": [],
    "middle": [],
-   "bottom": [],
-   "usedCards": []
+   "bottom": []
   },
   "expecteds": [
    {
@@ -5502,18 +5168,6 @@
     "8h",
     "Kh",
     "3h"
-   ],
-   "usedCards": [
-    "6c",
-    "2s",
-    "3c",
-    "2d",
-    "6s",
-    "8h",
-    "Kh",
-    "3h",
-    "Ts",
-    "7d"
    ]
   },
   "expecteds": [
@@ -5547,13 +5201,6 @@
    "bottom": [
     "9h",
     "Qd",
-    "Qh"
-   ],
-   "usedCards": [
-    "9h",
-    "Qd",
-    "3s",
-    "5s",
     "Qh"
    ]
   },
@@ -5605,18 +5252,6 @@
     "Qd",
     "Kh",
     "Js"
-   ],
-   "usedCards": [
-    "As",
-    "Ac",
-    "5h",
-    "5c",
-    "4h",
-    "Qd",
-    "Kh",
-    "Js",
-    "3c",
-    "3d"
    ]
   },
   "expecteds": [
@@ -5675,19 +5310,6 @@
     "5d",
     "Jd",
     "Kd"
-   ],
-   "usedCards": [
-    "Ad",
-    "9h",
-    "8s",
-    "7s",
-    "Qd",
-    "6d",
-    "5d",
-    "Jd",
-    "Kd",
-    "5s",
-    "Jh"
    ]
   },
   "expecteds": [
@@ -5725,16 +5347,6 @@
     "9h",
     "Kh",
     "Qh"
-   ],
-   "usedCards": [
-    "4c",
-    "8c",
-    "Js",
-    "2s",
-    "9h",
-    "Kh",
-    "Qh",
-    "6s"
    ]
   },
   "expecteds": [
@@ -5827,8 +5439,7 @@
   "state": {
    "top": [],
    "middle": [],
-   "bottom": [],
-   "usedCards": []
+   "bottom": []
   },
   "expecteds": [
    {
@@ -5950,8 +5561,7 @@
    "bottom": [
     "9d",
     "Ks"
-   ],
-   "usedCards": []
+   ]
   },
   "dealt": [
    "Xj0",
@@ -5998,8 +5608,7 @@
     "8c",
     "8d",
     "8s"
-   ],
-   "usedCards": []
+   ]
   },
   "dealt": [
    "7h",
@@ -6046,8 +5655,7 @@
     "8c",
     "8d",
     "8s"
-   ],
-   "usedCards": []
+   ]
   },
   "dealt": [
    "7h",
@@ -6087,8 +5695,7 @@
     "8c",
     "8d",
     "8s"
-   ],
-   "usedCards": []
+   ]
   },
   "dealt": [
    "7h",
@@ -6136,8 +5743,7 @@
     "8c",
     "8d",
     "8s"
-   ],
-   "usedCards": []
+   ]
   },
   "dealt": [
    "7h",
@@ -6332,9 +5938,6 @@
     "Tc",
     "Qc",
     "7c"
-   ],
-   "usedCards": [
-    "7d"
    ]
   },
   "dealt": [
@@ -6484,13 +6087,6 @@
    ],
    "bottom": [
     "7s"
-   ],
-   "usedCards": [
-    "Ac",
-    "Xj1",
-    "6c",
-    "4d",
-    "7s"
    ]
   },
   "expecteds": [
@@ -6627,18 +6223,6 @@
     "Qd",
     "8d",
     "7d"
-   ],
-   "usedCards": [
-    "3s",
-    "9c",
-    "Js",
-    "9h",
-    "Ts",
-    "Qd",
-    "8d",
-    "7d",
-    "4c",
-    "7s"
    ]
   },
   "expecteds": [
@@ -6677,16 +6261,6 @@
     "9c",
     "9h",
     "Qc"
-   ],
-   "usedCards": [
-    "Ah",
-    "As",
-    "4s",
-    "6d",
-    "9c",
-    "9h",
-    "Qc",
-    "8c"
    ]
   },
   "expecteds": [
