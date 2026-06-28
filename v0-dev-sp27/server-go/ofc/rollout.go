@@ -31,6 +31,10 @@ type RolloutConfig struct {
 	// 2026-05-23: per-request top-K sample (R1 only; R2-R5 永远 top-1 保 endgame).
 	// 0=top-1 deterministic (最强 = 难度 1), 2=top-2 随机 (中等 = 难度 2), 3=top-3 (简单 = 难度 3).
 	TopKSampleR1 int
+	// 2026-06-28 (#110/#118): 顶trips范种子 label bonus. silver-label only — 把"留合法trips范种子(joker顶≤中)"
+	//   的期权价值直接注入label, 不靠 rollout 偶然打成范(长尾低概率→label不奖→NN忽略 topTripsSeed dim160).
+	//   +1合法种子 → +bonus, -1 foul险trips → -bonus, 0 → 0. 0=关.
+	TopTripsSeedBonus float32
 }
 
 // DefaultRolloutConfig — 推理 / 老 ckpt 加载默认.
@@ -43,6 +47,8 @@ var DefaultRolloutConfig = RolloutConfig{
 	AAFanBonus:    80,
 	TripsFanBonus: 90,
 	Epsilon:       0, // 推理 0 = 纯 greedy; 训练 CLI 可调 0.1
+	// 2026-06-28 (#110/#118): 顶trips范种子期权价值 8 (≈ P(成trips范)*fanBonus 保守估). gen 从 Default 继承.
+	TopTripsSeedBonus: 8,
 }
 
 // IntnRNG — RNG 接口, 兼容 *rand.Rand 和测试用 LCG
@@ -130,6 +136,13 @@ func max3(a, b, c int) int {
 // (与 JS quickRollout 完全 parity)
 func (er *ExpertRollout) QuickRollout(state *GameState, currentRound int) float32 {
 	gs := state.Clone()
+	// 2026-06-28 (#110/#118): 顶trips范种子 label bonus — 从落子后盘面(state)算, 注入非foul终局 label.
+	//   不靠 rollout 偶然打成范. topTripsSeedScore: +1合法种子/-1 foul险/0. 见 RolloutConfig.TopTripsSeedBonus.
+	var seedBonus float32
+	if er.Cfg.TopTripsSeedBonus != 0 {
+		rankRem, suitRem, jokerRem := computeDeckRemaining(state)
+		seedBonus = topTripsSeedScore(state, rankRem, suitRem, jokerRem) * er.Cfg.TopTripsSeedBonus
+	}
 	deck := gs.GetRemainingDeck()
 	er.shuffle(deck)
 	deckIdx := 0
@@ -262,9 +275,9 @@ func (er *ExpertRollout) QuickRollout(state *GameState, currentRound int) float3
 		}
 		er.LastResult = RolloutResult{RawRoyalty: raw, IsFantasy: score.Fantasy, IsFoul: false, FanBonus: fanBonus}
 		if score.Fantasy {
-			return raw + fanBonus + mhr
+			return raw + fanBonus + mhr + seedBonus
 		}
-		return raw + mhr
+		return raw + mhr + seedBonus
 	}
 	er.LastResult = RolloutResult{RawRoyalty: -10, IsFantasy: false, IsFoul: false}
 	return -10

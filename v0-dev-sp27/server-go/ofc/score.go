@@ -158,7 +158,10 @@ var (
 	MHRMidTwoPair  float32 = 1.0
 	MHRBotTwoPair  float32 = 0.5
 	MHRBotTrips    float32 = 1.0
-	MHRRankStep    float32 = 0.01 // 同牌型内按 rank 破平微奖: 顶对kicker(AAK>AAQ #64) + 中/底单对rank(QQ>JJ #92). 满格 12*0.01=0.12 < 0.2 对子档/0.5 两对档 → 纯tiebreak, 绝不翻牌型/royalty.
+	// 2026-06-28 用户: 0.01 太小被rollout噪声淹没(#64/#90/#124 NN忽略). 各牌型加到"档gap内"的安全上限.
+	MHRRankStep      float32 = 0.03 // 中/底 单对rank(#92) + 两对高对rank(#124). 满 12*0.03=0.36 < 0.5(两对→三条 gap). 不翻牌型.
+	MHRKickerStep    float32 = 0.08 // 顶对 kicker(AAK>AAQ #64), 仅 66+(royalty对, 档gap=1.0). 满 0.96 < 1.0. 22-55 不给(MHRTopPairStep 0.2 档太窄会翻).
+	MHRTripsRankStep float32 = 0.06 // 中/底 三条rank(555>333 #90). 555 vs 333 差 2*0.06=0.12. 满 0.72; 底三条 1.0+0.72<2(→顺), 中三条 royalty2+0.72<4(→顺).
 )
 
 // pairRank5 — 5张手牌(中/底) TypePair 的对子 rank. Value=1e6+pair*15^4+k1*15^3+...
@@ -182,6 +185,14 @@ func twoPairRankReward(ev HandValue) float32 {
 	return float32(hp)*MHRRankStep + float32(lp)*(MHRRankStep/15)
 }
 
+// tripsRank5 — 5张手牌(中/底) TypeThreeOfAKind 的三条 rank. Value=3e6+trip*50625+...
+func tripsRank5(ev HandValue) int {
+	if ev.Type != TypeThreeOfAKind {
+		return 0
+	}
+	return clampRank(int((ev.Value - 3000000) / 50625))
+}
+
 // clampRank — 防御: rank 提取出界(如合成/空 HandValue) 时夹到 [0,12], 避免奖励失控.
 func clampRank(r int) int {
 	if r < 0 {
@@ -201,18 +212,23 @@ func MadeHandRewardLabel(topEval, midEval, botEval HandValue) float32 {
 		if pairRank >= 0 && pairRank <= 3 { // 卡牌 2-5 (rank idx 4=6 起 royalty)
 			r += float32(pairRank+1) * MHRTopPairStep
 		}
-		// 2026-06-25 kicker 微奖: 顶对第3张 kicker rank (AAK>AAQ, 同对/同royalty破平). 治 #64.
-		//   Value=1e6+pair*15+kicker → kicker=(Value-1e6)%15. 满格0.12 < 0.2 → 不翻牌型/pairRank.
-		kicker := int(topEval.Value-1000000) % 15
-		r += float32(kicker) * MHRRankStep
+		// kicker 微奖: 顶对第3张 kicker rank (AAK>AAQ #64). 2026-06-28 仅 66+(pairRank≥4, royalty对,
+		//   档gap=1.0, kicker满0.96<1.0 不翻). 22-55 不给(MHRTopPairStep 0.2 档太窄会翻 55+kicker>66).
+		if pairRank >= 4 {
+			kicker := int(topEval.Value-1000000) % 15
+			r += float32(kicker) * MHRKickerStep
+		}
 	}
 	switch midEval.Type {
 	case TypePair:
-		// 中单对 base 0.5 + rank 破平 (中KK>中QQ). 0.5+满0.12=0.62 < 1.0 两对.
+		// 中单对 base 0.5 + rank 破平 (中KK>中QQ). 0.5+满0.36=0.86 < 1.0 两对.
 		r += MHRMidPair + float32(pairRank5(midEval))*MHRRankStep
 	case TypeTwoPair:
-		// 中两对 base 1.0 + 高对/次对 rank 破平 (22/TT>22/88 #124). 1.0+满0.13.
+		// 中两对 base 1.0 + 高对/次对 rank 破平 (22/TT>22/88 #124). 1.0+满0.38 < 2(royalty三条).
 		r += MHRMidTwoPair + twoPairRankReward(midEval)
+	case TypeThreeOfAKind:
+		// 中三条 rank (555>333 #90). 无base(royalty2接管), 只rank破平. 2+满0.72 < 4(顺).
+		r += float32(tripsRank5(midEval)) * MHRTripsRankStep
 	}
 	switch botEval.Type {
 	case TypePair:
@@ -222,7 +238,8 @@ func MadeHandRewardLabel(topEval, midEval, botEval HandValue) float32 {
 		// 底两对 base 0.5 + 高对/次对 rank 破平. 0.5+满0.13=0.63 < 1.0 三条.
 		r += MHRBotTwoPair + twoPairRankReward(botEval)
 	case TypeThreeOfAKind:
-		r += MHRBotTrips
+		// 底三条 base 1.0 + rank 破平. 1.0+满0.72=1.72 < 2(底顺 royalty).
+		r += MHRBotTrips + float32(tripsRank5(botEval))*MHRTripsRankStep
 	}
 	return r
 }

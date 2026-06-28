@@ -40,8 +40,8 @@ func TestMHR_Case66(t *testing.T) {
 	if exp <= ai {
 		t.Fatal("期望(两对)应比AI(一对)奖更多")
 	}
-	// 顶对rank: 顶 33K = 0.4(33档) + 0.11(K kicker 微奖, idx11*0.01) = 0.51
-	if got := MadeHandRewardLabel(Evaluate3(mkrow("3s", "3d", "Kh")), hc, hc); got < 0.509 || got > 0.511 {
-		t.Errorf("顶33K 应0.51 (0.4+kicker0.11), 得%.2f", got)
+	// 顶33K: 33是低对(pairRank1<4), 2026-06-28起不给kicker(防低对档翻55+kicker>66), 只33档=0.4.
+	if got := MadeHandRewardLabel(Evaluate3(mkrow("3s", "3d", "Kh")), hc, hc); got < 0.399 || got > 0.401 {
+		t.Errorf("顶33K 应0.4 (低对无kicker), 得%.2f", got)
 	}
 }

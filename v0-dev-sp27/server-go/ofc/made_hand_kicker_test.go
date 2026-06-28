@@ -15,8 +15,10 @@ func TestMHR_KickerBreaksTie(t *testing.T) {
 	if !(aak > aaq && aaq > aaj) {
 		t.Fatalf("kicker 应破平 AAK>AAQ>AAJ, got %.4f %.4f %.4f", aak, aaq, aaj)
 	}
-	if aak-aaq > 0.05 { // 微: 一档 kicker 差应 ~0.01
-		t.Fatalf("kicker 步长太大 AAK-AAQ=%.4f (应~0.01)", aak-aaq)
+	// 2026-06-28: kicker 步长 bump 到 0.08 (66+对). 一档差=0.08, 满12档=0.96.
+	//   注: MHR不含royalty(rollout单独加). 全label里 AA royalty9 vs KK royalty8 gap=1.0 > kicker满0.96 → 不翻.
+	if d := aak - aaq; d < 0.07 || d > 0.09 {
+		t.Fatalf("kicker 一档差应 ~0.08, got %.4f", d)
 	}
 }
 
