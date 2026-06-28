@@ -5512,6 +5512,15 @@
      "5d"
     ],
     "bottom": []
+   },
+   {
+    "top": [
+     "Ts"
+    ],
+    "middle": [
+     "2d"
+    ],
+    "bottom": []
    }
   ],
   "note": "cardHasBotValue bug: 5d凑底5c对→误判有底价值→MidKickerBotFlush-3罚封中道正解→prod填顶留中道空位→R5长6666金刚>底花犯规. 修:底近成花时非该花色牌破花无底价值. value-head本就想封中(base1.88>填顶0.35).",

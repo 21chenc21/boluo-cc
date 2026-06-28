@@ -1,6 +1,9 @@
 package ofc
 
 // 「死牌 / 放牌效率」特征 Z 组 (sp28, 2026-06-21, dim154-156).
+// 2026-06-28 用户砍: 定义有根本问题(快照, 漏配对种子/kicker/位置, 顺子子查有slots bug) + 鸡肋(ablation净+1)
+//   + 跟 draw强度重叠 + 反向强化NN开口偏好(误导#23). → fillWastedCards 改写0(实际cut, 留3维保布局).
+//   "放牌效率"意图交给修好的 draw强度 + 概率 + 成手特征. wastedInRow/WastedTotal 保留供 featdiff 诊断.
 //
 // 背景 (用户 2026-06-21 失败case注释主线): value-head 低估"顺/draw 发育", 实为
 // "没把低牌放在能发育的行 / 用死低牌污染了强行". 关键概念是 **放牌效率**, 不是"数 outs"
@@ -173,6 +176,10 @@ func rowStraightTightness(row []Card) float32 {
 	if bestCnt == 0 {
 		return 0
 	}
+	// 2026-06-28 (#38): 完成顺需 (5-bestCnt) 个 rank, 鬼补 jokers 个, 剩下要抽必须 ≤ slots(5-len). 治 888+9 误报紧顺.
+	if (5-bestCnt)-jokers > 5-len(row) {
+		return 0
+	}
 	tier := bestGaps + 1
 	// 4 真张(差1成顺)时看"单边性": 数有几个顺窗能装下全4张. 2窗=开口(tier1), 1窗=单边/卡顺(tier2).
 	//   治 A-2-3-4 / J-Q-K-A 这种边缘连张(只一头能接)= 卡顺 2档 (用户 2026-06-25).
@@ -209,7 +216,6 @@ func WastedTotal(gs *GameState) int {
 
 // fillWastedCards — 每行死牌数 /3 (dim154-156: top/mid/bot). 越低越好 (放牌越有效率).
 func fillWastedCards(f []float32, gs *GameState) {
-	f[0] = clampF(float32(wastedInRow(gs.Top, 3, true))/3.0, 0, 1)
-	f[1] = clampF(float32(wastedInRow(gs.Middle, 5, false))/3.0, 0, 1)
-	f[2] = clampF(float32(wastedInRow(gs.Bottom, 5, false))/3.0, 0, 1)
+	// 2026-06-28 用户砍: 死牌特征恒 0 (实际 cut). 见文件头注释. 留 3 维保特征布局.
+	f[0], f[1], f[2] = 0, 0, 0
 }

@@ -110,7 +110,8 @@ SCRIPT_VERSION="2026-06-17-purenn"
 #     - Mark cases 35/37/40/45 as warn (AI 选合理但不在 expecteds)
 #     - sp17 iter-1 r1 deployed 8002, bench: 59通过/4警告/0 真错.
 #     - DATA_VERSION → i147-sp18 (rollout policy 含 sp17 best, 数据 fresh).
-DATA_VERSION="i164-sp29"  # 2026-06-25 sp29: 164-d (+B顺紧密度161-162 +C进范可行性163) + 成手奖励rank破平(顶kicker AAK>AAQ / 中底单对 QQ>JJ / 两对 22/TT>22/88) + 概率挑牌模型(cardsSeen, 行成手概率5.7%→48%). label+inDim 都变, fresh dataset.
+DATA_VERSION="i164-sp30"  # 2026-06-28 sp30 攻特征第一批 (164-d 不变, 特征值变 → fresh): draw强度纯花(顺交B组分档) + draw/B组 slots完成性修(治888+9/2,3,8误报顺) + 砍死牌特征(恒0). 治 #23/#38/#67/#104/#117. 从 sp29 best(127) warm-start.
+# 旧: i164-sp29 (2026-06-25: +B顺紧密度161-162 +C进范可行性163 + 成手奖励rank破平 + 概率挑牌模型cardsSeen).
 # 旧: i161-purenn (2026-06-22 sp28: 161-d +死牌Z 154-156 +draw强度Z2 157-159 +顶trips种子Z3 160, W组rescale).
 # 旧: i150-purenn (2026-06-17 纯NN gen DISABLE_HARD_RULES: rollout 真foul 标签携真实代价).
 # ====================================================================
