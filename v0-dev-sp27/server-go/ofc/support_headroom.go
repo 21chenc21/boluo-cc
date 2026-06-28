@@ -45,8 +45,12 @@ func maxAchievableCmpCapped(row []Card, slots int, rankRem [13]int, suitRem [4]i
 			if need := 3 - have; need <= 0 || (need <= slots && rankRem[r] >= need) {
 				add(HtThreeKind, r)
 			}
-			if need := 4 - have; need <= 0 || (need <= slots && rankRem[r] >= need) {
-				add(HtFourKind, r)
+			// 四条: 现实口径(2026-06-28 #24) — 需已有三条(have>=3, 即 ≤1摸). 单对凑四条要摸2张特定牌,
+			//   概率太低不当稳托 (旧版 QQ6 误判可成 QQQQ → dim151 假+1.0 压掉倒置警告).
+			if have >= 3 {
+				if need := 4 - have; need <= 0 || (need <= slots && rankRem[r] >= need) {
+					add(HtFourKind, r)
+				}
 			}
 		}
 	}
@@ -73,9 +77,13 @@ func maxAchievableCmpCapped(row []Card, slots int, rankRem [13]int, suitRem [4]i
 	if fh := bestAchievableFlushHigh(row, slots, suitRem, rankRem, j); fh >= 0 {
 		add(HtFlush, fh)
 	}
-	// 葫芦/金刚/同花顺: tier-only (rank 估高; 极少在 adjacent same-tier 比 rank).
-	if t := maxAchievableHandType(row, slots, rankRem, suitRem, jokerRem); t >= HtFullHouse {
-		add(t, 12)
+	// 葫芦/金刚/同花顺: tier-only (rank 估高). 现实口径(2026-06-28 #24) — 仅本行当前已 ≥两对时算高tier
+	//   (两对→葫芦 ≤1摸, 三条→葫芦/四条 ≤1摸). 单对凑葫芦要2摸(三条+对)概率太低, 旧版 QQ6 误判可成
+	//   QQQ66/QQQQ → dim151 假+1.0 稳托, 压掉 O-行序倒置警告 → NN 选了必 foul 摆法.
+	if int(rowMadeScore(row))/13 >= int(HtTwoPair) {
+		if t := maxAchievableHandType(row, slots, rankRem, suitRem, jokerRem); t >= HtFullHouse {
+			add(t, 12)
+		}
 	}
 	return best
 }
