@@ -32,38 +32,56 @@ func maxAchievableCmpCapped(row []Card, slots int, rankRem [13]int, suitRem [4]i
 	if cur := rowMadeScore(row); cur <= ceil && cur > best {
 		best = cur
 	}
+	// reliableDraw — 抽 need 张 rank r "靠得住"判定 (2026-06-28 用户): 有效 outs = 真牌 rankRem[r] +
+	//   可摸鬼 jokerRem (鬼万能补任意 rank, 故 +1鬼=+1out / +2鬼=+2out). 要求 ≥ need+1 (留1张余量,
+	//   不赌某 rank 最后一张的"空中楼阁"). need<=0 (已成手) 恒真. 治"只看牌面发不出来还当可达". (鬼计入是关键.)
+	reliableDraw := func(r, need int) bool {
+		if need <= 0 {
+			return true
+		}
+		return need <= slots && rankRem[r]+jokerRem >= need+1
+	}
 	// 对 / 三条 / 金刚 (rank-precise)
 	for r := 12; r >= 0; r-- {
 		have := rc[r] + j // jokers 当 r (乐观)
-		// pair: 单张+1draw 或 鬼配 (合理)
-		if have >= 2 || (rc[r] >= 1 && slots >= 1 && rankRem[r] >= 1) {
+		// pair: 单张+1draw(靠谱outs) 或 鬼配/已成对 (合理)
+		if have >= 2 || (rc[r] >= 1 && reliableDraw(r, 2-have)) {
 			add(HtPair, r)
 		}
 		// trips/quads: 必须**已有对**(真对或鬼配) 才算可发育 — 不从单张硬凑三条(太投机, 否则 222顶+底777
 		//   会被"中道单4硬凑444夹进缝"误判成可托). 这是关键: 看本行现有强度能不能托.
 		if have >= 2 {
-			if need := 3 - have; need <= 0 || (need <= slots && rankRem[r] >= need) {
+			if reliableDraw(r, 3-have) {
 				add(HtThreeKind, r)
 			}
-			// 四条: 现实口径(2026-06-28 #24) — 需已有三条(have>=3, 即 ≤1摸). 单对凑四条要摸2张特定牌,
-			//   概率太低不当稳托 (旧版 QQ6 误判可成 QQQQ → dim151 假+1.0 压掉倒置警告).
-			if have >= 3 {
-				if need := 4 - have; need <= 0 || (need <= slots && rankRem[r] >= need) {
-					add(HtFourKind, r)
-				}
+			// 四条: 现实口径(2026-06-28 #24) — 需已有三条(have>=3, 即 ≤1摸, 且 outs 靠谱). 单对凑四条要摸2张
+			//   特定牌, 概率太低不当稳托 (旧版 QQ6 误判可成 QQQQ → dim151 假+1.0 压掉倒置警告).
+			if have >= 3 && reliableDraw(r, 4-have) {
+				add(HtFourKind, r)
 			}
 		}
 	}
 	// 两对: 已成对(rc>=2)免费; 单张升对每个花 1 预算(slots+jokers). 受预算约束才能凑够 2 个对.
 	//   (修: 旧版没管预算, 底[2389]+1slot 被误判成两对.)
-	budget := slots + j
-	var pr []int // 预算内能成的对 rank, r 从高到低
+	budget := slots + j   // 升对预算: 槽数 + 行内鬼
+	jokerPool := jokerRem // 牌堆鬼共享池 — 救 last-card single→pair 按"补到2有效outs"消耗, 防一个鬼救多对
+	var pr []int          // 预算内能成的对 rank, r 从高到低
 	for r := 12; r >= 0; r-- {
 		if rc[r] >= 2 {
-			pr = append(pr, r)
-		} else if rc[r] == 1 && budget > 0 && rankRem[r] >= 1 {
-			pr = append(pr, r)
-			budget--
+			pr = append(pr, r) // 已成对, 免费
+			continue
+		}
+		if rc[r] == 1 && budget > 0 {
+			// single→pair 需 1 draw 靠谱(有效 outs ≥ 2): 真牌 rankRem 不足 2 时鬼补差额, 鬼是共享池用掉减少.
+			needJokers := 2 - rankRem[r]
+			if needJokers < 0 {
+				needJokers = 0
+			}
+			if needJokers <= jokerPool {
+				pr = append(pr, r)
+				budget--
+				jokerPool -= needJokers
+			}
 		}
 	}
 	if len(pr) >= 2 {
