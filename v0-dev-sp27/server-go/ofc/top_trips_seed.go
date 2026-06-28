@@ -52,7 +52,19 @@ func topTripsSeedScore(gs *GameState, rankRem [13]int, suitRem [4]int, jokerRem 
 		return 0 // 顶无 trips 范种子
 	}
 	if legalSeed {
-		return 1 // 稳的合法范种子, 该留
+		return 1 // 稳的合法范种子, 该留 (#110/#48 孤鬼种 ≤中 低trips 走这里, 先返回, 碰不到下面)
+	}
+	// 2026-06-28 (#51): 顶若已是 QQ+ 对范(真高对/鬼配现有Q+/双鬼 = 0摸即成), 是安全的对子范路,
+	//   不套"被迫trips必倒置"的 -1 (玩家会留对子范, 不会强凑foul trips). 治 🃏+Ad=AA 被误判foul险.
+	//   区别 #110 孤鬼: 无真高牌, 成对也要摸, 跟trips种子一样待发育, 不触发(且已被上面 legalSeed +1 接走).
+	topHighPairNow := tj >= 2
+	for r := int(RankQ); r <= 12 && !topHighPairNow; r++ {
+		if rc[r] >= 2 || (tj >= 1 && rc[r] >= 1) {
+			topHighPairNow = true
+		}
+	}
+	if topHighPairNow {
+		return 0 // 已有安全对子范路, 不报trips foul
 	}
 	if lowestTrips > midMax {
 		return -1 // 最低 trips 都 > 中乐观max → 必倒置 foul
