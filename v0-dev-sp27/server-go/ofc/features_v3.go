@@ -91,6 +91,9 @@ func SetFanBonusScale(qq, kk, aa, trips, foulCost *float64) {
 
 // BuildFeaturesV3 — 主入口. 输入 post-placement state, 返回 131-d feature.
 func BuildFeaturesV3(gs *GameState) []float32 {
+	if zeroUsedCardsAblation { // 实验: usedCards 只留 board (去 deck 感知). 见 usedcards_ablation.go
+		gs = gsBoardOnlyUsed(gs)
+	}
 	f := make([]float32, FeatureDimV3)
 
 	// 预算共享 eval (跟 V2 一致)
@@ -128,7 +131,7 @@ func BuildFeaturesV3(gs *GameState) []float32 {
 	fillExpectedRoyalty(f[94:97], gs, rankRem, suitRem, jokerRem, deckTotal, topEvalCapped, midEval, botEval)
 	fillSummary(f[97:102], gs, topEvalCapped, midEval, botEval, f) // 用前面的 P 值
 	fillPairRank(f[102:107], gs, topEvalCapped)
-	fillPairToTrips(f[107:112], gs, rankRem, jokerRem, deckTotal)
+	fillPairToTrips(f[107:112], gs, rankRem, suitRem, jokerRem, deckTotal)
 	fillTopFantasyLocks(f[112:116], gs, topEvalCapped, midEval, rankRem, jokerRem)
 	fillMaxAchievable(f[116:119], gs, rankRem, suitRem, jokerRem)
 	fillLastRound(f[119:121], gs)
@@ -335,15 +338,18 @@ func fillPairRank(f []float32, gs *GameState, topEv HandValue) {
 
 // ============ Group V: 对升 trips 条件概率 (5 dim, idx 107-111) ============
 
-func fillPairToTrips(f []float32, gs *GameState, rankRem [13]int, jokerRem, deckTotal int) {
+func fillPairToTrips(f []float32, gs *GameState, rankRem [13]int, suitRem [4]int, jokerRem, deckTotal int) {
 	cs := cardsSeenRemaining(gs)
 	topSlots := 3 - len(gs.Top)
 	midSlots := 5 - len(gs.Middle)
 	botSlots := 5 - len(gs.Bottom)
 
-	f[0] = pPairToTrips(gs.Top, rankRem, jokerRem, deckTotal, topSlots, cs)
-	f[1] = pPairToTrips(gs.Middle, rankRem, jokerRem, deckTotal, midSlots, cs)
-	f[2] = pPairToTrips(gs.Bottom, rankRem, jokerRem, deckTotal, botSlots, cs)
+	// foul cap (#124): 顶升trips须≤中max, 中须≤底max, 底无上限(999).
+	botMax := maxAchievableCmpCapped(gs.Bottom, botSlots, rankRem, suitRem, jokerRem, 999)
+	midMax := maxAchievableCmpCapped(gs.Middle, midSlots, rankRem, suitRem, jokerRem, botMax)
+	f[0] = pPairToTrips(gs.Top, rankRem, jokerRem, deckTotal, topSlots, cs, midMax)
+	f[1] = pPairToTrips(gs.Middle, rankRem, jokerRem, deckTotal, midSlots, cs, botMax)
+	f[2] = pPairToTrips(gs.Bottom, rankRem, jokerRem, deckTotal, botSlots, cs, 999)
 	f[3] = p2PairToFH(gs.Middle, rankRem, jokerRem, deckTotal, midSlots, cs)
 	f[4] = p2PairToFH(gs.Bottom, rankRem, jokerRem, deckTotal, botSlots, cs)
 }
@@ -1471,9 +1477,14 @@ func eRoyaltyBot(gs *GameState, rankRem [13]int, suitRem [4]int, jokerRem, deckT
 // ============================================================
 
 // pPairToTrips — row 已 pair, P(升 trips)
-func pPairToTrips(row []Card, rankRem [13]int, jokerRem, deckTotal, slots, cardsSeen int) float32 {
+func pPairToTrips(row []Card, rankRem [13]int, jokerRem, deckTotal, slots, cardsSeen, ceil int) float32 {
 	pr := maxPairRankRow(row)
 	if pr < 0 {
+		return 0
+	}
+	// 2026-06-28 (#124): 升 trips 会倒置(trips值 > 下行 max-achievable)就不算发育潜力 — 那是 foul 不是好牌.
+	//   治"中22→222三条"被算高分但 222>底JJ99 必倒置. 跟 W组/topTripsSeed 同口径. 底道 ceil=999 无上限.
+	if int(HtThreeKind)*13+pr > ceil {
 		return 0
 	}
 	if hasRealTrips(row) || hasRealTripsTop(row) {

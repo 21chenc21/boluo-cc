@@ -161,7 +161,9 @@ var (
 	// 2026-06-28 用户: 0.01 太小被rollout噪声淹没(#64/#90/#124 NN忽略). 各牌型加到"档gap内"的安全上限.
 	MHRRankStep      float32 = 0.03 // 中/底 单对rank(#92) + 两对高对rank(#124). 满 12*0.03=0.36 < 0.5(两对→三条 gap). 不翻牌型.
 	MHRKickerStep    float32 = 0.08 // 顶对 kicker(AAK>AAQ #64), 仅 66+(royalty对, 档gap=1.0). 满 0.96 < 1.0. 22-55 不给(MHRTopPairStep 0.2 档太窄会翻).
-	MHRTripsRankStep float32 = 0.06 // 中/底 三条rank(555>333 #90). 555 vs 333 差 2*0.06=0.12. 满 0.72; 底三条 1.0+0.72<2(→顺), 中三条 royalty2+0.72<4(→顺).
+	// 三条 rank (555>333 #90). 2026-06-28 用户: 中三条 royalty=2 到顺=4 有 0-2 headroom, 加大到学得动.
+	MHRMidTripsStep float32 = 0.15 // 中三条: 满 12*0.15=1.8, royalty2+1.8=3.8 < 4(→顺). 555-333=2*0.15=0.30 (≈4x 旧0.12, 过#64阈值0.08).
+	MHRBotTripsStep float32 = 0.07 // 底三条: base1.0, 满 0.84, 1.0+0.84=1.84 < 2(→底顺). 比中小(底 headroom 只 1).
 )
 
 // pairRank5 — 5张手牌(中/底) TypePair 的对子 rank. Value=1e6+pair*15^4+k1*15^3+...
@@ -227,8 +229,8 @@ func MadeHandRewardLabel(topEval, midEval, botEval HandValue) float32 {
 		// 中两对 base 1.0 + 高对/次对 rank 破平 (22/TT>22/88 #124). 1.0+满0.38 < 2(royalty三条).
 		r += MHRMidTwoPair + twoPairRankReward(midEval)
 	case TypeThreeOfAKind:
-		// 中三条 rank (555>333 #90). 无base(royalty2接管), 只rank破平. 2+满0.72 < 4(顺).
-		r += float32(tripsRank5(midEval)) * MHRTripsRankStep
+		// 中三条 rank (555>333 #90). 无base(royalty2接管), rank用0-1.8填headroom. 2+满1.8 < 4(顺).
+		r += float32(tripsRank5(midEval)) * MHRMidTripsStep
 	}
 	switch botEval.Type {
 	case TypePair:
@@ -238,8 +240,8 @@ func MadeHandRewardLabel(topEval, midEval, botEval HandValue) float32 {
 		// 底两对 base 0.5 + 高对/次对 rank 破平. 0.5+满0.13=0.63 < 1.0 三条.
 		r += MHRBotTwoPair + twoPairRankReward(botEval)
 	case TypeThreeOfAKind:
-		// 底三条 base 1.0 + rank 破平. 1.0+满0.72=1.72 < 2(底顺 royalty).
-		r += MHRBotTrips + float32(tripsRank5(botEval))*MHRTripsRankStep
+		// 底三条 base 1.0 + rank 破平. 1.0+满0.84=1.84 < 2(底顺 royalty).
+		r += MHRBotTrips + float32(tripsRank5(botEval))*MHRBotTripsStep
 	}
 	return r
 }
