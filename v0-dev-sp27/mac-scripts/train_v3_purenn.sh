@@ -110,7 +110,8 @@ SCRIPT_VERSION="2026-06-17-purenn"
 #     - Mark cases 35/37/40/45 as warn (AI 选合理但不在 expecteds)
 #     - sp17 iter-1 r1 deployed 8002, bench: 59通过/4警告/0 真错.
 #     - DATA_VERSION → i147-sp18 (rollout policy 含 sp17 best, 数据 fresh).
-DATA_VERSION="i164-sp31"  # 2026-06-28 sp31 (164-d不变, 特征/label/cases 全变→fresh). 含 sp30 全部 + 新: (a)中三条rank 0.06→0.15 用0-2 headroom(#90 555>333 学得动); (b)pPairToTrips foul cap(#124 中22→222>底=倒置不算潜力,跟W组同口径); (c)cases 全删 usedCards=board-only(清phantom-opponent污染); (d)outs-aware可达+鬼计入outs; (e)W组高tier≤1摸; (f)topTripsSeed QQ+对范不报foul. 从 sp29 best(127) warm-start.
+DATA_VERSION="i165-sp32"  # 2026-06-29 sp32 (165-d: +W2组dim164 强成手放错行). 含 sp31 全部 + #23/#24 倒置修(中KK>底QQ binary-1). 追加dim warm-start pad 0.
+# 旧 i164-sp31 (164-d): #90三条rank0-2 / #124 pPairToTrips cap / cases全删uc / outs-aware. sp31-one 跑了iter2=130, #124已落地, #90/#23/#24未.
 # 旧 sp30: i164-sp30 (draw纯花+slots / MHR rank各档安全上限 / 顶trips种子bonus). sp30-one 跑了iter-1=+3 但无#90/#124/clean-cases.
 # 旧: i164-sp29 (2026-06-25: +B顺紧密度161-162 +C进范可行性163 + 成手奖励rank破平 + 概率挑牌模型cardsSeen).
 # 旧: i161-purenn (2026-06-22 sp28: 161-d +死牌Z 154-156 +draw强度Z2 157-159 +顶trips种子Z3 160, W组rescale).
@@ -287,9 +288,9 @@ for ((iter=1; iter<=ITERS; iter++)); do
 
     # Phase A: gen samples — SELF-PLAY: rollout policy = 当前 BEST_CKPT (动态)
     # 跟 distillation 区别: 这里 BEST_CKPT 每 iter 都换, NN 跟自己玩.
-    echo "[iter $iter] Phase A: gen $GAMES games (rollouts=150, indim 164, SELF-PLAY + exploration)..." | tee -a "$LOG"
+    echo "[iter $iter] Phase A: gen $GAMES games (rollouts=150, indim 165, SELF-PLAY + exploration)..." | tee -a "$LOG"
     GEN_ARGS=(-num-games "$GAMES" -jokers 2 -rollouts 150 -r1-cap 30
-              -phantom-opponents 2 -indim 164
+              -phantom-opponents 2 -indim 165
               -foul-cost 3 -fan-bonus-qq 10 -fan-bonus-kk 30 -fan-bonus-aa 100 -fan-bonus-trips 140
               -out-dir "$GEN_OUT")
     if [ -n "$BEST_CKPT" ] && [ -f "$BEST_CKPT" ]; then
@@ -320,7 +321,7 @@ for ((iter=1; iter<=ITERS; iter++)); do
     DS_DIRS="$DATASET_ROOT${EXTRA_DATA:+,$EXTRA_DATA}"
     [ -n "${EXTRA_DATA:-}" ] && echo "[iter $iter]   +EXTRA_DATA 旧数据集: $EXTRA_DATA" | tee -a "$LOG"
     TRAIN_ARGS=(-dataset-dir "$DS_DIRS" -dataset-keep-warm-start -hours 1 -round-min 30
-                -outdim 4 -h1 512 -h2 256 -h3 128 -indim 164
+                -outdim 4 -h1 512 -h2 256 -h3 128 -indim 165
                 -epochs 30 -lr 0.001 -warm-lr-mult 0.2 -y-recompute
                 -fan-bonus-qq 10 -fan-bonus-kk 30 -fan-bonus-aa 100 -fan-bonus-trips 140
                 -foul-cost 3 -fan-w 0.40 -foul-w 0.10 -policy-w 0.30

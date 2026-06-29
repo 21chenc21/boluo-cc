@@ -202,3 +202,16 @@ func fillSupportHeadroom(f []float32, gs *GameState, rankRem [13]int, suitRem [4
 	f[2] = float32(partialEvalTP(gs.Top).Type) / 8.0
 	f[3] = clampF(float32(midMaxCapped-midV)/supportScale, 0, 1)
 }
+
+// fillStrongHandMisplaced — W2 组 (2026-06-29 #23/#24, dim164): "强成手放错行" binary 信号.
+//   底已成对+ 且 中道当前成手 > 底道当前成手 → 中压底(强牌该在底不在中) → -1.
+//   治 "KK塞中(中KK>底QQ) 而非 KK→底凑KKQQ". 现存特征全线性 margin: KK vs QQ 才差1档 rank → 压成~0 抓不住;
+//   W组又比"底max vs 中当前"漏了中会发育成KKK. 用 binary 当前成手比较 — gate"底成对+"排发育draw(高牌底),
+//   用当前成手不用max(避空/未满中道的顺/花潜力误伤 exp).
+func fillStrongHandMisplaced(f []float32, gs *GameState) {
+	midMade := int(rowMadeScore(gs.Middle))
+	botMade := int(rowMadeScore(gs.Bottom))
+	if botMade >= int(HtPair)*13 && midMade > botMade {
+		f[0] = -1
+	}
+}

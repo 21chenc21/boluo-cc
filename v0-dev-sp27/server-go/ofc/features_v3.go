@@ -47,7 +47,8 @@ import (
 // 2026-06-21 sp28: 157 → 160, 追加"draw 强度" Z2 组 (dim157-159, 每行顺/花potential). 追加法 pad 0.
 // 2026-06-21 sp28: 160 → 161, 追加"顶trips范种子合法性" Z3 组 (dim160). 追加法 pad 0.
 // 2026-06-25 sp29: 161 → 163, 追加"顺draw紧密度质量" B 组 (dim161-162, 中/底). 追加法 pad 0. (#122卡顺细化)
-const FeatureDimV3 = 164
+// 2026-06-29 sp32: 164 → 165, 追加"强成手放错行" W2 组 (dim164). 追加法 pad 0. (#23/#24 中KK>底QQ倒置)
+const FeatureDimV3 = 165
 
 // FeatureDimV3Base — 成手行序前的 147-d layout. 太子 ckpt 是此 dim; gen 用太子当 rollout 时建 147-d 特征.
 const FeatureDimV3Base = 147
@@ -175,6 +176,9 @@ func BuildFeaturesV3(gs *GameState) []float32 {
 	//   (hard_rules.go, 与 prod sp25featfix 同源). F组只算"顶摸QQ+概率"行序盲 → 锁低成手/堵行序杀范时给假范信号.
 	//   此维 = !(范死 || 假范) → NN 学会"F组范概率只在此=1时算数". 治#116(底2s6h锁66/22杀范被假范骗).
 	fillFantasyReachable(f[163:164], gs)
+
+	// 2026-06-29 W2 组: 强成手放错行 (dim164). 治 #23/#24 中KK>底QQ 倒置. 追加法 warm-start pad 0.
+	fillStrongHandMisplaced(f[164:165], gs)
 
 	return f
 }

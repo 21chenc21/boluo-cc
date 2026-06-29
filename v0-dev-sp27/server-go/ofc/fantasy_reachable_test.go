@@ -27,8 +27,8 @@ func TestFantasyReachableFeature(t *testing.T) {
 
 	fK := BuildFeaturesV3(kill)
 	fD := BuildFeaturesV3(dev)
-	if len(fK) != FeatureDimV3 || FeatureDimV3 != 164 {
-		t.Fatalf("FeatureDimV3 应=164, len=%d dim=%d", len(fK), FeatureDimV3)
+	if len(fK) != FeatureDimV3 || FeatureDimV3 != 165 {
+		t.Fatalf("FeatureDimV3 应=165, len=%d dim=%d", len(fK), FeatureDimV3)
 	}
 	if fK[163] != 0 {
 		t.Errorf("底2s6h锁死 fantasyReachable 应=0, 得 %.1f", fK[163])
