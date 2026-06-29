@@ -5184,7 +5184,7 @@
   "note": "D-nndiff局20 R4. 中66/22两对(满), 底8h Kh 3h 3红心(花draw). 范需顶QQ+底花, 但R4发4s Jd 9s无Q+/红心, 范跟避foul已互斥(死). 旧FantasyLost独立判误以为范活→FantasyPossible砍保花候选→9s进底杀花→FOUL. 2026-06-19重写FantasyLost(链式rank-aware: 头<QQ/中max<头min或<QQ/底max<中min或<QQ→lost). 修后范死→规则no-op→保花(头[X Jd 9s]留底3红心). 纯NN本就选对."
  },
  {
-  "name": "实战 104 [R2]: D63 底QQ(3张)+中3黑桃flush draw, 7s留中保花 别弃黑桃",
+  "name": "实战 104 [R2]: D63 底QQ(3张)别碰底保葫芦种子, 4/6/7→顶+中发育(7花draw或4顺draw)",
   "round": 2,
   "jokerCount": 2,
   "pureMLP": true,
@@ -5223,9 +5223,27 @@
      "7s"
     ],
     "bottom": []
+   },
+   {
+    "top": [
+     "6h"
+    ],
+    "middle": [
+     "4c"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "7s"
+    ],
+    "middle": [
+     "4c"
+    ],
+    "bottom": []
    }
   ],
-  "note": "【sp28关键观察】 D-nndiff局63 R2. 底9h Qd Qh=QQ(3张). 中3s 5s. 发4c 6h 7s里 3s/5s/7s全黑桃→中3黑桃flush draw. value-head漏看同花, 弃黑桃7s换6h进中(只2黑桃)+4c丢QQ底死kicker, 低估保花2.23(规则=纯NN无差异, 纯value-head盲区). 2026-06-19加R2BotPairMidDrawBonus(R2+底对/三条且3张+中3+同花或3连张→+3). 修后7s留中保花draw.",
+  "note": "【sp28关键观察+2026-06-29用户重审】 D-nndiff局63 R2. 底9h Qd Qh=QQ(3张,2空). 中3s 5s. 发4c 6h 7s. 核心: **别碰底, 保住底QQ→葫芦种子**(AI错在4c→底当死kicker堵死FH发育). 4/6/7任意一张→顶+另一张→中发育(7s→中=黑桃flush draw / 4c→中=3,4,5顺draw), 第三张弃. 共同点=底留3张QQ. label probe(去seedBonus): exp保花EV4.50 < AI杀花6.14 → **label偏AI是错的**: heuristic rollout不实现长尾(底葫芦/中顺花种子)→低估保种子摆法. 不是缺特征(draw dim158=0.60好的), 是 silver-label被rollout策略卡住. 软规则R2BotPairMidDrawBonus兜底. 真修=label侧按概率注入种子期权价值 或 强rollout策略.",
   "warn": false
  },
  {
