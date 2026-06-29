@@ -101,7 +101,7 @@ if [ -z "$LATEST" ]; then
 fi
 
 echo "[v3-pipeline] Phase C: bench 纯 MLP $LATEST"
-DISABLE_MCTS=1 "$BENCH_BIN" -ckpt "$LATEST" -cases cases/all-tests-expanded.json -workers 0 \
+DISABLE_MCTS=1 "$BENCH_BIN" -ckpt "$LATEST" -cases cases/game-cases.json -workers 0 \
     2>&1 | tee -a "$LOG"
 
 echo ""

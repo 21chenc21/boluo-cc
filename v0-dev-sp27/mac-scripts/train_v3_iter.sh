@@ -141,7 +141,7 @@ if [ -e "$BEST_LINK" ]; then
     RESOLVED=$(readlink -f "$BEST_LINK" 2>/dev/null || echo "$BEST_LINK")
     if [ -f "$RESOLVED" ]; then
         echo "[v3-iter] 检测到现有 best.json → $RESOLVED, bench 取分..." | tee -a "$LOG"
-        BENCH_OUT=$(DISABLE_MCTS=1 "$BENCH_BIN" -ckpt "$RESOLVED" -cases cases/all-tests-expanded.json -workers 0 2>&1 | tail -3)
+        BENCH_OUT=$(DISABLE_MCTS=1 "$BENCH_BIN" -ckpt "$RESOLVED" -cases cases/game-cases.json -workers 0 2>&1 | tail -3)
         EXISTING_TC=$(echo "$BENCH_OUT" | grep -oE "[0-9]+通过" | head -1 | grep -oE "[0-9]+")
         if [ -n "$EXISTING_TC" ] && [ "$EXISTING_TC" -gt 0 ]; then
             BEST_TC=$EXISTING_TC
@@ -227,7 +227,7 @@ for ((iter=1; iter<=ITERS; iter++)); do
     NEW_CKPT=""
     for ck in "${NEW_CKPTS[@]}"; do
         echo "[iter $iter] Phase C: bench $ck" | tee -a "$LOG"
-        BENCH_OUT=$(DISABLE_MCTS=1 "$BENCH_BIN" -ckpt "$ck" -cases cases/all-tests-expanded.json -workers 0 2>&1 | tail -3)
+        BENCH_OUT=$(DISABLE_MCTS=1 "$BENCH_BIN" -ckpt "$ck" -cases cases/game-cases.json -workers 0 2>&1 | tail -3)
         echo "$BENCH_OUT" | tee -a "$LOG"
         TC=$(echo "$BENCH_OUT" | grep -oE "[0-9]+通过" | head -1 | grep -oE "[0-9]+")
         [ -z "$TC" ] && TC=0

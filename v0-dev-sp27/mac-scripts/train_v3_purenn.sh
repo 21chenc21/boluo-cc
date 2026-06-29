@@ -144,20 +144,16 @@ GEN_BIN="$BIN_DIR/gen-rollout-dataset"
 BENCH_BIN="$BIN_DIR/bench-cases"
 TRANSLATE_BIN="$BIN_DIR/translate-v2-v3-weights"
 
-# 2026-06-14 (用户): bench TC = std63 + 41 gamecase 总通过数 (训练带上所有 case).
-# 设全局 BENCH_TC_STD / BENCH_TC_GC / BENCH_GC_TOTAL / BENCH_STD_LINE / BENCH_GC_LINE / BENCH_TOTAL.
-# ⚠️ 必须直接调用 (bench_total_tc "$ck"), 不能用 $(bench_total_tc ...) — 子shell 会丢全局赋值,
-#    导致 "std /63 + gc /" 显示为空. 用后读 $BENCH_TOTAL 拿总分.
+# 2026-06-29 (用户): std63 已并入 game-cases.json (183 case 单文件), bench 单文件总通过数.
+# 设全局 BENCH_TOTAL (总通过) / BENCH_TOTAL_CASES (总数) / BENCH_LINE (结果行).
+# ⚠️ 必须直接调用 (bench_total_tc "$ck"), 不能用 $(bench_total_tc ...) — 子shell 会丢全局赋值.
 bench_total_tc() {
-    local ck="$1" o1 o2
+    local ck="$1" o
     # 2026-06-20 (用户): gate 改纯NN (DISABLE_HARD+SOFT, 含支配过滤) — 之前规则全开掩盖 value-head 没长进 (i154白训).
-    o1=$(DISABLE_MCTS=1 DISABLE_HARD_RULES=1 DISABLE_SOFT_RULES=1 "$BENCH_BIN" -ckpt "$ck" -cases cases/all-tests-expanded.json -workers 0 2>&1 | grep 结果 | tail -1)
-    o2=$(DISABLE_MCTS=1 DISABLE_HARD_RULES=1 DISABLE_SOFT_RULES=1 "$BENCH_BIN" -ckpt "$ck" -cases cases/game-cases.json -workers 0 2>&1 | grep 结果 | tail -1)
-    BENCH_STD_LINE="$o1"; BENCH_GC_LINE="$o2"
-    BENCH_TC_STD=$(echo "$o1" | grep -oE "[0-9]+通过" | head -1 | grep -oE "[0-9]+"); [ -z "$BENCH_TC_STD" ] && BENCH_TC_STD=0
-    BENCH_TC_GC=$(echo "$o2" | grep -oE "[0-9]+通过" | head -1 | grep -oE "[0-9]+"); [ -z "$BENCH_TC_GC" ] && BENCH_TC_GC=0
-    BENCH_GC_TOTAL=$(echo "$o2" | grep -oE "[0-9]+总计" | head -1 | grep -oE "[0-9]+"); [ -z "$BENCH_GC_TOTAL" ] && BENCH_GC_TOTAL=44
-    BENCH_TOTAL=$((BENCH_TC_STD + BENCH_TC_GC))
+    o=$(DISABLE_MCTS=1 DISABLE_HARD_RULES=1 DISABLE_SOFT_RULES=1 "$BENCH_BIN" -ckpt "$ck" -cases cases/game-cases.json -workers 0 2>&1 | grep 结果 | tail -1)
+    BENCH_LINE="$o"
+    BENCH_TOTAL=$(echo "$o" | grep -oE "[0-9]+通过" | head -1 | grep -oE "[0-9]+"); [ -z "$BENCH_TOTAL" ] && BENCH_TOTAL=0
+    BENCH_TOTAL_CASES=$(echo "$o" | grep -oE "[0-9]+总计" | head -1 | grep -oE "[0-9]+"); [ -z "$BENCH_TOTAL_CASES" ] && BENCH_TOTAL_CASES=183
 }
 
 echo "[v3-sp] (re)build binaries..."
@@ -263,13 +259,13 @@ fi
 if [ -e "$BEST_LINK" ]; then
     RESOLVED=$(readlink -f "$BEST_LINK" 2>/dev/null || echo "$BEST_LINK")
     if [ -f "$RESOLVED" ]; then
-        echo "[v3-sp] best.json → $RESOLVED, bench 取分 (std63 + gamecase)..." | tee -a "$LOG"
+        echo "[v3-sp] best.json → $RESOLVED, bench 取分 (game-cases 183)..." | tee -a "$LOG"
         bench_total_tc "$RESOLVED"; EXISTING_TC=$BENCH_TOTAL
-        echo "    $BENCH_STD_LINE | $BENCH_GC_LINE" | tee -a "$LOG"
+        echo "    $BENCH_LINE" | tee -a "$LOG"
         if [ -n "$EXISTING_TC" ] && [ "$EXISTING_TC" -gt 0 ]; then
             BEST_TC=$EXISTING_TC
             BEST_CKPT="$RESOLVED"
-            echo "[v3-sp] 起点: best=$BEST_CKPT (std $BENCH_TC_STD/63 + gc $BENCH_TC_GC/$BENCH_GC_TOTAL = $BEST_TC), self-play loop 从此开始" | tee -a "$LOG"
+            echo "[v3-sp] 起点: best=$BEST_CKPT (tc $BEST_TC/$BENCH_TOTAL_CASES), self-play loop 从此开始" | tee -a "$LOG"
         else
             echo "[v3-sp] WARN: best.json bench=0, 冷启动" | tee -a "$LOG"
         fi
@@ -357,11 +353,11 @@ for ((iter=1; iter<=ITERS; iter++)); do
     NEW_TC=0
     NEW_CKPT=""
     for ck in "${NEW_CKPTS[@]}"; do
-        echo "[iter $iter] Phase C: bench $ck (std63 + gamecase)" | tee -a "$LOG"
+        echo "[iter $iter] Phase C: bench $ck (game-cases 183)" | tee -a "$LOG"
         bench_total_tc "$ck"; TC=$BENCH_TOTAL
         [ -z "$TC" ] && TC=0
-        echo "    $BENCH_STD_LINE | $BENCH_GC_LINE" | tee -a "$LOG"
-        echo "[iter $iter]   $ck → std $BENCH_TC_STD/63 + gc $BENCH_TC_GC/$BENCH_GC_TOTAL = $TC" | tee -a "$LOG"
+        echo "    $BENCH_LINE" | tee -a "$LOG"
+        echo "[iter $iter]   $ck → tc $TC/$BENCH_TOTAL_CASES" | tee -a "$LOG"
         if [ "$TC" -gt "$NEW_TC" ]; then
             NEW_TC=$TC
             NEW_CKPT="$ck"
@@ -369,11 +365,11 @@ for ((iter=1; iter<=ITERS; iter++)); do
     done
 
     echo "" | tee -a "$LOG"
-    echo "[iter $iter] testcase pick: $NEW_CKPT → new_tc=$NEW_TC vs best_tc=$BEST_TC (std63+gamecase 合计)" | tee -a "$LOG"
+    echo "[iter $iter] testcase pick: $NEW_CKPT → new_tc=$NEW_TC vs best_tc=$BEST_TC (game-cases 183 合计)" | tee -a "$LOG"
 
     # === PROMOTE 决策 (2026-06-25 用户): 唯一标准 = testcase 严格↑, 无任何门禁/其它条件 ===
     #   去掉: 3-metric duel(fan/score 200局) + testcase大跌guard + fantasy↑/score↑规则 + litmus veto门禁.
-    #   只要 NEW_TC > BEST_TC 就替换 best (testcase = std63 + gamecase 合计, 纯NN DISABLE_HARD+SOFT).
+    #   只要 NEW_TC > BEST_TC 就替换 best (testcase = game-cases 183 合计, 纯NN DISABLE_HARD+SOFT).
     SHOULD_PROMOTE=0
     REASON=""
     if [ -z "$BEST_CKPT" ]; then

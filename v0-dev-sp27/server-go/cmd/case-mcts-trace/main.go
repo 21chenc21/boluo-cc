@@ -1,7 +1,7 @@
 // case-mcts-trace — 给单个 case + ckpt, 跑 ExpertPlace5/3 一次, 打印各 stage top 候选.
 //
 // 用法:
-//   ./case-mcts-trace -ckpt ckpts-v2-ema/round-001-acc89.json -cases cases/all-tests-expanded.json -case 20
+//   ./case-mcts-trace -ckpt ckpts-v2-ema/round-001-acc89.json -cases cases/game-cases.json -case 20
 //
 // 输出:
 //   === Case 20 [R1] ===
@@ -59,7 +59,7 @@ func parseCards(strs []string) []ofc.Card {
 
 func main() {
 	ckptPath := flag.String("ckpt", "ckpts-v2-ema/round-001-acc89.json", "ckpt path")
-	casesPath := flag.String("cases", "cases/all-tests-expanded.json", "cases JSON path")
+	casesPath := flag.String("cases", "cases/game-cases.json", "cases JSON path")
 	caseIdx := flag.Int("case", 20, "case number (1-based)")
 	seed := flag.Int64("seed", 42, "RNG seed (deterministic)")
 	simsMult := flag.Float64("sims-mult", 1.0, "MCTS_SIMS_MULT")

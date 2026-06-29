@@ -137,14 +137,13 @@ BENCH3_BIN="$BIN_DIR/bench-3metric"
 # 2026-06-14 (用户): bench TC = std63 + 41 gamecase 总通过数 (训练带上所有 case).
 # 设全局 BENCH_TC_STD / BENCH_TC_GC / BENCH_STD_LINE / BENCH_GC_LINE; stdout = 总通过数.
 bench_total_tc() {
-    local ck="$1" o1 o2
-    o1=$(DISABLE_MCTS=1 "$BENCH_BIN" -ckpt "$ck" -cases cases/all-tests-expanded.json -workers 0 2>&1 | grep 结果 | tail -1)
-    o2=$(DISABLE_MCTS=1 "$BENCH_BIN" -ckpt "$ck" -cases cases/game-cases.json -workers 0 2>&1 | grep 结果 | tail -1)
-    BENCH_STD_LINE="$o1"; BENCH_GC_LINE="$o2"
-    BENCH_TC_STD=$(echo "$o1" | grep -oE "[0-9]+通过" | head -1 | grep -oE "[0-9]+"); [ -z "$BENCH_TC_STD" ] && BENCH_TC_STD=0
-    BENCH_TC_GC=$(echo "$o2" | grep -oE "[0-9]+通过" | head -1 | grep -oE "[0-9]+"); [ -z "$BENCH_TC_GC" ] && BENCH_TC_GC=0
-    BENCH_GC_TOTAL=$(echo "$o2" | grep -oE "[0-9]+总计" | head -1 | grep -oE "[0-9]+"); [ -z "$BENCH_GC_TOTAL" ] && BENCH_GC_TOTAL=44
-    echo $((BENCH_TC_STD + BENCH_TC_GC))
+    # 2026-06-29: std63 已并入 game-cases.json (183 单文件).
+    local ck="$1" o
+    o=$(DISABLE_MCTS=1 "$BENCH_BIN" -ckpt "$ck" -cases cases/game-cases.json -workers 0 2>&1 | grep 结果 | tail -1)
+    BENCH_GC_LINE="$o"
+    BENCH_TC_GC=$(echo "$o" | grep -oE "[0-9]+通过" | head -1 | grep -oE "[0-9]+"); [ -z "$BENCH_TC_GC" ] && BENCH_TC_GC=0
+    BENCH_GC_TOTAL=$(echo "$o" | grep -oE "[0-9]+总计" | head -1 | grep -oE "[0-9]+"); [ -z "$BENCH_GC_TOTAL" ] && BENCH_GC_TOTAL=183
+    echo "$BENCH_TC_GC"
 }
 
 echo "[v3-sp] (re)build binaries..."

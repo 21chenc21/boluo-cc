@@ -44,7 +44,7 @@ func parseCards(strs []string) []ofc.Card {
 
 func main() {
 	ckpt := flag.String("ckpt", "ckpts-v2-ema/round-001-acc89.json", "")
-	cases := flag.String("cases", "cases/all-tests-expanded.json", "")
+	cases := flag.String("cases", "cases/game-cases.json", "")
 	caseIdx := flag.Int("case", 3, "")
 	sims := flag.Int("sims", 200, "")
 	cpuct := flag.Float64("cpuct", 1.5, "")

@@ -77,7 +77,7 @@ DISABLE_MCTS=1 "$AZ_BIN" \
     -rollout-epsilon 0 \
     -testcase-drop-limit 1 \
     -train-bin "$TRAIN_BIN" \
-    -cases-file cases/all-tests-expanded.json \
+    -cases-file cases/game-cases.json \
     -bench-sims-mult 2 \
     -workers 0 2>&1 | tee "$LOG"
 
@@ -89,4 +89,4 @@ echo "[az-puremlp] 查看每 iter 的纯 MLP testcase 趋势:"
 echo "  grep 'testcase:' $LOG"
 echo ""
 echo "[az-puremlp] 单独 bench 任一 iter:"
-echo "  DISABLE_MCTS=1 ./server-go-bin/bench-cases -ckpt $CKPT_DIR/iter-NNN.json -cases cases/all-tests-expanded.json -workers 0"
+echo "  DISABLE_MCTS=1 ./server-go-bin/bench-cases -ckpt $CKPT_DIR/iter-NNN.json -cases cases/game-cases.json -workers 0"

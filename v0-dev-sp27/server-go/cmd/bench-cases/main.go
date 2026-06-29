@@ -3,7 +3,7 @@
 //
 // 用法:
 //   ./bench-cases -ckpt big-model-v1.json
-//   ./bench-cases -ckpt round-001-acc89.json -cases cases/all-tests-expanded.json -bench-sims-mult 2 -workers 0
+//   ./bench-cases -ckpt round-001-acc89.json -cases cases/game-cases.json -bench-sims-mult 2 -workers 0
 //
 // 时间: ~1-2 min for 63 cases (vs run-cases.sh 5-10 min)
 //
@@ -280,7 +280,7 @@ type caseResult struct {
 
 func main() {
 	ckpt := flag.String("ckpt", "", "ckpt JSON path")
-	casesFile := flag.String("cases", "cases/all-tests-expanded.json", "testcase JSON path")
+	casesFile := flag.String("cases", "cases/game-cases.json", "testcase JSON path")
 	benchSimsMult := flag.Float64("bench-sims-mult", 2.0, "MCTS_SIMS_MULT (default 2 = run-cases.sh 等价)")
 	r1Mult := flag.Float64("r1-mult", 1.0, "RolloutConfig.R1Mult (1.0=full 30 candidates, 0.17≈top-5)")
 	prerankW := flag.Float64("prerank-w", 0.0, "MctsPrerankW (0=纯 rollout, 1=纯 NN, 0.5=blend)")
