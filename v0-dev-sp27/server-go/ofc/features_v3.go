@@ -1345,7 +1345,39 @@ func pMidGTBot(gs *GameState, midEv, botEv HandValue, rankRem [13]int, suitRem [
 	// 2026-06-29 (#51 同根): 改真概率 P(底 ≥ 中) 替换粗桶乐观 maxAchievable. P(中>底)=1-P(底≥中).
 	cs := cardsSeenRemaining(gs)
 	if midEv.Type < TypePair {
-		return 0.1 // 中高牌, 底易 ≥ → foul 风险低
+		// 2026-06-29 (#67): 中高牌 ≠ 安全. "中小底大"常识 — 中的高牌将来配对可能倒置.
+		//   P(中>底) ≈ P(中配出最高牌的对) × P(底 < 该对). AI把J放中赌来Q, 来J不来Q就 中JJ>底Q高 倒置.
+		midHigh := -1
+		midHighCnt := 0
+		for _, c := range gs.Middle {
+			if !c.IsJoker() {
+				if r := int(c.Rank()); r > midHigh {
+					midHigh, midHighCnt = r, 1
+				} else if r == midHigh {
+					midHighCnt++
+				}
+			}
+		}
+		if midHigh < 0 { // 中全鬼(罕见)
+			return 0.1
+		}
+		var pMidPairsHigh float32
+		if midHighCnt >= 2 {
+			pMidPairsHigh = 1
+		} else {
+			pMidPairsHigh = pDraw(deckTotal, rankRem[midHigh], cs, midSlots, 1)
+		}
+		// 底是否摸到 ≥ "中最高牌对"(配 ≥midHigh 的对, 或两对+)
+		pBotGEpair := pRowPairAtLeastRank(gs.Bottom, midHigh, rankRem, jokerRem, deckTotal, botSlots, cs)
+		pBotTwoPair := pRowAtLeast(gs.Bottom, TypeTwoPair, rankRem, suitRem, jokerRem, deckTotal, botSlots, cs)
+		pBotGE0 := pBotGEpair + pBotTwoPair*(1-pBotGEpair)
+		p := pMidPairsHigh * (1 - pBotGE0)
+		if p < 0 {
+			p = 0
+		} else if p > 0.9 {
+			p = 0.9
+		}
+		return p
 	}
 	var pBotGE float32 // P(底道现实摸到 ≥ 中)
 	if midEv.Type == TypePair {
