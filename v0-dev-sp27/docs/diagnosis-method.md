@@ -25,9 +25,11 @@
 > ⚠️ **必同时看 foul率**（2026-06-29 用户）：foul率常是真凶 —— 如 #51 flush 摆法 EV 略高**且 foul 更低(12.6% vs 17.8%)**才看出是最优。只看 EV 会漏。
 > ⚠️ EV 必须是 **QuickRollout 返回值**（含 -FoulCost 惩罚），不能用 RawRoyalty+FanBonus（漏扣 foul 惩罚 = 假高）。cfg/metric/rollout-policy 三者必一致，否则数字不可比（踩过坑）。
 - **`Δ(exp-AI) > 0`（标签偏 exp）但 NN 选 AI** → **over-value 特征压住了区分特征**。NN 该学会，是某个 descriptive 特征（pair rank / PairToTrips / midDevelopHeadroom…）把错位的成手当好事。→ **找那个 over-value 特征 cap/contextualize（治得了）**。
-- **`Δ(exp-AI) ≤ 0`（标签偏 AI）** → **NN 学得对！** 问题在 label 侧：
+- **`Δ(exp-AI) ≤ 0`（标签偏 AI）** → NN 跟着 label 学，问题在 label 侧。**别急着判 case 错**，三种分流：
+  - **rollout 长尾盲区（Root B，最易漏）**：case 对，但 heuristic rollout 不实现长尾价值（底QQ→葫芦托住中花/顺、顶trips范）→ silver-label 低估"保种子"摆。问用户/domain 确认 case 对后，**按概率往 label 注入种子期权**（`topTripsSeedBonus` / `drawSeedScore`，不是改特征、不是软规则）。#104 即此类。
   - reward 不够（seed bonus / rank 奖太小没翻转 EV）→ 调大 reward。
-  - 或 **case 判断本身错**（exp 其实没比 AI 好）→ 重审 case，别硬训。
+  - **case 判断本身错**（exp 其实没比 AI 好）→ 重审 case，别硬训。#51 即此类（旧 exp 是最差摆）。
+  > 区分"长尾盲区"vs"case错": 看 `QuickRolloutDetailed` 的 raw royalty 分布 —— 若 exp 摆**确实偶尔realizes高royalty**(≥10 的次数 >> AI)只是均值被拉低，则是 Root B 盲区（rollout 实现率不足）；若 exp 根本没高 royalty 尾巴，才是 case 错。
 
 ### 3. 特征值 sanity — 区分特征值合理吗
 即使特征区分了，值也可能是 bug 算出来的。手算盘面真值对一遍。典型 bug：
