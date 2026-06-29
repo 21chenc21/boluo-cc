@@ -1342,16 +1342,58 @@ func pMidGTBot(gs *GameState, midEv, botEv HandValue, rankRem [13]int, suitRem [
 		}
 		return 0 // 确定 no foul
 	}
-	// 非终局, 估算
-	if len(gs.Middle) > 0 && len(gs.Bottom) > 0 && midEv.Type > botEv.Type {
-		// 还有 slot, bot 可能反超
-		botMax := maxAchievableHandType(gs.Bottom, botSlots, rankRem, suitRem, jokerRem)
-		if int(botMax) > midEv.Type {
-			return 0.4 // 50/50 偏 bot 可能反超
-		}
-		return 0.9 // bot 上限低, 大概率 foul
+	// 2026-06-29 (#51 同根): 改真概率 P(底 ≥ 中) 替换粗桶乐观 maxAchievable. P(中>底)=1-P(底≥中).
+	cs := cardsSeenRemaining(gs)
+	if midEv.Type < TypePair {
+		return 0.1 // 中高牌, 底易 ≥ → foul 风险低
 	}
-	return 0.2 // 当前 mid ≤ bot, foul 风险中等
+	var pBotGE float32 // P(底道现实摸到 ≥ 中)
+	if midEv.Type == TypePair {
+		midR := highestRealPairRank(gs.Middle)
+		if midR < 0 {
+			midR = 0
+		}
+		pBotPairGE := pRowPairAtLeastRank(gs.Bottom, midR, rankRem, jokerRem, deckTotal, botSlots, cs)
+		pBotTwoPairPlus := pRowAtLeast(gs.Bottom, TypeTwoPair, rankRem, suitRem, jokerRem, deckTotal, botSlots, cs)
+		pBotGE = pBotPairGE + pBotTwoPairPlus*(1-pBotPairGE)
+	} else {
+		pBotGE = pRowAtLeast(gs.Bottom, midEv.Type, rankRem, suitRem, jokerRem, deckTotal, botSlots, cs)
+	}
+	p := 1 - pBotGE
+	if p < 0 {
+		p = 0
+	} else if p > 1 {
+		p = 1
+	}
+	return p
+}
+
+// pRowPairAtLeastRank — P(row 配出一个 rank ≥ minRank 的对子). union over ranks≥minRank, 每 rank 用 pDraw.
+//   已成对/鬼配=1; 单张+1摸; 无该rank=2摸(rare). (#51 同根: foul 概率复用 pDraw, 不拍桶.)
+func pRowPairAtLeastRank(row []Card, minRank int, rankRem [13]int, jokerRem, deckTotal, slots, cs int) float32 {
+	var rc [13]int
+	hasJoker := false
+	for _, c := range row {
+		if c.IsJoker() {
+			hasJoker = true
+		} else {
+			rc[c.Rank()]++
+		}
+	}
+	pNone := float32(1)
+	for r := minRank; r <= 12; r++ {
+		var pPair float32
+		switch {
+		case rc[r] >= 2 || (rc[r] >= 1 && hasJoker):
+			pPair = 1
+		case rc[r] == 1:
+			pPair = pDraw(deckTotal, rankRem[r], cs, slots, 1)
+		default:
+			pPair = pDraw(deckTotal, rankRem[r], cs, slots, 2)
+		}
+		pNone *= (1 - pPair)
+	}
+	return 1 - pNone
 }
 
 // pBotGEMid — 等于 1 - pMidGTBot
