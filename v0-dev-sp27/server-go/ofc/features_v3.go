@@ -333,7 +333,19 @@ func fillPairRank(f []float32, gs *GameState, topEv HandValue) {
 	if topEv.Type == TypePair {
 		topPair = int((topEv.Value - 1000000) / 15)
 	}
-	f[0] = pairToFeat(topPair)
+	// 2026-06-29 (#110): 顶有鬼且只配出 sub-QQ 低对(或无对) = 范种子, 不是低对. 鬼该当种子(价值在 f160/f163),
+	//   别钉成低对(鬼配77=0.417)、更别把孤鬼种子当 -1 最差 → 中性 0. (真低对/QQ+鬼对/无鬼无对 走原逻辑.)
+	topJokers := 0
+	for _, c := range gs.Top {
+		if c.IsJoker() {
+			topJokers++
+		}
+	}
+	if topJokers >= 1 && topPair < int(RankQ) {
+		f[0] = 0
+	} else {
+		f[0] = pairToFeat(topPair)
+	}
 	f[1] = pairToFeat(maxPairRankRow(gs.Middle))
 	f[2] = pairToFeat(maxPairRankRow(gs.Bottom))
 	f[3] = pairToFeat(twoPairHighRank(gs.Middle))

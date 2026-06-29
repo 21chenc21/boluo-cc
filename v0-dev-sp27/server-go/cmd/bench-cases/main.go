@@ -291,7 +291,9 @@ func main() {
 	workers := flag.Int("workers", 0, "parallel workers (0=NumCPU)")
 	seed := flag.Int64("seed", 42, "rng seed")
 	featdiff := flag.Bool("featdiff", false, "失败 case dump AI首选 vs 期望[0] 的 BuildFeaturesV3 特征 diff")
+	labelprobe := flag.Bool("labelprobe", false, "失败 case 直接量 AI摆 vs exp摆 的平均 rollout label(EV), 自动分类 缺reward vs over-value特征压. 配 -featdiff")
 	flag.Parse()
+	labelProbeEnabled = *labelprobe
 
 	if *ckpt == "" {
 		log.Fatal("usage: -ckpt CKPT.json")
@@ -475,6 +477,29 @@ func featGroup(i int) string {
 	}
 }
 
+var labelProbeEnabled bool
+
+// labelProbe — 直接量两个 post-state 的平均 rollout label(EV). NN 学的是 label, 这是金标准:
+//   标签偏 exp 但 NN 选 AI → over-value 特征压住区分特征(找 feature cap, 治得了);
+//   标签偏 AI → reward 不够/case 判断本身问题(调 reward 或重审 case). 见 reference_diagnosis_method.
+func labelProbe(aiState, expState *ofc.GameState, round int, cfg *ofc.RolloutConfig) {
+	probe := func(st *ofc.GameState) float64 {
+		var sum float64
+		const N = 500
+		for i := 0; i < N; i++ {
+			er := &ofc.ExpertRollout{Rng: rand.New(rand.NewSource(int64(i))), Cfg: *cfg}
+			sum += float64(er.QuickRollout(st.Clone(), round))
+		}
+		return sum / N
+	}
+	lAI, lExp := probe(aiState), probe(expState)
+	cls := "📊标签偏 exp → NN 该学会, 是 over-value 特征压住区分特征 (找 feature cap)"
+	if lExp <= lAI {
+		cls = "📊标签偏 AI → reward 不够 / case 判断本身问题 (调 reward 或重审 case)"
+	}
+	fmt.Printf("  >> LABEL PROBE: exp=%.2f  AI=%.2f  Δ(exp-AI)=%+.2f\n     %s\n", lExp, lAI, lExp-lAI, cls)
+}
+
 // featDiffCase: 重建 AI首选 post-state 和 期望[0] post-state, dump BuildFeaturesV3 diff.
 // 判断"缺特征 vs 缺权重": 强信号组(Δ>0.3)=特征捕捉到了→是权重问题; 全弱(<0.1)=特征缺.
 func featDiffCase(c TestCase, jokers int, cfg *ofc.RolloutConfig, rng *rand.Rand) {
@@ -566,6 +591,9 @@ func featDiffCase(c TestCase, jokers int, cfg *ofc.RolloutConfig, rng *rand.Rand
 		wtag = " ✗死牌特征反"
 	}
 	fmt.Printf("\n===== %s | te gap=%+.2f [%s] | 死牌 AI=%d exp=%d%s =====\n", caseTag(c.Name), gap, tag, wAI, wExp, wtag)
+	if labelProbeEnabled {
+		labelProbe(aiState, expState, c.Round, cfg)
+	}
 	n := 0
 	grpMax := map[string]float64{}
 	for i := range fa {
