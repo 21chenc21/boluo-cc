@@ -1379,15 +1379,74 @@ func pTopGTMid(gs *GameState, topEv, midEv HandValue, rankRem [13]int, suitRem [
 	if !cur {
 		return 0 // 中道现状已 ≥ 顶 → 无顶>中 foul
 	}
-	// 中道当前 < 顶. 上限能追上吗?
-	midMax := int(maxAchievableHandType(gs.Middle, midSlots, rankRem, suitRem, jokerRem))
-	if midMax < topT {
-		return 1 // 中道上限 type 都 < 顶 → 铁定 foul
+	// 2026-06-29 (#51): 改用真概率(pDraw/pRowAtLeast)算 P(中道现实摸到 ≥ 顶), 不再用乐观 maxAchievable 拍桶.
+	//   旧 bug: 中 3,Ac 因"3空位能凑轮子顺"被乐观算成 midMax>顶 → 全 flat 0.7 → foul 特征死. 概率机器(pRowAtLeast)早有, 没复用.
+	cs := cardsSeenRemaining(gs)
+	deckTotal := jokerRem
+	for _, v := range rankRem {
+		deckTotal += v
 	}
-	if midMax > topT {
-		return 0.7 // 能跳更高 type(如 trips→FH) 但概率低(~25-30%) → foul ~0.7
+	var pMidGE float32 // P(中道 ≥ 顶)
+	if topT == TypePair {
+		topR := int((topEv.Value - 1000000) / 15)
+		// 顶 kicker (满顶才锁定; 未满=-1 待发育)
+		topKicker := -1
+		if len(gs.Top) == 3 {
+			for _, c := range gs.Top {
+				if !c.IsJoker() {
+					if r := int(c.Rank()); r != topR && r > topKicker {
+						topKicker = r
+					}
+				}
+			}
+		}
+		var midRc [13]int
+		midJoker := false
+		for _, c := range gs.Middle {
+			if c.IsJoker() {
+				midJoker = true
+			} else {
+				midRc[c.Rank()]++
+			}
+		}
+		// P(中配出 ≥R 的对) — union over ranks≥R, 每 rank 用 pDraw
+		pNone := float32(1)
+		for r := topR; r <= 12; r++ {
+			var pPair float32
+			switch {
+			case midRc[r] >= 2 || (midRc[r] >= 1 && midJoker):
+				pPair = 1 // 已成对/鬼配
+			case midRc[r] == 1:
+				pPair = pDraw(deckTotal, rankRem[r], cs, midSlots, 1)
+			default:
+				pPair = pDraw(deckTotal, rankRem[r], cs, midSlots, 2)
+			}
+			// kicker (#51): 配出"恰好 R"同对时需 kicker 超顶. 顶满低kicker → 中易超(不折); 顶高kicker → 难超(折);
+			//   顶未满(kicker未定可能高) → 部分折. 治"4→头锁低kicker更安全".
+			if r == topR {
+				switch {
+				case topKicker < 0:
+					pPair *= 0.7 // 顶未满, kicker 待定
+				case topKicker >= int(RankJ):
+					pPair *= 0.4 // 顶锁高 kicker, 中同对难超
+				}
+			}
+			pNone *= (1 - pPair)
+		}
+		pPairGE := 1 - pNone
+		pTwoPairPlus := pRowAtLeast(gs.Middle, TypeTwoPair, rankRem, suitRem, jokerRem, deckTotal, midSlots, cs)
+		pMidGE = pPairGE + pTwoPairPlus*(1-pPairGE)
+	} else {
+		// 顶三条+: type-level pRowAtLeast 够 (rank 细节少见)
+		pMidGE = pRowAtLeast(gs.Middle, topT, rankRem, suitRem, jokerRem, deckTotal, midSlots, cs)
 	}
-	return 0.8 // 同 type 需更高 rank, 更难
+	p := 1 - pMidGE
+	if p < 0 {
+		p = 0
+	} else if p > 1 {
+		p = 1
+	}
+	return p
 }
 
 func pFoulFinal(gs *GameState, topEv, midEv, botEv HandValue, rankRem [13]int, suitRem [4]int, jokerRem, deckTotal int) float32 {
