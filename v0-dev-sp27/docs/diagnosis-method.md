@@ -21,7 +21,9 @@
 - **全弱（<0.1）** → **缺特征**，加 dedicated 特征（如 #90 三条 rank、#23/#24 强成手放错行）。
 
 ### 2. label probe — 标签偏哪边（金标准）
-`bench-cases -featdiff -labelprobe`：直接对两个 post-state 各跑 N=500 次 `QuickRollout`（gen 同 cfg，含 seed bonus / fan bonus），量**平均 EV**。
+`bench-cases -featdiff -labelprobe`：对两个 post-state 各跑 N=500 次 `QuickRollout`（**用 gen 校准 cfg**：AA=100/FoulCost=3，不是 Default 的 80/6），量 **EV + foul率**。
+> ⚠️ **必同时看 foul率**（2026-06-29 用户）：foul率常是真凶 —— 如 #51 flush 摆法 EV 略高**且 foul 更低(12.6% vs 17.8%)**才看出是最优。只看 EV 会漏。
+> ⚠️ EV 必须是 **QuickRollout 返回值**（含 -FoulCost 惩罚），不能用 RawRoyalty+FanBonus（漏扣 foul 惩罚 = 假高）。cfg/metric/rollout-policy 三者必一致，否则数字不可比（踩过坑）。
 - **`Δ(exp-AI) > 0`（标签偏 exp）但 NN 选 AI** → **over-value 特征压住了区分特征**。NN 该学会，是某个 descriptive 特征（pair rank / PairToTrips / midDevelopHeadroom…）把错位的成手当好事。→ **找那个 over-value 特征 cap/contextualize（治得了）**。
 - **`Δ(exp-AI) ≤ 0`（标签偏 AI）** → **NN 学得对！** 问题在 label 侧：
   - reward 不够（seed bonus / rank 奖太小没翻转 EV）→ 调大 reward。

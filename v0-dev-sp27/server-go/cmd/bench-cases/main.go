@@ -491,21 +491,28 @@ func labelProbe(aiState, expState *ofc.GameState, round int, cfg *ofc.RolloutCon
 	pcfg.KKFanBonus = 30
 	pcfg.AAFanBonus = 100
 	pcfg.TripsFanBonus = 140
-	probe := func(st *ofc.GameState) float64 {
+	// 2026-06-29 用户: 必同时打 EV + foul率 (foul率常是真凶, 如 #51 flush foul更低才是最优).
+	probe := func(st *ofc.GameState) (ev, foulPct float64) {
 		var sum float64
+		foul := 0
 		const N = 500
 		for i := 0; i < N; i++ {
 			er := &ofc.ExpertRollout{Rng: rand.New(rand.NewSource(int64(i))), Cfg: pcfg}
 			sum += float64(er.QuickRollout(st.Clone(), round))
+			if er.LastResult.IsFoul {
+				foul++
+			}
 		}
-		return sum / N
+		return sum / N, float64(foul) / N * 100
 	}
-	lAI, lExp := probe(aiState), probe(expState)
+	eAI, fAI := probe(aiState)
+	eExp, fExp := probe(expState)
 	cls := "📊标签偏 exp → NN 该学会, 是 over-value 特征压住区分特征 (找 feature cap)"
-	if lExp <= lAI {
+	if eExp <= eAI {
 		cls = "📊标签偏 AI → reward 不够 / case 判断本身问题 (调 reward 或重审 case)"
 	}
-	fmt.Printf("  >> LABEL PROBE: exp=%.2f  AI=%.2f  Δ(exp-AI)=%+.2f\n     %s\n", lExp, lAI, lExp-lAI, cls)
+	fmt.Printf("  >> LABEL PROBE: exp EV=%.2f foul=%.1f%%  |  AI EV=%.2f foul=%.1f%%  |  Δ(exp-AI)=%+.2f\n     %s\n",
+		eExp, fExp, eAI, fAI, eExp-eAI, cls)
 }
 
 // featDiffCase: 重建 AI首选 post-state 和 期望[0] post-state, dump BuildFeaturesV3 diff.
