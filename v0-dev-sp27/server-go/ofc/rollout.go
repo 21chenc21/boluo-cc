@@ -35,6 +35,10 @@ type RolloutConfig struct {
 	//   的期权价值直接注入label, 不靠 rollout 偶然打成范(长尾低概率→label不奖→NN忽略 topTripsSeed dim160).
 	//   +1合法种子 → +bonus, -1 foul险trips → -bonus, 0 → 0. 0=关.
 	TopTripsSeedBonus float32
+	// 2026-06-29 (#104): 底葫芦种子 + 中flush/顺draw 的期权价值注入 label. silver-label only —
+	//   heuristic rollout 不实现长尾(底QQ→葫芦托住中花/顺)→ label 低估"保种子别堵底"摆法.
+	//   drawSeedScore: P(底FH)+P(中花/顺)*P(底能托). 0=关.
+	DrawSeedBonus float32
 }
 
 // DefaultRolloutConfig — 推理 / 老 ckpt 加载默认.
@@ -49,6 +53,8 @@ var DefaultRolloutConfig = RolloutConfig{
 	Epsilon:       0, // 推理 0 = 纯 greedy; 训练 CLI 可调 0.1
 	// 2026-06-28 (#110/#118): 顶trips范种子期权价值 8 (≈ P(成trips范)*fanBonus 保守估). gen 从 Default 继承.
 	TopTripsSeedBonus: 8,
+	// 2026-06-29 (#104): 底葫芦种子+中draw期权价值 8 (≈ P(成手)*royalty 量级, 翻转#104 label). gen 从 Default 继承.
+	DrawSeedBonus: 8,
 }
 
 // IntnRNG — RNG 接口, 兼容 *rand.Rand 和测试用 LCG
@@ -142,6 +148,11 @@ func (er *ExpertRollout) QuickRollout(state *GameState, currentRound int) float3
 	if er.Cfg.TopTripsSeedBonus != 0 {
 		rankRem, suitRem, jokerRem := computeDeckRemaining(state)
 		seedBonus = topTripsSeedScore(state, rankRem, suitRem, jokerRem) * er.Cfg.TopTripsSeedBonus
+	}
+	// 2026-06-29 (#104): 底葫芦种子 + 中draw 期权价值. 同样从落子后盘面算, 注入非foul终局.
+	if er.Cfg.DrawSeedBonus != 0 {
+		rankRem, suitRem, jokerRem := computeDeckRemaining(state)
+		seedBonus += drawSeedScore(state, rankRem, suitRem, jokerRem) * er.Cfg.DrawSeedBonus
 	}
 	deck := gs.GetRemainingDeck()
 	er.shuffle(deck)

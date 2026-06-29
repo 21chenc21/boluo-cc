@@ -1433,6 +1433,34 @@ func pBotGEMid(gs *GameState, midEv, botEv HandValue, rankRem [13]int, suitRem [
 	return 1 - pMidGTBot(gs, midEv, botEv, rankRem, suitRem, jokerRem, deckTotal, midSlots, botSlots)
 }
 
+// drawSeedScore — #104 (2026-06-29): 保种子期权价值 (silver-label 注入, 复用现成概率).
+//   heuristic rollout 不实现长尾"底QQ→葫芦托住中花/顺", label 低估"保种子别堵底"摆 → 按概率补.
+//   = P(底成葫芦)  +  P(中flush/顺) × P(底能托住)(否则中花/顺反而倒置, 无价值).
+func drawSeedScore(state *GameState, rankRem [13]int, suitRem [4]int, jokerRem int) float32 {
+	midSlots := 5 - len(state.Middle)
+	botSlots := 5 - len(state.Bottom)
+	cs := cardsSeenRemaining(state)
+	deckTotal := jokerRem
+	for _, v := range rankRem {
+		deckTotal += v
+	}
+	// 底葫芦种子: P(底成FH) — 有 slot 才有期权 (底无对时 P≈0 自然不奖)
+	var bp float32
+	if botSlots > 0 {
+		bp = pRowAtLeast(state.Bottom, TypeFullHouse, rankRem, suitRem, jokerRem, deckTotal, botSlots, cs)
+	}
+	// 中 flush/顺 draw, 条件: 底能托(底≥FH 才不被中花/顺倒置) → 用 bp 当 support
+	var midVal float32
+	if midSlots > 0 {
+		md := pRowFlush(state.Middle, suitRem, jokerRem, deckTotal, midSlots, cs)
+		if st := pRowStraight(state.Middle, rankRem, jokerRem, deckTotal, midSlots, cs); st > md {
+			md = st
+		}
+		midVal = md * bp
+	}
+	return bp + midVal
+}
+
 // pFoulFinal — P(top > mid ∨ mid > bot)
 // 注: evalRowSafe 用 cap chain, 当 mid > bot 时 midEv.Type = -2 (overCap 标志). 用 raw Evaluate5 重算.
 // pTopGTMid — P(顶 > 中道最终牌型) = 顶压中犯规概率 (中道未满时). joker-aware floor + maxAchievable
