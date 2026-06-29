@@ -1444,10 +1444,18 @@ func drawSeedScore(state *GameState, rankRem [13]int, suitRem [4]int, jokerRem i
 	for _, v := range rankRem {
 		deckTotal += v
 	}
-	// 底葫芦种子: P(底成FH) — 有 slot 才有期权 (底无对时 P≈0 自然不奖)
-	var bp float32
+	// 底种子: 葫芦/花/顺 取最强 (底是最强行, 成强手无倒置风险, 无条件计). bp=底FH 单留作中draw的support.
+	// 2026-06-29 (#117): 加底花/顺draw — 底2d6dKd(3方块)是花种子, 旧版只算葫芦漏掉.
+	var bp, botSeed float32
 	if botSlots > 0 {
 		bp = pRowAtLeast(state.Bottom, TypeFullHouse, rankRem, suitRem, jokerRem, deckTotal, botSlots, cs)
+		botSeed = bp
+		if fl := pRowFlush(state.Bottom, suitRem, jokerRem, deckTotal, botSlots, cs); fl > botSeed {
+			botSeed = fl
+		}
+		if st := pRowStraight(state.Bottom, rankRem, jokerRem, deckTotal, botSlots, cs); st > botSeed {
+			botSeed = st
+		}
 	}
 	// 中 flush/顺 draw, 条件: 底能托(底≥FH 才不被中花/顺倒置) → 用 bp 当 support
 	var midVal float32
@@ -1458,7 +1466,7 @@ func drawSeedScore(state *GameState, rankRem [13]int, suitRem [4]int, jokerRem i
 		}
 		midVal = md * bp
 	}
-	return bp + midVal
+	return botSeed + midVal
 }
 
 // pFoulFinal — P(top > mid ∨ mid > bot)

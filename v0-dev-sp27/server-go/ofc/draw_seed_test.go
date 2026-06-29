@@ -18,4 +18,9 @@ func TestDrawSeedScore(t *testing.T){
 	// 无种子: 底高牌散+中无draw → ≈0
 	none:=score(build(mk("4c"),mk("2h","8d"),mk("3c","9s","Kd"),"6h"))
 	if none>0.1 { t.Fatalf("无种子该≈0, 得%.3f", none) }
+	// #117: 底花draw种子 (底2d6dKd=3方块) 该被算; 破花(2s进底)该≈0
+	botFlush:=score(build(mk("Qc"),mk("Js","3c","Jd","3h","6h"),mk("2d","6d","Kd"),"2s"))
+	botBlock:=score(build(mk("Qc"),mk("Js","3c","Jd","3h"),mk("2d","6d","Kd","2s"),"6h"))
+	if botFlush<=botBlock { t.Fatalf("#117 底花draw(%.3f)该 > 破花(%.3f)", botFlush, botBlock) }
+	if botFlush<0.1 { t.Fatalf("#117 底3方块花种子该显著, 得%.3f", botFlush) }
 }
