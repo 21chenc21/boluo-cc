@@ -483,11 +483,19 @@ var labelProbeEnabled bool
 //   标签偏 exp 但 NN 选 AI → over-value 特征压住区分特征(找 feature cap, 治得了);
 //   标签偏 AI → reward 不够/case 判断本身问题(调 reward 或重审 case). 见 reference_diagnosis_method.
 func labelProbe(aiState, expState *ofc.GameState, round int, cfg *ofc.RolloutConfig) {
+	// 2026-06-29 fix: 用 gen 的 fan/foul 校准 (DefaultRolloutConfig 是 AA=80/FoulCost=6, gen 是 AA=100/FoulCost=3)
+	//   → 量的 EV 才跟 NN 真训练的 label 一致. 否则绝对值偏.
+	pcfg := *cfg
+	pcfg.FoulCost = 3
+	pcfg.QQFanBonus = 10
+	pcfg.KKFanBonus = 30
+	pcfg.AAFanBonus = 100
+	pcfg.TripsFanBonus = 140
 	probe := func(st *ofc.GameState) float64 {
 		var sum float64
 		const N = 500
 		for i := 0; i < N; i++ {
-			er := &ofc.ExpertRollout{Rng: rand.New(rand.NewSource(int64(i))), Cfg: *cfg}
+			er := &ofc.ExpertRollout{Rng: rand.New(rand.NewSource(int64(i))), Cfg: pcfg}
 			sum += float64(er.QuickRollout(st.Clone(), round))
 		}
 		return sum / N

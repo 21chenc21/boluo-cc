@@ -15,15 +15,19 @@ func rowDrawStrength(row []Card, capacity int) int {
 	}
 	slots := capacity - len(row) // 还能补几张
 	var sc [4]int
+	jokers := 0
 	for _, c := range row {
-		if !c.IsJoker() {
+		if c.IsJoker() {
+			jokers++ // 2026-06-29 (#51): 鬼是 wild 当任意花色 → 计入最佳门花draw. 原 bug: skip鬼 漏算 底2梅花+鬼=花draw
+		} else {
 			sc[int(c.Suit())]++
 		}
 	}
 	bestFl := 0
 	for s := 0; s < 4; s++ {
-		if sc[s] > bestFl && 5-sc[s] <= slots { // 缺(5-同花数)必须 ≤ slots
-			bestFl = sc[s]
+		eff := sc[s] + jokers               // 鬼补到该门
+		if eff > bestFl && 5-eff <= slots { // 缺(5-有效同花数)必须 ≤ slots
+			bestFl = eff
 		}
 	}
 	return bestFl
