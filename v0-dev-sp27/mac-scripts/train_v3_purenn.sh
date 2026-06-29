@@ -154,6 +154,7 @@ bench_total_tc() {
     BENCH_LINE="$o"
     BENCH_TOTAL=$(echo "$o" | grep -oE "[0-9]+通过" | head -1 | grep -oE "[0-9]+"); [ -z "$BENCH_TOTAL" ] && BENCH_TOTAL=0
     BENCH_TOTAL_CASES=$(echo "$o" | grep -oE "[0-9]+总计" | head -1 | grep -oE "[0-9]+"); [ -z "$BENCH_TOTAL_CASES" ] && BENCH_TOTAL_CASES=183
+    return 0  # ⚠️ 必须: 否则末行 [ -z ] && 在值非空时返回非零 → set -e 杀脚本
 }
 
 echo "[v3-sp] (re)build binaries..."
