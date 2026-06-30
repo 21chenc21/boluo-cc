@@ -1114,9 +1114,8 @@ func pRowAtLeast(row []Card, targetType int, rankRem [13]int, suitRem [4]int, jo
 	case TypeThreeOfAKind:
 		return pRowAtLeastTrips(row, rankRem, jokerRem, deckTotal, slots, cardsSeen)
 	case TypeFullHouse:
-		// 2026-07-01 (#110 bug): 旧 pRowAtLeastTrips*0.3 flat 粗估 — 对已三条的行(pTrips=1)恒给 0.3,
-		//   严重虚高(666剩1空成FH要摸对配kicker, 真实~0.1) → eRoyaltyMid 虚抬 → over-value中道发育. 改 outs-aware.
-		return pRowFullHouseProb(row, rankRem, jokerRem, deckTotal, slots, cardsSeen)
+		// FH = trips + pair. 复杂, 用粗估
+		return pRowAtLeastTrips(row, rankRem, jokerRem, deckTotal, slots, cardsSeen) * 0.3
 	case TypeFourOfAKind:
 		return pRowAtLeastQuads(row, rankRem, jokerRem, deckTotal, slots, cardsSeen)
 	}
@@ -1198,51 +1197,6 @@ func pRowAtLeastTrips(row []Card, rankRem [13]int, jokerRem, deckTotal, slots, c
 		}
 	}
 	return maxP
-}
-
-// pRowFullHouseProb — outs-aware P(row 成葫芦+). 替换旧 pTrips*0.3 flat 粗估(#110 eRoyalty虚抬).
-//   已三条 → P(其余 rank 再成一个对); 已两对 → P(任一对升三条); 对/高牌 → P(三条)×低系数.
-func pRowFullHouseProb(row []Card, rankRem [13]int, jokerRem, deckTotal, slots, cs int) float32 {
-	if slots == 0 {
-		return 0
-	}
-	var cnt [13]int
-	for _, c := range row {
-		if !c.IsJoker() {
-			cnt[c.Rank()]++
-		}
-	}
-	switch rowCurrentType(row) {
-	case TypeThreeOfAKind:
-		tr, trCnt := -1, 0 // trips rank = 牌最多 rank (joker 可能补成)
-		for r := 12; r >= 0; r-- {
-			if cnt[r] > trCnt {
-				tr, trCnt = r, cnt[r]
-			}
-		}
-		pNone := float32(1) // P(没成第二个对)
-		for r := 0; r <= 12; r++ {
-			if r == tr {
-				continue
-			}
-			need := 2 - cnt[r]
-			if need <= 0 {
-				continue
-			}
-			pNone *= (1 - pDraw(deckTotal, rankRem[r]+jokerRem, cs, slots, need))
-		}
-		return 1 - pNone
-	case TypeTwoPair:
-		pNone := float32(1) // 任一对升三条 → 葫芦
-		for r := 0; r <= 12; r++ {
-			if cnt[r] == 2 {
-				pNone *= (1 - pDraw(deckTotal, rankRem[r]+jokerRem, cs, slots, 1))
-			}
-		}
-		return 1 - pNone
-	default:
-		return pRowAtLeastTrips(row, rankRem, jokerRem, deckTotal, slots, cs) * 0.15
-	}
 }
 
 // pRowAtLeastQuads — row 至少 quads
