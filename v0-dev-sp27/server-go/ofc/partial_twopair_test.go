@@ -25,3 +25,16 @@ func TestPMidGTBot_TwoPairRank(t *testing.T){
 	hi:=v(bld(mk("Ac","As"),mk("2s","2c","Ks","Kh"),mk("Qh","Qc","6h"),"2d"))
 	if hi<0.45{t.Fatalf("中KK高两对压底QQ foul该≥0.45(实战54.8%%), 得%.3f",hi)}
 }
+
+// #110 (2026-07-01): pRowFullHouseProb outs-aware, 替换旧 pTrips*0.3 flat 粗估.
+func TestFHProbOutsAware(t *testing.T){
+	mk:=func(ss ...string)[]Card{var r []Card;for _,s:=range ss{r=append(r,mustParse(s))};return r}
+	g:=NewGameState(2);g.NumJokers=2;g.Round=4
+	g.Middle=mk("6h","6d","4c","6c");g.Bottom=mk("9d","8h","8c","8d","8s")
+	for _,c:=range append(g.Middle,g.Bottom...){g.UsedCards[c.ID()]=true}
+	rr,sr,jr:=computeDeckRemaining(g);dt:=jr;for _,r:=range rr{dt+=r};cs:=cardsSeenRemaining(g)
+	pfh:=pRowAtLeast(g.Middle,TypeFullHouse,rr,sr,jr,dt,1,cs)
+	// 中666,4 剩1空成FH要配kicker, 真实~0.1-0.2, 不该是旧粗估0.3
+	if pfh>=0.28{t.Fatalf("中666,4(1空)成FH该<0.28(旧粗估0.3虚高), 得%.3f",pfh)}
+	if pfh<=0.02{t.Fatalf("该>0(能配4或摸joker), 得%.3f",pfh)}
+}
