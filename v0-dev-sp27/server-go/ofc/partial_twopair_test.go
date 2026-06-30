@@ -11,6 +11,10 @@ func TestPartialEvalTwoPair(t *testing.T){
 	// 回归: 单对/三条不受影响
 	if e:=evalRowSafe(mk("2s","2c"),5,nil); e.Type!=TypePair{t.Fatalf("22该Pair, 得%d",e.Type)}
 	if e:=evalRowSafe(mk("2s","2c","2d"),5,nil); e.Type!=TypeThreeOfAKind{t.Fatalf("222该Trips, 得%d",e.Type)}
+	// #22 bug: 金刚 (4张 KKKK / KKK+鬼) 别当三条
+	if e:=evalRowSafe(mk("Kc","Kd","Ks","Kh"),5,nil); e.Type!=TypeFourOfAKind{t.Fatalf("KKKK(4真)该金刚, 得%d",e.Type)}
+	if e:=evalRowSafe(mk("Kc","Kd","Xj0","Kh"),5,nil); e.Type!=TypeFourOfAKind{t.Fatalf("KKK+鬼(4张)该金刚, 得%d",e.Type)}
+	if e:=evalRowSafe(mk("Kc","Kd","Xj0"),5,nil); e.Type!=TypeThreeOfAKind{t.Fatalf("KK+鬼(3张)该三条, 得%d",e.Type)}
 }
 // #24 bug2: pMidGTBot 中两对要 rank-aware (底要≥中的具体两对, 不是随便成个两对).
 func TestPMidGTBot_TwoPairRank(t *testing.T){

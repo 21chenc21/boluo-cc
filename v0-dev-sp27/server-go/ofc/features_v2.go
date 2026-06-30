@@ -85,8 +85,13 @@ func partialEval(cards []Card) HandValue {
 			maxRank = r
 		}
 	}
-	// joker 可助配 pair/trips
+	// joker 可助配 pair/trips/quads
 	effMax := maxCnt + jokerCnt
+	// 2026-07-01 (#22 bug): partialEval 原来漏金刚 — 4张 KKKK / KKK+鬼(effMax>=4) 被走 trips 分支当三条
+	//   → exp 底 KKK+鬼=金刚 被评成三条, value-head 以为弱 → 偏 AI. 金刚检查放 trips 前.
+	if effMax >= 4 {
+		return HandValue{Type: TypeFourOfAKind, Value: makeValue(TypeFourOfAKind, maxRank, 0)}
+	}
 	if effMax >= 3 {
 		return HandValue{Type: TypeThreeOfAKind, Value: int64(3000000 + maxRank*15)}
 	}
