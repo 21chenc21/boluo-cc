@@ -1078,7 +1078,8 @@ func pTopTrips(gs *GameState, rankRem [13]int, jokerRem, deckTotal, topSlots int
 	//   顶 r-trips ≤ 中现值 → 合法全算; 顶 r-trips > 中(且中已成三条+) → 要中再发育成葫芦+ 才合法, 打折.
 	//   (例 AI 顶🃏7h 唯一 777>中666: 折扣; exp 顶🃏 可成 2/3/4/5/6 多条 ≤中666: union 全算 → exp>AI.)
 	midCur := int(rowMadeScore(gs.Middle))
-	capTrips := midCur/13 >= int(HtThreeKind)
+	midTier := midCur / 13
+	midFull := len(gs.Middle) == 5
 	pNone := float32(1) // P(没成任何合法 trips 范)
 	for r := 0; r < 13; r++ {
 		have := countRankInRow(gs.Top, r) + topJokers
@@ -1090,8 +1091,14 @@ func pTopTrips(gs *GameState, rankRem [13]int, jokerRem, deckTotal, topSlots int
 			pMake = hypergeoAtLeast(deckTotal, rankRem[r]+jokerRem, topSlots, need)
 		}
 		legalFactor := float32(1)
-		if capTrips && int(HtThreeKind)*13+r > midCur {
-			legalFactor = 0.3 // 顶 r-trips > 中已成三条 → 要中发育超过它(葫芦+), 折扣
+		// 顶 r-trips(tier3) > 中现成手(两对tier2/三条tier3低rank) → foul, 要中再发育成金刚/葫芦(>顶trips)才合法.
+		//   满中不能发育 → 0; partial 中能发育 → 0.3 折扣. (顺子/同花/葫芦/金刚 tier≥4 比顶trips高, 永不触发=合法.)
+		if midTier >= int(HtTwoPair) && int(HtThreeKind)*13+r > midCur {
+			if midFull {
+				legalFactor = 0 // 满中两对/低三条锁死, 顶更高trips必foul
+			} else {
+				legalFactor = 0.3 // 中发育成金刚葫芦的粗略概率
+			}
 		}
 		pNone *= (1 - pMake*legalFactor)
 	}

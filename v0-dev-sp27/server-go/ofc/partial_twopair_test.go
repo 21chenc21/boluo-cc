@@ -49,3 +49,14 @@ func TestPTopTrips_JokerUnionLegal(t *testing.T){
 	if ai<=0.005{t.Fatalf("AI 777范存在(摸7+中发育)不该清零: ai=%.3f",ai)}
 	if exp<=0.005{t.Fatalf("exp孤鬼顶trips范不该是0(旧漏数鬼bug): exp=%.3f",exp)}
 }
+
+// #110续 (2026-07-01): pTopTrips 合法性扩到中两对+ / 满中不能发育→0. 你问"金刚葫芦"验出两对漏洞.
+func TestPTopTrips_TwoPairAndFull(t *testing.T){
+	mk:=func(ss ...string)[]Card{var r []Card;for _,s:=range ss{r=append(r,mustParse(s))};return r}
+	bld:=func(top,mid,bot []Card)*GameState{g:=NewGameState(2);g.NumJokers=2;g.Round=4;g.Top=top;g.Middle=mid;g.Bottom=bot;for _,c:=range append(append(top,mid...),bot...){g.UsedCards[c.ID()]=true};return g}
+	f93:=func(top,mid,bot []Card)float32{return BuildFeaturesV3(bld(top,mid,bot))[93]}
+	full2p:=f93(mk("Kc","Ks"), mk("Qh","Qd","Jc","Js","2c"), mk("Ah","Ad","As","Kh","Qd")) // 满中两对, 顶KKK>它foul锁死
+	fh:=f93(mk("Kc","Ks"), mk("9h","9d","9c","2s","2c"), mk("Ah","Ad","As","Kh","Qd"))     // 中葫芦, 顶KKK<它合法
+	if full2p>0.005{t.Fatalf("满中两对锁死 顶trips必foul该≈0, 得%.3f",full2p)}
+	if fh<0.03{t.Fatalf("中葫芦>顶trips 该合法全算, 得%.3f",fh)}
+}
