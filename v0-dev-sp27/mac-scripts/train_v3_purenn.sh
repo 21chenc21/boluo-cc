@@ -110,7 +110,7 @@ SCRIPT_VERSION="2026-06-17-purenn"
 #     - Mark cases 35/37/40/45 as warn (AI 选合理但不在 expecteds)
 #     - sp17 iter-1 r1 deployed 8002, bench: 59通过/4警告/0 真错.
 #     - DATA_VERSION → i147-sp18 (rollout policy 含 sp17 best, 数据 fresh).
-DATA_VERSION="i165-sp33"  # 2026-07-01 sp33: #24 bug修 (partialEval 4张两对认成两对 + pMidGTBot 中两对rank-aware foul). foul特征大修, fresh data.
+DATA_VERSION="i165-sp33"  # 2026-07-01 sp33: 6个真bug修 — partialEval两对/金刚 + pMidGTBot两对rank + pTopGTMid顶三条rank + pTopTrips(漏顶鬼+max非union+合法性) + eRoyalty金刚双重计数. FeatureDimV3=165不变(只改算法). fresh data. promote按失败数最少.
 # 旧 i164-sp31 (164-d): #90三条rank0-2 / #124 pPairToTrips cap / cases全删uc / outs-aware. sp31-one 跑了iter2=130, #124已落地, #90/#23/#24未.
 # 旧 sp30: i164-sp30 (draw纯花+slots / MHR rank各档安全上限 / 顶trips种子bonus). sp30-one 跑了iter-1=+3 但无#90/#124/clean-cases.
 # 旧: i164-sp29 (2026-06-25: +B顺紧密度161-162 +C进范可行性163 + 成手奖励rank破平 + 概率挑牌模型cardsSeen).
@@ -153,6 +153,8 @@ bench_total_tc() {
     o=$(DISABLE_MCTS=1 DISABLE_HARD_RULES=1 DISABLE_SOFT_RULES=1 "$BENCH_BIN" -ckpt "$ck" -cases cases/game-cases.json -workers 0 2>&1 | grep 结果 | tail -1)
     BENCH_LINE="$o"
     BENCH_TOTAL=$(echo "$o" | grep -oE "[0-9]+通过" | head -1 | grep -oE "[0-9]+"); [ -z "$BENCH_TOTAL" ] && BENCH_TOTAL=0
+    # 2026-07-01 (用户): promote 按失败数(✗)最少, 不是通过数 — 还有 warn(⚠)档, 通过+warn+失败=总计.
+    BENCH_FAIL=$(echo "$o" | grep -oE "[0-9]+失败" | head -1 | grep -oE "[0-9]+"); [ -z "$BENCH_FAIL" ] && BENCH_FAIL=999
     BENCH_TOTAL_CASES=$(echo "$o" | grep -oE "[0-9]+总计" | head -1 | grep -oE "[0-9]+"); [ -z "$BENCH_TOTAL_CASES" ] && BENCH_TOTAL_CASES=183
     return 0  # ⚠️ 必须: 否则末行 [ -z ] && 在值非空时返回非零 → set -e 杀脚本
 }
@@ -232,6 +234,7 @@ echo "[v3-sp] start $(date)" | tee -a "$LOG"
 echo "" | tee -a "$LOG"
 
 BEST_TC=0
+BEST_FAIL=999  # promote 主标准: 失败数最少 (BEST_TC 仅日志)
 BEST_CKPT=""
 
 # best.json bootstrap:
@@ -261,12 +264,13 @@ if [ -e "$BEST_LINK" ]; then
     RESOLVED=$(readlink -f "$BEST_LINK" 2>/dev/null || echo "$BEST_LINK")
     if [ -f "$RESOLVED" ]; then
         echo "[v3-sp] best.json → $RESOLVED, bench 取分 (game-cases 183)..." | tee -a "$LOG"
-        bench_total_tc "$RESOLVED"; EXISTING_TC=$BENCH_TOTAL
+        bench_total_tc "$RESOLVED"; EXISTING_TC=$BENCH_TOTAL; EXISTING_FAIL=$BENCH_FAIL
         echo "    $BENCH_LINE" | tee -a "$LOG"
         if [ -n "$EXISTING_TC" ] && [ "$EXISTING_TC" -gt 0 ]; then
             BEST_TC=$EXISTING_TC
+            BEST_FAIL=$EXISTING_FAIL
             BEST_CKPT="$RESOLVED"
-            echo "[v3-sp] 起点: best=$BEST_CKPT (tc $BEST_TC/$BENCH_TOTAL_CASES), self-play loop 从此开始" | tee -a "$LOG"
+            echo "[v3-sp] 起点: best=$BEST_CKPT (失败 $BEST_FAIL, 通过 $BEST_TC/$BENCH_TOTAL_CASES), self-play loop 从此开始" | tee -a "$LOG"
         else
             echo "[v3-sp] WARN: best.json bench=0, 冷启动" | tee -a "$LOG"
         fi
@@ -352,23 +356,28 @@ for ((iter=1; iter<=ITERS; iter++)); do
     fi
 
     NEW_TC=0
+    NEW_FAIL=999  # 挑本 iter 失败数最少的 ckpt
     NEW_CKPT=""
     for ck in "${NEW_CKPTS[@]}"; do
         echo "[iter $iter] Phase C: bench $ck (game-cases 183)" | tee -a "$LOG"
-        bench_total_tc "$ck"; TC=$BENCH_TOTAL
+        bench_total_tc "$ck"; TC=$BENCH_TOTAL; FAIL=$BENCH_FAIL
         [ -z "$TC" ] && TC=0
+        [ -z "$FAIL" ] && FAIL=999
         echo "    $BENCH_LINE" | tee -a "$LOG"
-        echo "[iter $iter]   $ck → tc $TC/$BENCH_TOTAL_CASES" | tee -a "$LOG"
-        if [ "$TC" -gt "$NEW_TC" ]; then
+        echo "[iter $iter]   $ck → 失败 $FAIL (通过 $TC/$BENCH_TOTAL_CASES)" | tee -a "$LOG"
+        if [ "$FAIL" -lt "$NEW_FAIL" ]; then
+            NEW_FAIL=$FAIL
             NEW_TC=$TC
             NEW_CKPT="$ck"
         fi
     done
 
     echo "" | tee -a "$LOG"
-    echo "[iter $iter] testcase pick: $NEW_CKPT → new_tc=$NEW_TC vs best_tc=$BEST_TC (game-cases 183 合计)" | tee -a "$LOG"
+    echo "[iter $iter] pick: $NEW_CKPT → new_fail=$NEW_FAIL vs best_fail=$BEST_FAIL (失败数最少, game-cases 183)" | tee -a "$LOG"
 
-    # === PROMOTE 决策 (2026-06-25 用户): 唯一标准 = testcase 严格↑, 无任何门禁/其它条件 ===
+    # === PROMOTE 决策 (2026-07-01 用户): 唯一标准 = 失败数(✗)最少, 无任何门禁/其它条件 ===
+    #   2026-06-25: 撤掉所有门禁(3-metric duel + 大跌guard + fantasy/score规则 + litmus veto).
+    #   2026-07-01: 指标从"通过数最多"改"失败数最少"(还有 warn⚠ 这档, 通过+warn+失败=总计).
     #   去掉: 3-metric duel(fan/score 200局) + testcase大跌guard + fantasy↑/score↑规则 + litmus veto门禁.
     #   只要 NEW_TC > BEST_TC 就替换 best (testcase = game-cases 183 合计, 纯NN DISABLE_HARD+SOFT).
     SHOULD_PROMOTE=0
@@ -376,22 +385,23 @@ for ((iter=1; iter<=ITERS; iter++)); do
     if [ -z "$BEST_CKPT" ]; then
         SHOULD_PROMOTE=1
         REASON="initial (no prev best)"
-    elif [ "$NEW_TC" -gt "$BEST_TC" ]; then
+    elif [ "$NEW_FAIL" -lt "$BEST_FAIL" ]; then
         SHOULD_PROMOTE=1
-        REASON="testcase↑ ($BEST_TC → $NEW_TC)"
+        REASON="失败↓ ($BEST_FAIL → $NEW_FAIL)"
     else
-        REASON="testcase 未严格↑ ($BEST_TC → $NEW_TC) → DISCARD"
+        REASON="失败未减 ($BEST_FAIL → $NEW_FAIL) → DISCARD"
     fi
 
     if [ "$SHOULD_PROMOTE" -eq 1 ]; then
         BEST_TC=$NEW_TC
+        BEST_FAIL=$NEW_FAIL
         BEST_CKPT="$NEW_CKPT"
         ln -sf "../$NEW_CKPT" "$BEST_LINK" 2>/dev/null || cp "$NEW_CKPT" "$BEST_LINK"
         echo "[iter $iter] ✓ PROMOTE: $REASON" | tee -a "$LOG"
-        echo "[iter $iter]   new best = $NEW_CKPT (tc=$NEW_TC)" | tee -a "$LOG"
+        echo "[iter $iter]   new best = $NEW_CKPT (失败=$NEW_FAIL, 通过=$NEW_TC)" | tee -a "$LOG"
     else
         echo "[iter $iter] ✗ DISCARD: $REASON" | tee -a "$LOG"
-        echo "[iter $iter]   best stays = $BEST_CKPT (tc=$BEST_TC)" | tee -a "$LOG"
+        echo "[iter $iter]   best stays = $BEST_CKPT (失败=$BEST_FAIL, 通过=$BEST_TC)" | tee -a "$LOG"
     fi
     CUR_GEN_OUT=""; CUR_TRAIN_OUT=""  # 本 iter 完成, 中断不再清理它
     echo "" | tee -a "$LOG"
@@ -399,5 +409,5 @@ done
 
 echo "=== DONE $(date) ===" | tee -a "$LOG"
 echo "[v3-sp] best ckpt: $BEST_CKPT" | tee -a "$LOG"
-echo "[v3-sp] best testcase: $BEST_TC/63" | tee -a "$LOG"
+echo "[v3-sp] best: 失败=$BEST_FAIL (通过 $BEST_TC/$BENCH_TOTAL_CASES)" | tee -a "$LOG"
 echo "[v3-sp] log: $LOG"
