@@ -26,3 +26,14 @@ func TestPMidGTBot_TwoPairRank(t *testing.T){
 	if hi<0.45{t.Fatalf("中KK高两对压底QQ foul该≥0.45(实战54.8%%), 得%.3f",hi)}
 }
 
+
+// #42 (2026-07-01): pTopGTMid 顶三条 rank-aware — 顶KKK>中444 该报foul (旧rank-blind给0).
+func TestPTopGTMid_TripsRank(t *testing.T){
+	mk:=func(ss ...string)[]Card{var r []Card;for _,s:=range ss{r=append(r,mustParse(s))};return r}
+	bld:=func(top,mid,bot []Card)*GameState{g:=NewGameState(2);g.NumJokers=2;g.Round=4;g.Top=top;g.Middle=mid;g.Bottom=bot;for _,c:=range append(append(top,mid...),bot...){g.UsedCards[c.ID()]=true};g.SetDiscard(mustParse("Qs"));return g}
+	pt:=func(g *GameState)float32{rr,sr,jr:=computeDeckRemaining(g);dt:=jr;for _,r:=range rr{dt+=r};return pTopGTMid(g,evalRowSafe(g.Top,3,nil),evalRowSafe(g.Middle,5,nil),rr,sr,jr,5-len(g.Middle))}
+	hi:=pt(bld(mk("Kc","Ks","Kh"),mk("3d","4s","4c","Xj0"),mk("Ts","Tc","9h","Th"))) // 顶KKK>中444 倒置
+	lo:=pt(bld(mk("4c","4s","4d"),mk("Kc","Ks","Kh","3d"),mk("Ts","Tc","9h","Th"))) // 顶444<中KKK 托得住
+	if hi<0.3{t.Fatalf("顶KKK压中444 foul该高(>0.3), 得%.3f",hi)}
+	if lo>0.2{t.Fatalf("顶444<中KKK(高三条托得住) foul该低(<0.2), 得%.3f",lo)}
+}

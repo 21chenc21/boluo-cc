@@ -1438,6 +1438,28 @@ func pRowPairAtLeastRank(row []Card, minRank int, rankRem [13]int, jokerRem, dec
 	return 1 - pNone
 }
 
+// pRowTripsAtLeastRank — P(row 配出一个 rank ≥ minRank 的三条). #42: 顶三条 foul 比较要 rank-aware.
+//   行内(含joker)已成 ≥minRank 三条=1; 否则 union over ranks≥minRank, pDraw(outs含deck joker).
+func pRowTripsAtLeastRank(row []Card, minRank int, rankRem [13]int, jokerRem, deckTotal, slots, cs int) float32 {
+	var rc [13]int
+	jrow := 0
+	for _, c := range row {
+		if c.IsJoker() {
+			jrow++
+		} else {
+			rc[c.Rank()]++
+		}
+	}
+	pNone := float32(1)
+	for r := minRank; r <= 12; r++ {
+		if rc[r]+jrow >= 3 {
+			return 1
+		}
+		pNone *= (1 - pDraw(deckTotal, rankRem[r]+jokerRem, cs, slots, 3-rc[r]))
+	}
+	return 1 - pNone
+}
+
 // pBotGEMid — 等于 1 - pMidGTBot
 func pBotGEMid(gs *GameState, midEv, botEv HandValue, rankRem [13]int, suitRem [4]int, jokerRem, deckTotal, midSlots, botSlots int) float32 {
 	return 1 - pMidGTBot(gs, midEv, botEv, rankRem, suitRem, jokerRem, deckTotal, midSlots, botSlots)
@@ -1556,8 +1578,14 @@ func pTopGTMid(gs *GameState, topEv, midEv HandValue, rankRem [13]int, suitRem [
 		pPairGE := 1 - pNone
 		pTwoPairPlus := pRowAtLeast(gs.Middle, TypeTwoPair, rankRem, suitRem, jokerRem, deckTotal, midSlots, cs)
 		pMidGE = pPairGE + pTwoPairPlus*(1-pPairGE)
+	} else if topT == TypeThreeOfAKind {
+		// 2026-07-01 (#42 bug): 顶三条(rank=topR). 中要"三条≥topR 或 葫芦+"才托住 —
+		//   不是"中随便成个三条"(中444托不住顶KKK). 旧 pRowAtLeast(中,Trips) rank-blind → pTopGTMid=0 漏报foul.
+		topR := int((topEv.Value - 3000000) / 15)
+		pMidFH := pRowAtLeast(gs.Middle, TypeFullHouse, rankRem, suitRem, jokerRem, deckTotal, midSlots, cs)
+		pMidTripsGE := pRowTripsAtLeastRank(gs.Middle, topR, rankRem, jokerRem, deckTotal, midSlots, cs)
+		pMidGE = pMidFH + pMidTripsGE*(1-pMidFH)
 	} else {
-		// 顶三条+: type-level pRowAtLeast 够 (rank 细节少见)
 		pMidGE = pRowAtLeast(gs.Middle, topT, rankRem, suitRem, jokerRem, deckTotal, midSlots, cs)
 	}
 	p := 1 - pMidGE
