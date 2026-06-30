@@ -1052,28 +1052,50 @@ func pTopFinalPairExact(gs *GameState, r uint8, rankRem [13]int, jokerRem, deckT
 
 // pTopTrips — P(top final trips, any rank)
 func pTopTrips(gs *GameState, rankRem [13]int, jokerRem, deckTotal, topSlots int) float32 {
+	// 2026-07-01 (#110 bug): 旧版 topHasR=countRankInRow 不数顶上的鬼 → 孤鬼顶[🃏](2空)被当成
+	//   "顶0张要摸3张成trips"=0 → exp 靠鬼成 trips 范的概率被清零(f93=0). 顶上的鬼可当任意 rank, 计入 need.
+	topJokers := 0
+	for _, c := range gs.Top {
+		if c.IsJoker() {
+			topJokers++
+		}
+	}
 	if topSlots == 0 {
-		// 检查已 trips
-		if hasRealTripsTop(gs.Top) {
+		// 含鬼也算: 顶满且(真三条 或 真对+鬼 或 双鬼)
+		if hasRealTripsTop(gs.Top) || topJokers >= 2 {
 			return 1
+		}
+		if topJokers == 1 {
+			for r := 0; r < 13; r++ {
+				if countRankInRow(gs.Top, r) >= 2 {
+					return 1 // 真对 + 鬼 = trips
+				}
+			}
 		}
 		return 0
 	}
-	// 简化: 各 rank 估算 + max
-	maxP := float32(0)
+	// 2026-07-01 (#110): union over ranks (顶可成多条 trips, 不是单 max) + 合法性.
+	//   顶 r-trips ≤ 中现值 → 合法全算; 顶 r-trips > 中(且中已成三条+) → 要中再发育成葫芦+ 才合法, 打折.
+	//   (例 AI 顶🃏7h 唯一 777>中666: 折扣; exp 顶🃏 可成 2/3/4/5/6 多条 ≤中666: union 全算 → exp>AI.)
+	midCur := int(rowMadeScore(gs.Middle))
+	capTrips := midCur/13 >= int(HtThreeKind)
+	pNone := float32(1) // P(没成任何合法 trips 范)
 	for r := 0; r < 13; r++ {
-		topHasR := countRankInRow(gs.Top, r)
-		deckR := rankRem[r] + jokerRem
-		need := 3 - topHasR
+		have := countRankInRow(gs.Top, r) + topJokers
+		need := 3 - have
+		var pMake float32
 		if need <= 0 {
-			return 1
+			pMake = 1 // 顶已成 r-trips
+		} else {
+			pMake = hypergeoAtLeast(deckTotal, rankRem[r]+jokerRem, topSlots, need)
 		}
-		p := hypergeoAtLeast(deckTotal, deckR, topSlots, need)
-		if p > maxP {
-			maxP = p
+		legalFactor := float32(1)
+		if capTrips && int(HtThreeKind)*13+r > midCur {
+			legalFactor = 0.3 // 顶 r-trips > 中已成三条 → 要中发育超过它(葫芦+), 折扣
 		}
+		pNone *= (1 - pMake*legalFactor)
 	}
-	return maxP
+	return 1 - pNone
 }
 
 // pTopNoFoulVsMid — 估算 P(top ≤ mid final)

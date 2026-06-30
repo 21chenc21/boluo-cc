@@ -37,3 +37,15 @@ func TestPTopGTMid_TripsRank(t *testing.T){
 	if hi<0.3{t.Fatalf("顶KKK压中444 foul该高(>0.3), 得%.3f",hi)}
 	if lo>0.2{t.Fatalf("顶444<中KKK(高三条托得住) foul该低(<0.2), 得%.3f",lo)}
 }
+
+// #110 (2026-07-01): pTopTrips 漏数顶上鬼 + max非union + 没合法性. exp孤鬼顶trips范该>AI(7已上顶,唯777超中).
+func TestPTopTrips_JokerUnionLegal(t *testing.T){
+	mk:=func(ss ...string)[]Card{var r []Card;for _,s:=range ss{r=append(r,mustParse(s))};return r}
+	bld:=func(top,mid []Card)*GameState{g:=NewGameState(2);g.NumJokers=2;g.Round=4;g.Top=top;g.Middle=mid;g.Bottom=mk("9d","8h","8c","8d","8s");for _,c:=range append(append(top,mid...),g.Bottom...){g.UsedCards[c.ID()]=true};return g}
+	aiF:=BuildFeaturesV3(bld(mk("Xj0","7h"),mk("6h","6d","4c","6c")))   // 顶🃏7h: 唯777>中666
+	expF:=BuildFeaturesV3(bld(mk("Xj0"),mk("6h","6d","4c","6c","7h")))  // 顶🃏: 多条≤666合法trips
+	ai,exp:=aiF[93],expF[93]
+	if exp<=ai{t.Fatalf("exp孤鬼顶(多条合法trips)该>AI(唯777超中打折): exp=%.3f ai=%.3f",exp,ai)}
+	if ai<=0.005{t.Fatalf("AI 777范存在(摸7+中发育)不该清零: ai=%.3f",ai)}
+	if exp<=0.005{t.Fatalf("exp孤鬼顶trips范不该是0(旧漏数鬼bug): exp=%.3f",exp)}
+}
