@@ -296,7 +296,7 @@ for ((iter=1; iter<=ITERS; iter++)); do
               -out-dir "$GEN_OUT")
     if [ -n "$BEST_CKPT" ] && [ -f "$BEST_CKPT" ]; then
         GEN_ARGS+=(-weights "$BEST_CKPT")
-        echo "[iter $iter]   rollout policy = $BEST_CKPT ($BEST_TC/63)" | tee -a "$LOG"
+        echo "[iter $iter]   rollout policy = $BEST_CKPT (失败 $BEST_FAIL, 通过 $BEST_TC/$BENCH_TOTAL_CASES)" | tee -a "$LOG"
     else
         echo "[iter $iter]   rollout policy = embed default (cold start)" | tee -a "$LOG"
     fi
