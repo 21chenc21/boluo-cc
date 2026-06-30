@@ -1,0 +1,11 @@
+# 训练/运行产物, 不进 git
+gen-rollout-dataset
+server-go-bin/
+*.test
+*.log
+# ckpts + 数据集
+ckpts-*/
+rollout-dataset-*/
+dataset-*/
+# JS dev 残留 (server-go 是 Go)
+*.js
