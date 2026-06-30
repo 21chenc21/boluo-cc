@@ -90,6 +90,26 @@ func partialEval(cards []Card) HandValue {
 	if effMax >= 3 {
 		return HandValue{Type: TypeThreeOfAKind, Value: int64(3000000 + maxRank*15)}
 	}
+	// 2026-07-01 (#24 bug): partialEval 原来漏了两对 — 4张 22KK 被当成"KK 一对" → pMidGTBot 严重低估 foul.
+	//   trips 已用掉 joker(effMax>=3); 这里只数自然对, ≥2 个对 = 两对. (4张内不会有葫芦, 那要5张.)
+	pairCount := 0
+	var pr []int // 对子 rank, 降序
+	for r := 12; r >= 0; r-- {
+		if rankCnt[r] >= 2 {
+			pairCount++
+			pr = append(pr, r)
+		}
+	}
+	if pairCount >= 2 {
+		kicker := 0
+		for r := 12; r >= 0; r-- {
+			if rankCnt[r] == 1 && r != pr[0] && r != pr[1] {
+				kicker = r
+				break
+			}
+		}
+		return HandValue{Type: TypeTwoPair, Value: makeValue(TypeTwoPair, pr[0], pr[1], kicker)}
+	}
 	if effMax >= 2 {
 		// 找 kicker
 		kicker := 0

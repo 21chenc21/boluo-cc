@@ -1388,6 +1388,16 @@ func pMidGTBot(gs *GameState, midEv, botEv HandValue, rankRem [13]int, suitRem [
 		pBotPairGE := pRowPairAtLeastRank(gs.Bottom, midR, rankRem, jokerRem, deckTotal, botSlots, cs)
 		pBotTwoPairPlus := pRowAtLeast(gs.Bottom, TypeTwoPair, rankRem, suitRem, jokerRem, deckTotal, botSlots, cs)
 		pBotGE = pBotPairGE + pBotTwoPairPlus*(1-pBotPairGE)
+	} else if midEv.Type == TypeTwoPair {
+		// 2026-07-01 (#24 bug2): 中是两对(高对 rank=midHi). 底要"配出 ≥midHi 的对(成更高两对)或三条+"才能超 —
+		//   不是"随便成个两对"(QQ两对超不过中 KK两对). 旧 else 用 pRowAtLeast(底,TwoPair) rank-blind 低估 foul.
+		midHi := highestRealPairRank(gs.Middle)
+		if midHi < 0 {
+			midHi = 0
+		}
+		pBotPairGE := pRowPairAtLeastRank(gs.Bottom, midHi, rankRem, jokerRem, deckTotal, botSlots, cs)
+		pBotTrips := pRowAtLeast(gs.Bottom, TypeThreeOfAKind, rankRem, suitRem, jokerRem, deckTotal, botSlots, cs)
+		pBotGE = pBotPairGE + pBotTrips*(1-pBotPairGE)
 	} else {
 		pBotGE = pRowAtLeast(gs.Bottom, midEv.Type, rankRem, suitRem, jokerRem, deckTotal, botSlots, cs)
 	}

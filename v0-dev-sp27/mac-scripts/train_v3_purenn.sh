@@ -110,7 +110,7 @@ SCRIPT_VERSION="2026-06-17-purenn"
 #     - Mark cases 35/37/40/45 as warn (AI 选合理但不在 expecteds)
 #     - sp17 iter-1 r1 deployed 8002, bench: 59通过/4警告/0 真错.
 #     - DATA_VERSION → i147-sp18 (rollout policy 含 sp17 best, 数据 fresh).
-DATA_VERSION="i165-sp32"  # 2026-06-29 sp32 (165-d: +W2组dim164 强成手放错行). 含 sp31 全部 + #23/#24 倒置修(中KK>底QQ binary-1). 追加dim warm-start pad 0.
+DATA_VERSION="i165-sp33"  # 2026-07-01 sp33: #24 bug修 (partialEval 4张两对认成两对 + pMidGTBot 中两对rank-aware foul). foul特征大修, fresh data.
 # 旧 i164-sp31 (164-d): #90三条rank0-2 / #124 pPairToTrips cap / cases全删uc / outs-aware. sp31-one 跑了iter2=130, #124已落地, #90/#23/#24未.
 # 旧 sp30: i164-sp30 (draw纯花+slots / MHR rank各档安全上限 / 顶trips种子bonus). sp30-one 跑了iter-1=+3 但无#90/#124/clean-cases.
 # 旧: i164-sp29 (2026-06-25: +B顺紧密度161-162 +C进范可行性163 + 成手奖励rank破平 + 概率挑牌模型cardsSeen).
