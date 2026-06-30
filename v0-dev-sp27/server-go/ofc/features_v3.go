@@ -1711,7 +1711,12 @@ func eRoyaltyMid(gs *GameState, rankRem [13]int, suitRem [4]int, jokerRem, deckT
 	pFlush := pRowFlush(gs.Middle, suitRem, jokerRem, deckTotal, midSlots, cs)
 	pFH := pRowAtLeast(gs.Middle, TypeFullHouse, rankRem, suitRem, jokerRem, deckTotal, midSlots, cs)
 	pQ := pRowAtLeastQuads(gs.Middle, rankRem, jokerRem, deckTotal, midSlots, cs)
-	return pTrips*2 + pStraight*4 + pFlush*8 + pFH*12 + pQ*20
+	// 2026-07-01 (#41/#110 bug): 同 eRoyaltyBot — pFH(≥葫芦)含金刚, 金刚增量计 (20-12), pFH≥pQ 保一致.
+	pFHc := pFH
+	if pQ > pFHc {
+		pFHc = pQ
+	}
+	return pTrips*2 + pStraight*4 + pFlush*8 + pFHc*12 + pQ*(20-12)
 }
 
 func eRoyaltyBot(gs *GameState, rankRem [13]int, suitRem [4]int, jokerRem, deckTotal, botSlots int) float32 {
@@ -1721,7 +1726,13 @@ func eRoyaltyBot(gs *GameState, rankRem [13]int, suitRem [4]int, jokerRem, deckT
 	pFlush := pRowFlush(gs.Bottom, suitRem, jokerRem, deckTotal, botSlots, cs)
 	pFH := pRowAtLeast(gs.Bottom, TypeFullHouse, rankRem, suitRem, jokerRem, deckTotal, botSlots, cs)
 	pQ := pRowAtLeastQuads(gs.Bottom, rankRem, jokerRem, deckTotal, botSlots, cs)
-	return pTrips*0 + pStraight*2 + pFlush*4 + pFH*6 + pQ*10
+	// 2026-07-01 (#41 bug): pFH=P(≥葫芦)已含金刚, pQ=P(≥金刚). 旧 pFH*6+pQ*10 把金刚算两次(6+10=16, 实际10).
+	//   修: 金刚只加增量(10-6). 且 pFH 粗估可能<pQ(不可能, 金刚⊆≥葫芦) → 取 max 保一致.
+	pFHc := pFH
+	if pQ > pFHc {
+		pFHc = pQ
+	}
+	return pTrips*0 + pStraight*2 + pFlush*4 + pFHc*6 + pQ*(10-6)
 }
 
 // ============================================================

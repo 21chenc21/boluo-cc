@@ -60,3 +60,14 @@ func TestPTopTrips_TwoPairAndFull(t *testing.T){
 	if full2p>0.005{t.Fatalf("满中两对锁死 顶trips必foul该≈0, 得%.3f",full2p)}
 	if fh<0.03{t.Fatalf("中葫芦>顶trips 该合法全算, 得%.3f",fh)}
 }
+
+// #41 (2026-07-01): eRoyalty 金刚双重计数 — pFH(≥葫芦)含金刚 + pQ(≥金刚) 各乘满皇室 → 三条底虚高.
+func TestERoyaltyQuadsDoubleCounted(t *testing.T){
+	mk:=func(ss ...string)[]Card{var r []Card;for _,s:=range ss{r=append(r,mustParse(s))};return r}
+	bld:=func(mid,bot []Card)*GameState{g:=NewGameState(2);g.NumJokers=2;g.Round=3;g.Top=mk("As","Kc");g.Middle=mid;g.Bottom=bot;for _,c:=range append(append(g.Top,mid...),bot...){g.UsedCards[c.ID()]=true};g.SetDiscard(mustParse("Kh"));return g}
+	eb:=func(g *GameState)float32{rr,sr,jr:=computeDeckRemaining(g);dt:=jr;for _,r:=range rr{dt+=r};return eRoyaltyBot(g,rr,sr,jr,dt,5-len(g.Bottom))}
+	ai:=eb(bld(mk("5s","5d","9h"),mk("8c","9d","8h","8s")))  // 底888,9三条(0分, 摸金刚/葫芦)
+	exp:=eb(bld(mk("5s","5d"),mk("8c","9d","8h","8s","9h"))) // 底888-99锁死葫芦(6分)
+	if ai>=exp{t.Fatalf("三条底预期皇室该明显<锁死葫芦(6): 三条=%.2f 葫芦=%.2f",ai,exp)}
+	if ai>4.5{t.Fatalf("三条底(0分现成)预期皇室不该虚高>4.5(旧bug5.36): %.2f",ai)}
+}
