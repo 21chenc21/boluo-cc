@@ -558,25 +558,8 @@ func fillMadeRowOrder(f []float32, gs *GameState) {
 	topS := rowMadeScore(gs.Top)
 	midS := rowMadeScore(gs.Middle)
 	botS := rowMadeScore(gs.Bottom)
-	// 2026-07-01 (#23 bug): 空行 rowMadeScore=0, 旧版拿它跟上/下行的 made-score 比 → 空中路(made=0)被误当
-	//   "远低于顶"罚 -1.0. 但空行是"待发育"不是倒置, 行序无意义 → 该中性 0. 只在两行都已发育(非空)时才判倒置.
-	topEmpty := len(gs.Top) == 0
-	midEmpty := len(gs.Middle) == 0
-	botEmpty := len(gs.Bottom) == 0
-	midPartial := len(gs.Middle) < 5
-	// f0 = 中-顶 行序. partial 中 < 顶 → 中性: 中还没发育完, 会长成更高牌型托顶(#23空中/#24中22都是),
-	//   不该拿"当前对子低于顶"当锁定倒置罚. 真"顶>中最终"风险由 pTopGTMid(f89链)精确管.
-	if midEmpty || topEmpty || (midPartial && midS < topS) {
-		f[0] = 0
-	} else {
-		f[0] = clampF(float32(midS-topS)/13.0, -1, 1)
-	}
-	// f1 = 底-中 行序. 中>底倒置(负)保留 — 那是真 foul 信号(底要发育反超难, 是AI这类错摆的病根).
-	if midEmpty || botEmpty {
-		f[1] = 0
-	} else {
-		f[1] = clampF(float32(botS-midS)/13.0, -1, 1)
-	}
+	f[0] = clampF(float32(midS-topS)/13.0, -1, 1) // 中-顶 行序 (正常 ≥0)
+	f[1] = clampF(float32(botS-midS)/13.0, -1, 1) // 底-中 行序 (负 = 中>底倒置, 主 bias)
 	minM := f[0]
 	if f[1] < minM {
 		minM = f[1]

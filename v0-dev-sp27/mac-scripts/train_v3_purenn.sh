@@ -110,7 +110,7 @@ SCRIPT_VERSION="2026-06-17-purenn"
 #     - Mark cases 35/37/40/45 as warn (AI 选合理但不在 expecteds)
 #     - sp17 iter-1 r1 deployed 8002, bench: 59通过/4警告/0 真错.
 #     - DATA_VERSION → i147-sp18 (rollout policy 含 sp17 best, 数据 fresh).
-DATA_VERSION="i165-sp34"  # 2026-07-01 sp34: sp33的6个修 + MadeRowOrder(f147-149)发育中'中<顶'误罚锁定倒置修(#23/#24, partial中<顶→中性0, 中>底foul保留). +cases #28加AI预期. FeatureDimV3=165不变. fresh data. promote按失败数最少.
+DATA_VERSION="i165-sp33"  # sp33: 6个真bug修(partialEval两对/金刚+pMidGTBot两对+pTopGTMid顶三条+pTopTrips+eRoyalty金刚双计). MadeRowOrder改动已撤(语义错,弄崩8case). +#28 cases. FeatureDim165. promote按失败数最少.
 # 旧 sp33: partialEval两对/金刚 + pMidGTBot两对rank + pTopGTMid顶三条rank + pTopTrips(漏顶鬼+max非union+合法性) + eRoyalty金刚双重计数.
 # 旧 i164-sp31 (164-d): #90三条rank0-2 / #124 pPairToTrips cap / cases全删uc / outs-aware. sp31-one 跑了iter2=130, #124已落地, #90/#23/#24未.
 # 旧 sp30: i164-sp30 (draw纯花+slots / MHR rank各档安全上限 / 顶trips种子bonus). sp30-one 跑了iter-1=+3 但无#90/#124/clean-cases.
