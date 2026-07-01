@@ -71,3 +71,16 @@ func TestERoyaltyQuadsDoubleCounted(t *testing.T){
 	if ai>=exp{t.Fatalf("三条底预期皇室该明显<锁死葫芦(6): 三条=%.2f 葫芦=%.2f",ai,exp)}
 	if ai>4.5{t.Fatalf("三条底(0分现成)预期皇室不该虚高>4.5(旧bug5.36): %.2f",ai)}
 }
+
+// #23/#24 (2026-07-01): MadeRowOrder 空/发育中的"中<顶"被误当锁定倒置罚, 该中性(会发育托顶). 中>底foul保留.
+func TestMadeRowOrder_PartialMidBelowTop(t *testing.T){
+	mk:=func(ss ...string)[]Card{var r []Card;for _,s:=range ss{r=append(r,mustParse(s))};return r}
+	bld:=func(rnd int,top,mid,bot []Card,d string)*GameState{g:=NewGameState(2);g.NumJokers=2;g.Round=rnd;g.Top=top;g.Middle=mid;g.Bottom=bot;for _,c:=range append(append(top,mid...),bot...){g.UsedCards[c.ID()]=true};g.SetDiscard(mustParse(d));return g}
+	f147:=func(g *GameState)float32{return BuildFeaturesV3(g)[147]}
+	// 空中路 < 顶 → f147 中性0 (不再 -1.0)
+	if v:=f147(bld(2,mk("Ac","As"),mk(),mk("Qh","Qc","6h","Ks","Kh"),"3h"));v< -0.01{t.Fatalf("空中<顶该中性0, 得%.3f",v)}
+	// partial 中22 < 顶AA → f147 中性0 (不再 -0.923)
+	if v:=f147(bld(3,mk("Ac","As"),mk("2s","2c"),mk("Qh","Qc","6h","Ks","Kh"),"2d"));v< -0.01{t.Fatalf("中22<顶该中性0, 得%.3f",v)}
+	// 回归: 满board 中KK>底QQ 倒置 f148 该<0 (foul信号保留)
+	if v:=BuildFeaturesV3(bld(2,mk("2c","3c","4c"),mk("Kh","Kd","5s","6s","7s"),mk("Qh","Qc","2h","3h","4h"),"9h"))[148];v>=0{t.Fatalf("满board中>底倒置 f148该<0, 得%.3f",v)}
+}
