@@ -13,7 +13,7 @@ export GCP_KEY="${GCP_KEY:-/Users/Chen/Documents/pem/gcp-chguang-new}"
 GCP="chguang@34.19.194.234"
 GCPDIR="boluo-cc/v0-dev-sp27"
 SSH="ssh -i $GCP_KEY -o StrictHostKeyChecking=no"
-DSROOT="v3-dataset-i165-sp34-gcp"; TRROOT="v3-train-i165-sp34-gcp"
+DSROOT="v3-dataset-i165-sp35-gcp"; TRROOT="v3-train-i165-sp35-gcp"
 [ -f "$GCP_KEY" ] || { echo "FATAL: GCP key 不在 $GCP_KEY"; exit 1; }
 
 # 确保 round-002 在本地 (train 首次 bootstrap best.json 用)

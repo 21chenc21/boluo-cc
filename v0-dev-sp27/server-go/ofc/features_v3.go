@@ -131,7 +131,7 @@ func BuildFeaturesV3(gs *GameState) []float32 {
 	fillFantasyGranular(f[90:94], gs, midEval, rankRem, jokerRem, deckTotal) // sp16: 传 midEval 做 cap
 	fillExpectedRoyalty(f[94:97], gs, rankRem, suitRem, jokerRem, deckTotal, topEvalCapped, midEval, botEval)
 	fillSummary(f[97:102], gs, topEvalCapped, midEval, botEval, f) // 用前面的 P 值
-	fillPairRank(f[102:107], gs, topEvalCapped)
+	fillPairRank(f[102:107], gs, topEvalCapped, f[79]) // f79=pMidGTBot, gate 中强度
 	fillPairToTrips(f[107:112], gs, rankRem, suitRem, jokerRem, deckTotal)
 	fillTopFantasyLocks(f[112:116], gs, topEvalCapped, midEval, rankRem, jokerRem)
 	fillMaxAchievable(f[116:119], gs, rankRem, suitRem, jokerRem)
@@ -321,7 +321,7 @@ func fillSummary(f []float32, gs *GameState, topEv, midEv, botEv HandValue, all 
 
 // 2026-05-20 sp16: top 用 cap-aware topEv 提 pair rank (joker+A 被 mid pair-K cap 时反映 pair-2 真值)
 // case 50 R5 教训: AI top=[X 2c As] vs mid KK → joker cap → top 实际 pair-2 (非 AA)
-func fillPairRank(f []float32, gs *GameState, topEv HandValue) {
+func fillPairRank(f []float32, gs *GameState, topEv HandValue, midFoulProb float32) {
 	pairToFeat := func(r int) float32 {
 		if r < 0 {
 			return -1.0
@@ -346,9 +346,21 @@ func fillPairRank(f []float32, gs *GameState, topEv HandValue) {
 	} else {
 		f[0] = pairToFeat(topPair)
 	}
-	f[1] = pairToFeat(maxPairRankRow(gs.Middle))
+	// 2026-07-02 (#23/#24): 中对子/两对 rank 用 foul概率(midFoulProb=pMidGTBot=f79) gate: 中强度 × (1-foulprob).
+	//   中越可能压底(倒置)→ 打折越狠 (#24 KK22两对>底QQ: f79=0.73 → 0.917 砍到 0.25, 不再被当强).
+	//   draw-aware: 底是 draw 时 f79 低, 中强度基本不打折 → 不误伤 探1(底顺draw时 KK→中 才是对的).
+	//   无对/空中 → 0(中性): 留中开发育合理, 别当最差 -1. 底是最强行, 不 gate.
+	if mp := maxPairRankRow(gs.Middle); mp < 0 {
+		f[1] = 0
+	} else {
+		f[1] = float32(mp) / 12.0 * (1 - midFoulProb)
+	}
 	f[2] = pairToFeat(maxPairRankRow(gs.Bottom))
-	f[3] = pairToFeat(twoPairHighRank(gs.Middle))
+	if mtp := twoPairHighRank(gs.Middle); mtp < 0 {
+		f[3] = 0
+	} else {
+		f[3] = float32(mtp) / 12.0 * (1 - midFoulProb)
+	}
 	f[4] = pairToFeat(twoPairHighRank(gs.Bottom))
 }
 

@@ -256,14 +256,19 @@ func TestV3_Z_PhaseR1(t *testing.T) {
 	}
 }
 
-// TestV3_U_TwoPairHigh — mid 2pair K + 8, U3 = K rank / 12
+// TestV3_U_TwoPairHigh — mid 2pair K high. 2026-07-02: f105 现在 = rank × (1-foulprob) gate.
+//   底强(压住中,不 foul)→ 不打折 = raw K rank; 底弱(被中倒置)→ 打折 < raw.
 func TestV3_U_TwoPairHigh(t *testing.T) {
-	gs := makeStateV3(t, nil, []string{"Kc", "Kd", "8h", "8s", "3c"}, nil)
-	f := BuildFeaturesV3(gs)
-	// U3 mid 2pair high rank at idx 105 (102+3), K rank = 11/12 ≈ 0.917
+	// 底 AAA-QQ 葫芦 压过 中 KK88 两对 → foulprob~0 → f105 = raw K rank
+	gs := makeStateV3(t, nil, []string{"Kc", "Kd", "8h", "8s", "3c"}, []string{"Ah", "Ad", "Ac", "Qh", "Qd"})
 	expected := 11.0 / 12.0
-	if math.Abs(float64(f[105])-expected) > 0.01 {
-		t.Errorf("U3 mid 2pair high (KK+88): got %.3f, want %.3f", f[105], expected)
+	if got := float64(BuildFeaturesV3(gs)[105]); math.Abs(got-expected) > 0.02 {
+		t.Errorf("U3 中KK88两对(底葫芦压住不foul): got %.3f, want %.3f", got, expected)
+	}
+	// 底 QQ6 弱, 被中 KK88 两对倒置 → foulprob 高 → f105 该打折 < raw
+	gs2 := makeStateV3(t, nil, []string{"Kc", "Kd", "8h", "8s"}, []string{"Qh", "Qc", "6h"})
+	if got := BuildFeaturesV3(gs2)[105]; got >= float32(expected) {
+		t.Errorf("中KK88两对倒置底QQ6, f105 该被foul打折(<%.3f), got %.3f", expected, got)
 	}
 }
 
