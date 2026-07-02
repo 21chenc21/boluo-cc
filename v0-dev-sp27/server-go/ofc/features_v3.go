@@ -428,16 +428,41 @@ func fillTopFantasyLocks(f []float32, gs *GameState, topEv, midEv HandValue, ran
 
 // ============ Group C: 各行最大可达手型 (3 dim, idx 116-118) ============
 
+// probableMaxTier — 概率加权的"可达最高牌型": max over tiers of (tier/8 × P(reach≥tier)),
+//   floor = 当前已成型(P=1). improbable 高tier 被真概率压下去(#110 金刚 via 1真out ~2.5% → 压回 trips).
+//   不数牌堆鬼(jokerRem=0)于 顺子/三条/葫芦/金刚(别假设抽鬼来烧在这些); 同花/对子 保留数鬼.
+//   (2026-07-02 #110/#120: 替换旧的纯乐观 maxAchievableHandType ceiling, 那个不管概率+瞎数鬼.)
+func probableMaxTier(row []Card, slots int, rankRem [13]int, suitRem [4]int, jokerRem, deckTotal, cs int) float32 {
+	best := float32(rowCurrentType(row)) / 8.0 // floor: 当前成型
+	consider := func(tier int, p float32) {
+		if v := float32(tier) / 8.0 * p; v > best {
+			best = v
+		}
+	}
+	// 保留数鬼: 对子 / 两对 / 同花
+	consider(TypePair, pRowAtLeast(row, TypePair, rankRem, suitRem, jokerRem, deckTotal, slots, cs))
+	consider(TypeTwoPair, pRowAtLeast(row, TypeTwoPair, rankRem, suitRem, jokerRem, deckTotal, slots, cs))
+	consider(TypeFlush, pRowFlush(row, suitRem, jokerRem, deckTotal, slots, cs))
+	// 不数牌堆鬼(jokerRem=0): 三条 / 顺子 / 葫芦 / 金刚
+	consider(TypeThreeOfAKind, pRowAtLeast(row, TypeThreeOfAKind, rankRem, suitRem, 0, deckTotal, slots, cs))
+	consider(TypeStraight, pRowStraight(row, rankRem, 0, deckTotal, slots, cs))
+	consider(TypeFullHouse, pRowAtLeast(row, TypeFullHouse, rankRem, suitRem, 0, deckTotal, slots, cs))
+	consider(TypeFourOfAKind, pRowAtLeast(row, TypeFourOfAKind, rankRem, suitRem, 0, deckTotal, slots, cs))
+	return best
+}
+
 func fillMaxAchievable(f []float32, gs *GameState, rankRem [13]int, suitRem [4]int, jokerRem int) {
+	// Top: 保持老 ceiling (顶范要靠鬼, 数鬼; HighCard/Pair/ThreeKind → 0/1/3, /3)
 	topMax := maxAchievableHandType(gs.Top, 3-len(gs.Top), rankRem, suitRem, jokerRem)
-	midMax := maxAchievableHandType(gs.Middle, 5-len(gs.Middle), rankRem, suitRem, jokerRem)
-	botMax := maxAchievableHandType(gs.Bottom, 5-len(gs.Bottom), rankRem, suitRem, jokerRem)
-	// Top max: HighCard / Pair / ThreeKind → 0/1/3 (skip 2pair which can't on 3 card top)
-	// Normalize / 3
 	f[0] = float32(topMax) / 3.0
-	// Mid / Bot: HighCard...SF / 0-9
-	f[1] = float32(midMax) / 9.0
-	f[2] = float32(botMax) / 9.0
+	// Mid / Bot: 概率加权 + 不数鬼(顺/三条/葫芦/金刚), 见 probableMaxTier
+	cs := cardsSeenRemaining(gs)
+	deckTotal := jokerRem
+	for _, r := range rankRem {
+		deckTotal += r
+	}
+	f[1] = probableMaxTier(gs.Middle, 5-len(gs.Middle), rankRem, suitRem, jokerRem, deckTotal, cs)
+	f[2] = probableMaxTier(gs.Bottom, 5-len(gs.Bottom), rankRem, suitRem, jokerRem, deckTotal, cs)
 }
 
 // ============ Group R5: 末轮强制信号 (2 dim, idx 119-120) ============
@@ -1425,7 +1450,9 @@ func pMidGTBot(gs *GameState, midEv, botEv HandValue, rankRem [13]int, suitRem [
 			midHi = 0
 		}
 		pBotPairGE := pRowPairAtLeastRank(gs.Bottom, midHi, rankRem, jokerRem, deckTotal, botSlots, cs)
-		pBotTrips := pRowAtLeast(gs.Bottom, TypeThreeOfAKind, rankRem, suitRem, jokerRem, deckTotal, botSlots, cs)
+		// 2026-07-02 (#24): 底凑三条反超中两对时不数牌堆鬼(jokerRem=0) — 好玩家不会抽鬼烧在底凑三条,
+		//   原来数鬼把 pBotTrips 从真~0.1 抬到~0.47 → pBotGE 虚高 → foul 从该有的~0.85 压到 0.527.
+		pBotTrips := pRowAtLeast(gs.Bottom, TypeThreeOfAKind, rankRem, suitRem, 0, deckTotal, botSlots, cs)
 		pBotGE = pBotPairGE + pBotTrips*(1-pBotPairGE)
 	} else {
 		pBotGE = pRowAtLeast(gs.Bottom, midEv.Type, rankRem, suitRem, jokerRem, deckTotal, botSlots, cs)

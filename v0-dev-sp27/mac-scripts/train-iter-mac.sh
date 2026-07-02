@@ -8,7 +8,7 @@
 #      (默认 v3-train-i165-sp33-1/iter-1/round-002-acc95.json)
 set -euo pipefail
 ITER="${1:?用法: train-iter-mac.sh <iter>}"
-DATA_VERSION=i165-sp33; RUN=gcp
+DATA_VERSION=i165-sp34; RUN=gcp
 DATASET_ROOT="v3-dataset-${DATA_VERSION}-${RUN}"
 TRAIN_ROOT="v3-train-${DATA_VERSION}-${RUN}"
 TRAIN_OUT="$TRAIN_ROOT/iter-$ITER"
