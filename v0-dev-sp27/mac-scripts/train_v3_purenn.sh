@@ -110,7 +110,7 @@ SCRIPT_VERSION="2026-06-17-purenn"
 #     - Mark cases 35/37/40/45 as warn (AI 选合理但不在 expecteds)
 #     - sp17 iter-1 r1 deployed 8002, bench: 59通过/4警告/0 真错.
 #     - DATA_VERSION → i147-sp18 (rollout policy 含 sp17 best, 数据 fresh).
-DATA_VERSION="i165-sp33"  # sp33: 6个真bug修(partialEval两对/金刚+pMidGTBot两对+pTopGTMid顶三条+pTopTrips+eRoyalty金刚双计). MadeRowOrder改动已撤(语义错,弄崩8case). +#28 cases. FeatureDim165. promote按失败数最少.
+DATA_VERSION="i165-sp36"  # sp36: sp33+MaxAchiev概率加权+pMidGTBot不数鬼+f103/f105 foulprob gate. 起点sp34 iter-1 r1. 原注释:  # sp33: 6个真bug修(partialEval两对/金刚+pMidGTBot两对+pTopGTMid顶三条+pTopTrips+eRoyalty金刚双计). MadeRowOrder改动已撤(语义错,弄崩8case). +#28 cases. FeatureDim165. promote按失败数最少.
 # 旧 sp33: partialEval两对/金刚 + pMidGTBot两对rank + pTopGTMid顶三条rank + pTopTrips(漏顶鬼+max非union+合法性) + eRoyalty金刚双重计数.
 # 旧 i164-sp31 (164-d): #90三条rank0-2 / #124 pPairToTrips cap / cases全删uc / outs-aware. sp31-one 跑了iter2=130, #124已落地, #90/#23/#24未.
 # 旧 sp30: i164-sp30 (draw纯花+slots / MHR rank各档安全上限 / 顶trips种子bonus). sp30-one 跑了iter-1=+3 但无#90/#124/clean-cases.
@@ -303,8 +303,32 @@ for ((iter=1; iter<=ITERS; iter++)); do
     fi
     # 用 PIPESTATUS[0] 拿 gen 的真实退出码 (bash 3.2 pipefail + tee 不可靠, 见 sp7).
     # 2026-06-20 (用户): gen 加 DISABLE_SOFT_RULES=1 — 之前只关硬规则, 软bonus/penalty 还在影响 rollout 策略 → silver-label EV 带软规则偏置. 现 gen 全纯NN (硬+软+支配全关).
-    DISABLE_HARD_RULES=1 DISABLE_SOFT_RULES=1 "$GEN_BIN" "${GEN_ARGS[@]}" 2>&1 | tee -a "$LOG" || true
-    GEN_EXIT=${PIPESTATUS[0]}
+    # 2026-07-02: GEN_SHARDS>1 → 分片并行 gen. 单 gen 进程只并行"局内候选"(~15核), 局间串行;
+    #   多核机器 (如 128 核 GCP) 分 N 片各跑 GAMES/N 局并行, 填满核. gen 时间随机seed + 错开>1s启动
+    #   保证各片不同局; train 递归读 dataset (filepath.Walk) 自动合并各 shard 子目录. 默认1=原行为.
+    GEN_SHARDS="${GEN_SHARDS:-1}"
+    if [ "${GEN_SHARDS}" -gt 1 ]; then
+        echo "[iter $iter]   GEN_SHARDS=$GEN_SHARDS 分片并行 gen (each ~$((GAMES/GEN_SHARDS)) games)" | tee -a "$LOG"
+        _common=(); _skip=0
+        for _a in "${GEN_ARGS[@]}"; do
+            if [ "$_skip" = 1 ]; then _skip=0; continue; fi
+            case "$_a" in -num-games|-out-dir) _skip=1; continue;; esac
+            _common+=("$_a")
+        done
+        _pids=(); _per=$((GAMES/GEN_SHARDS)); _rem=$((GAMES%GEN_SHARDS))
+        for _k in $(seq 0 $((GEN_SHARDS-1))); do
+            _g=$_per; [ "$_k" -lt "$_rem" ] && _g=$((_per+1))
+            DISABLE_HARD_RULES=1 DISABLE_SOFT_RULES=1 "$GEN_BIN" "${_common[@]}" -num-games "$_g" -out-dir "$GEN_OUT/shard$_k" >> "$LOG" 2>&1 &
+            _pids+=($!)
+            sleep 1.2   # 错开>1s: gen 无 -seed flag, 靠时间seed区分, 同秒启动会同seed生成相同局
+        done
+        GEN_EXIT=0
+        for _p in "${_pids[@]}"; do wait "$_p" || GEN_EXIT=$?; done
+        echo "[iter $iter]   分片 gen 全部完成 (exit=$GEN_EXIT)" | tee -a "$LOG"
+    else
+        DISABLE_HARD_RULES=1 DISABLE_SOFT_RULES=1 "$GEN_BIN" "${GEN_ARGS[@]}" 2>&1 | tee -a "$LOG" || true
+        GEN_EXIT=${PIPESTATUS[0]}
+    fi
     if [ "$GEN_EXIT" -ne 0 ]; then
         echo "[iter $iter] FATAL: gen 失败 (exit=$GEN_EXIT)" | tee -a "$LOG"
         # 130=SIGINT 143=SIGTERM: 用户中断 → 整个 script 退
