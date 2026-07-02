@@ -290,8 +290,9 @@ for ((iter=1; iter<=ITERS; iter++)); do
 
     # Phase A: gen samples — SELF-PLAY: rollout policy = 当前 BEST_CKPT (动态)
     # 跟 distillation 区别: 这里 BEST_CKPT 每 iter 都换, NN 跟自己玩.
-    echo "[iter $iter] Phase A: gen $GAMES games (rollouts=150, indim 165, SELF-PLAY + exploration)..." | tee -a "$LOG"
-    GEN_ARGS=(-num-games "$GAMES" -jokers 2 -rollouts 100 -r1-cap 30
+    ROLLOUTS="${ROLLOUTS:-100}"  # gen 每候选 rollout 数, env 可调 (150=标签最干净慢 / 100=1.5x快 / 别<75太吵)
+    echo "[iter $iter] Phase A: gen $GAMES games (rollouts=$ROLLOUTS, indim 165, SELF-PLAY + exploration)..." | tee -a "$LOG"
+    GEN_ARGS=(-num-games "$GAMES" -jokers 2 -rollouts "$ROLLOUTS" -r1-cap 30
               -phantom-opponents 2 -indim 165
               -foul-cost 3 -fan-bonus-qq 10 -fan-bonus-kk 30 -fan-bonus-aa 100 -fan-bonus-trips 140
               -out-dir "$GEN_OUT")
