@@ -60,4 +60,4 @@ else
 fi
 echo ""
 echo ">>> 下一步: 推 best.json 回 GCP 供 iter-$((ITER+1)) gen:"
-echo "    rsync -az -e \"ssh -i \$GCP_KEY\" $BEST chguang@34.19.194.234:~/boluo-cc/v0-dev-sp27/$BEST"
+echo "    rsync -az -e \"ssh -i \$GCP_KEY\" $BEST chguang@35.203.6.88:~/boluo-cc/v0-dev-sp27/$BEST"

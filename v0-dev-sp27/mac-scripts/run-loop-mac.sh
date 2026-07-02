@@ -10,7 +10,7 @@
 set -euo pipefail
 START="${1:-1}"; END="${2:-5}"
 export GCP_KEY="${GCP_KEY:-/Users/Chen/Documents/pem/gcp-chguang-new}"
-GCP="chguang@34.19.194.234"
+GCP="chguang@35.203.6.88"
 GCPDIR="boluo-cc/v0-dev-sp27"
 SSH="ssh -i $GCP_KEY -o StrictHostKeyChecking=no"
 DSROOT="v3-dataset-i165-sp35-gcp"; TRROOT="v3-train-i165-sp35-gcp"

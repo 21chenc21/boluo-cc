@@ -3,10 +3,10 @@
 # train 递归读整个 DATASET_ROOT, iter-1..N 全用上, 见 filepath.Walk).
 #
 # 用法 (Mac 上):  bash mac-scripts/pull-gen-from-gcp.sh <iter>
-# env: GCP_HOST(默认 chguang@34.19.194.234)  GCP_KEY(默认 ~/.ssh/gcp-chguang-new)
+# env: GCP_HOST(默认 chguang@35.203.6.88)  GCP_KEY(默认 ~/.ssh/gcp-chguang-new)
 set -euo pipefail
 ITER="${1:?用法: pull-gen-from-gcp.sh <iter>}"
-GCP_HOST="${GCP_HOST:-chguang@34.19.194.234}"
+GCP_HOST="${GCP_HOST:-chguang@35.203.6.88}"
 GCP_KEY="${GCP_KEY:-$HOME/.ssh/gcp-chguang-new}"
 BASE="v3-dataset-i165-sp35-gcp/iter-$ITER"
 REMOTE="boluo-cc/v0-dev-sp27/$BASE"
