@@ -31,3 +31,4 @@ for k in $(seq 0 $((SHARDS-1))); do
 done
 ec=0; for p in "${pids[@]}"; do wait "$p" || ec=$?; done
 echo "gen iter-$ITER 完成 exit=$ec, 用时 $(( $(date +%s)-t0 ))s, 样本 $(find "$GEN_OUT" -name '*.jsonl.gz'|wc -l) 文件 / $(du -sh "$GEN_OUT"|cut -f1)"
+[ "$ec" -eq 0 ] && touch "$GEN_OUT/.gen-done" || { echo "gen 非0退出, 不写完成标记"; exit "$ec"; }
