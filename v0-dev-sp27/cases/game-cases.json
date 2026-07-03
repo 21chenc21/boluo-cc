@@ -10440,5 +10440,45 @@
     ]
    }
   ]
+ },
+ {
+  "name": "200 [R4] joker-QQ范靶: 顶Qc+发🃏配成QQ范(合法≤中KK), As下底凑三条别塞顶(joker-max AA假foul)",
+  "round": 4,
+  "jokerCount": 2,
+  "dealt": [
+   "Xj0",
+   "As",
+   "2d"
+  ],
+  "state": {
+   "top": [
+    "Qc"
+   ],
+   "middle": [
+    "Kh",
+    "Kd",
+    "3h",
+    "4s",
+    "5h"
+   ],
+   "bottom": [
+    "Ah",
+    "Ad",
+    "8s"
+   ]
+  },
+  "expecteds": [
+   {
+    "top": [
+     "Xj0"
+    ],
+    "middle": [],
+    "bottom": [
+     "As"
+    ]
+   }
+  ],
+  "wrongs": [],
+  "note": "2026-07-03 f69冗余漏验证靶(f90已覆盖QQ范, 建来训后验证NN真识别). 🃏配Qc=QQ范合法(≤中KK), As→底凑AAA三条. 别把As塞顶(joker-max=AA>KK假foul, 实际打QQ). 顶QQ范优先."
  }
 ]
