@@ -6,7 +6,7 @@
 set -uo pipefail
 export PATH=$PATH:/usr/local/go/bin
 ITER="${1:?用法: gen-iter-gcp.sh <iter> [rollout-ckpt]}"
-DATA_VERSION=i169-sp39; RUN=gcp
+DATA_VERSION=i169-sp40; RUN=gcp
 DATASET_ROOT="v3-dataset-${DATA_VERSION}-${RUN}"
 TRAIN_ROOT="v3-train-${DATA_VERSION}-${RUN}"
 CKPT="${2:-}"
@@ -26,6 +26,7 @@ for k in $(seq 0 $((SHARDS-1))); do
   g=$per; [ "$k" -lt "$rem" ] && g=$((per+1))
   DISABLE_HARD_RULES=1 DISABLE_SOFT_RULES=1 "$BIN/gen-rollout-dataset" \
     -num-games "$g" -jokers 2 -rollouts 100 -r1-cap 30 -phantom-opponents 2 -indim 169 \
+    -mcts-margin 2.5 -mcts-sims 500 -mcts-topk 5 -traj-explore 0.15 -traj-topk 3 \
     -foul-cost 6 -fan-bonus-qq 10 -fan-bonus-kk 30 -fan-bonus-aa 100 -fan-bonus-trips 140 \
     -weights "$CKPT" -out-dir "$GEN_OUT/shard$k" > "$GEN_OUT/shard$k.log" 2>&1 &
   pids+=($!); sleep 1.2   # 错开>1s: gen 无 -seed, 靠时间seed区分
