@@ -4878,6 +4878,15 @@
      "9h",
      "3c"
     ]
+   },
+   {
+    "top": [
+     "3c"
+    ],
+    "middle": [],
+    "bottom": [
+     "9h"
+    ]
    }
   ],
   "note": "DeadLowKickerFanTop软罚修复: 顶AA锁+底999时, 低牌2h该进底凑99922葫芦, 拍2h上顶填死罚2.5→翻正选9h+2h→底. 守护: 底必trips+(实战72底[Tc]单张不罚, 低牌让位5c花draw)+低对顶留弱不罚+高kicker不罚. 模拟seed99局30. 2026-06-18"
@@ -5286,7 +5295,8 @@
     "bottom": []
    }
   ],
-  "note": "D-nndiff局20 R4. 中66/22两对(满), 底8h Kh 3h 3红心(花draw). 范需顶QQ+底花, 但R4发4s Jd 9s无Q+/红心, 范跟避foul已互斥(死). 旧FantasyLost独立判误以为范活→FantasyPossible砍保花候选→9s进底杀花→FOUL. 2026-06-19重写FantasyLost(链式rank-aware: 头<QQ/中max<头min或<QQ/底max<中min或<QQ→lost). 修后范死→规则no-op→保花(头[X Jd 9s]留底3红心). 纯NN本就选对."
+  "note": "D-nndiff局20 R4. 中66/22两对(满), 底8h Kh 3h 3红心(花draw). 范需顶QQ+底花, 但R4发4s Jd 9s无Q+/红心, 范跟避foul已互斥(死). 旧FantasyLost独立判误以为范活→FantasyPossible砍保花候选→9s进底杀花→FOUL. 2026-06-19重写FantasyLost(链式rank-aware: 头<QQ/中max<头min或<QQ/底max<中min或<QQ→lost). 修后范死→规则no-op→保花(头[X Jd 9s]留底3红心). 纯NN本就选对. [2026-07-03 用户标warn: 顶🃏+2张 J-high tie, 4s/9s kicker差别, 非大问题]",
+  "warn": true
  },
  {
   "name": "实战 104 [R2]: D63 底QQ(3张)别碰底保葫芦种子, 4/6/7→顶+中发育(7花draw或4顺draw)",
@@ -5443,6 +5453,14 @@
      "2s",
      "2d"
     ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "2s",
+     "2d"
+    ],
+    "middle": [],
     "bottom": []
    }
   ],
@@ -5707,6 +5725,15 @@
     ],
     "middle": [
      "4c"
+    ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "4c"
+    ],
+    "bottom": [
+     "Xj0"
     ]
    }
   ],

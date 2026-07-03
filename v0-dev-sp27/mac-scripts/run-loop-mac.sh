@@ -13,13 +13,13 @@ export GCP_KEY="${GCP_KEY:-/Users/Chen/Documents/pem/gcp-chguang-new}"
 GCP="chguang@35.203.6.88"
 GCPDIR="boluo-cc/v0-dev-sp27"
 SSH="ssh -i $GCP_KEY -o StrictHostKeyChecking=no"
-DSROOT="v3-dataset-i168-sp37-gcp"; TRROOT="v3-train-i168-sp37-gcp"
+DSROOT="v3-dataset-i168-sp38-gcp"; TRROOT="v3-train-i168-sp38-gcp"
 [ -f "$GCP_KEY" ] || { echo "FATAL: GCP key 不在 $GCP_KEY"; exit 1; }
 
-# sp37 warm-start 起点 = sp36 太子 (iter-4 r2, 43失败). Mac 上训的 → Mac 必须有; GCP gen iter-1 fallback 也要 → 推过去.
-SEED="v3-train-i165-sp36-1/iter-4/round-002-acc94.json"
-[ -f "$SEED" ] || { echo "FATAL: sp36 太子不在本地: $SEED (它是 Mac 训的, 找 v3-train-i165-sp36-1/)"; exit 1; }
-$SSH $GCP "mkdir -p $GCPDIR/v3-train-i165-sp36-1/iter-4"
+# sp38 warm-start 起点 = sp37 iter-1 太子 (41失败, 168-d). Mac 上训的 → Mac 必须有; GCP gen iter-1 fallback 也要 → 推过去.
+SEED="v3-train-i168-sp37-gcp/iter-1/round-002-acc94.json"
+[ -f "$SEED" ] || { echo "FATAL: sp37 太子不在本地: $SEED (它是 Mac 训的, 找 v3-train-i168-sp37-gcp/)"; exit 1; }
+$SSH $GCP "mkdir -p $GCPDIR/v3-train-i168-sp37-gcp/iter-1"
 rsync -az -e "$SSH" "$SEED" "$GCP:$GCPDIR/$SEED"
 echo "seed 已推 GCP: $SEED"
 
