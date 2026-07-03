@@ -1383,10 +1383,18 @@ func pRowFlush(row []Card, suitRem [4]int, jokerRem, deckTotal, slots, cardsSeen
 	if len(row)+slots < 5 {
 		return 0
 	}
+	// 2026-07-03 (#1 bug, 用户抓): 行内已放的鬼是万能牌, 算作目标花色的一张 (countSuitInRow 跳过鬼 → 漏).
+	//   旧版底[🃏 Jd 8d](2真方块+鬼)算 need=3>2空=0, 抹掉真花draw → value-head喂0学不会留花(那条 stopgap 软规则其实补此bug).
+	rowJokers := 0
+	for _, c := range row {
+		if c.IsJoker() {
+			rowJokers++
+		}
+	}
 	// 各 suit 算 P(row 最终 5 张同色)
 	maxP := float32(0)
 	for s := 0; s < 4; s++ {
-		rowHasS := countSuitInRow(row, s)
+		rowHasS := countSuitInRow(row, s) + rowJokers // 行内鬼当该花色 wild
 		need := 5 - rowHasS
 		if need <= 0 {
 			return 1
