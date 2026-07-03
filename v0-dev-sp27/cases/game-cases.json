@@ -310,6 +310,15 @@
     "bottom": [
      "Ts"
     ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "Xj1"
+    ],
+    "bottom": [
+     "Ad"
+    ]
    }
   ],
   "wrongs": [
@@ -322,7 +331,8 @@
      "X"
     ]
    }
-  ]
+  ],
+  "note": " [2026-07-03 用户标: A不上头(Ad→底,顶保持AA不冒AAA)就对; 中鬼可打低避foul. draw-support-gate+pDraw后AAA冒顶已治]"
  },
  {
   "name": "实战 7 [R2]: top=[Ac] mid=[X] bot=[7d9d8d] dealt[Kc X 7s] — X+Kc 上头锁 AA fantasy (ypk-98042186-4, X 不该进中弃 7s)",
