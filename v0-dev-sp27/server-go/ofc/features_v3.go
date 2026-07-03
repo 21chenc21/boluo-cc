@@ -218,14 +218,39 @@ func fillProbabilities(f []float32, gs *GameState, rankRem [13]int, suitRem [4]i
 	f[1] = pTopTrips(gs, rankRem, jokerRem, deckTotal, topSlots)
 	f[2] = pTopNoFoulVsMid(topEv, midEv)
 
-	// Mid (8 dim, idx 3-10)
+	// Mid (8 dim, idx 3-10) — 2026-07-03 (#104/#124) draw-support-gate:
+	//   中每个 tier 的 draw × P(底≥该tier). 底托不住该tier → 中成该tier会foul → draw无意义, 压掉.
+	//   P(底≥T): ≤三条用 pRowAtLeast(累积) ∪ 底顺 ∪ 底花; 顺=底顺∪花∪葫芦+; 花=底花∪葫芦+; 葫芦+用pRowAtLeast.
+	bStraight := pRowStraight(gs.Bottom, rankRem, jokerRem, deckTotal, botSlots, cs)
+	bFlush := pRowFlush(gs.Bottom, suitRem, jokerRem, deckTotal, botSlots, cs)
+	bFH := pRowAtLeast(gs.Bottom, TypeFullHouse, rankRem, suitRem, jokerRem, deckTotal, botSlots, cs)
+	pUnion := func(ps ...float32) float32 {
+		pn := float32(1)
+		for _, p := range ps {
+			pn *= 1 - p
+		}
+		return 1 - pn
+	}
+	botGE := func(tier int) float32 {
+		switch {
+		case tier <= int(TypeThreeOfAKind):
+			return pUnion(pRowAtLeast(gs.Bottom, tier, rankRem, suitRem, jokerRem, deckTotal, botSlots, cs), bStraight, bFlush)
+		case tier == int(TypeStraight):
+			return pUnion(bStraight, bFlush, bFH)
+		case tier == int(TypeFlush):
+			return pUnion(bFlush, bFH)
+		default: // 葫芦+
+			return pRowAtLeast(gs.Bottom, tier, rankRem, suitRem, jokerRem, deckTotal, botSlots, cs)
+		}
+	}
+	// f3 单对不 gate (单对几乎不foul, 底轻松≥对; 用户清单从两对起). f4-f8(两对+)才 gate.
 	f[3] = pRowAtLeast(gs.Middle, TypePair, rankRem, suitRem, jokerRem, deckTotal, midSlots, cs)
-	f[4] = pRowAtLeast(gs.Middle, TypeTwoPair, rankRem, suitRem, jokerRem, deckTotal, midSlots, cs)
-	f[5] = pRowAtLeast(gs.Middle, TypeThreeOfAKind, rankRem, suitRem, jokerRem, deckTotal, midSlots, cs)
-	f[6] = pRowStraight(gs.Middle, rankRem, jokerRem, deckTotal, midSlots, cs)
-	f[7] = pRowFlush(gs.Middle, suitRem, jokerRem, deckTotal, midSlots, cs)
-	f[8] = pRowAtLeast(gs.Middle, TypeFullHouse, rankRem, suitRem, jokerRem, deckTotal, midSlots, cs)
-	f[9] = pRowAtLeast(gs.Middle, TypePair, rankRem, suitRem, jokerRem, deckTotal, midSlots, cs) // 累加 ≥ pair, 同 X3
+	f[4] = pRowAtLeast(gs.Middle, TypeTwoPair, rankRem, suitRem, jokerRem, deckTotal, midSlots, cs) * botGE(int(TypeTwoPair))
+	f[5] = pRowAtLeast(gs.Middle, TypeThreeOfAKind, rankRem, suitRem, jokerRem, deckTotal, midSlots, cs) * botGE(int(TypeThreeOfAKind))
+	f[6] = pRowStraight(gs.Middle, rankRem, jokerRem, deckTotal, midSlots, cs) * botGE(int(TypeStraight))
+	f[7] = pRowFlush(gs.Middle, suitRem, jokerRem, deckTotal, midSlots, cs) * botGE(int(TypeFlush))
+	f[8] = pRowAtLeast(gs.Middle, TypeFullHouse, rankRem, suitRem, jokerRem, deckTotal, midSlots, cs) * botGE(int(TypeFullHouse))
+	f[9] = f[3] // 累加 ≥ pair, 同 X3 (单对不gate)
 	f[10] = pMidGTBot(gs, midEv, botEv, rankRem, suitRem, jokerRem, deckTotal, midSlots, botSlots)
 
 	// Bot (9 dim, idx 11-19)
