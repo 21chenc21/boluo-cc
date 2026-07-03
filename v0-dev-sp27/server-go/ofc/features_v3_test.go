@@ -145,13 +145,12 @@ func TestV3_MaxAchievable_Dead(t *testing.T) {
 
 // TestV3_MaxAchievable_FlushPossible — bot 3 ♦, max ≥ flush
 func TestV3_MaxAchievable_FlushPossible(t *testing.T) {
-	gs := makeStateV3(t, nil, nil,
-		[]string{"2d", "5d", "8d"}, // 3 diamonds, deck has 10 more
-	)
-	f := BuildFeaturesV3(gs)
-	// C2 bot max ≥ flush (5/9)
-	if f[118] < float32(TypeFlush)/9.0 {
-		t.Errorf("C2 bot max (3 ♦): got %.2f, want ≥ %.2f (flush)", f[118], float32(TypeFlush)/9.0)
+	// 2026-07-03: f118=probableMaxTier(tier/8×P), 概率加权后不是raw tier — 老阈值TypeFlush/9尺度不对.
+	//   改相对比较: 强花draw底(4♦1空) 的 MaxAchiev 应 > 无花底(彩虹高牌).
+	fFlush := BuildFeaturesV3(makeStateV3(t, nil, nil, []string{"2d", "5d", "8d", "Jd"})) // 4♦, 摸1♦成花
+	fNone := BuildFeaturesV3(makeStateV3(t, nil, nil, []string{"2d", "5h", "8c", "Js"}))  // 彩虹, 无花draw
+	if fFlush[118] <= fNone[118] {
+		t.Errorf("4♦强花draw MaxAchiev(%.2f) 应 > 彩虹无花(%.2f)", fFlush[118], fNone[118])
 	}
 }
 

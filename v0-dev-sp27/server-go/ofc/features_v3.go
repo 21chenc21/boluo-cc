@@ -995,7 +995,14 @@ func pDraw(deckTotal, targetCount, cardsSeen, slots, k int) float32 {
 	if k > slots { // 行放不下这么多, 不可能
 		return 0
 	}
+	// 2026-07-03 (#75/#19/#99 bug): 抽牌数按**行的 slots** 收, 不用整局 cardsSeen.
+	//   旧版 cardsSeen=(13-已放)×3/2 (R1≈12) 当单行抽牌数 → 一行只有 slots 空位却按12张算 →
+	//   顺/花 draw 空位多时暴涨17x([5h4h]底顺0.78/花0.53应0.045/0.008). 多缺口(need>1)边际相乘更炸.
+	//   dc=min(cardsSeen, slots+2): slots+选择加成(见到比放的多), 但别吃整局的牌. slots+2 保护晚局1空位(#73不误伤).
 	dc := cardsSeen
+	if cap := slots + 2; dc > cap {
+		dc = cap
+	}
 	if dc > deckTotal {
 		dc = deckTotal
 	}
