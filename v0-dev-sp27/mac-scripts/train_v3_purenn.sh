@@ -110,7 +110,7 @@ SCRIPT_VERSION="2026-06-17-purenn"
 #     - Mark cases 35/37/40/45 as warn (AI 选合理但不在 expecteds)
 #     - sp17 iter-1 r1 deployed 8002, bench: 59通过/4警告/0 真错.
 #     - DATA_VERSION → i147-sp18 (rollout policy 含 sp17 best, 数据 fresh).
-DATA_VERSION="i165-sp36"  # sp36: sp33+MaxAchiev概率加权+pMidGTBot不数鬼+f103/f105 foulprob gate. 起点sp34 iter-1 r1. 原注释:  # sp33: 6个真bug修(partialEval两对/金刚+pMidGTBot两对+pTopGTMid顶三条+pTopTrips+eRoyalty金刚双计). MadeRowOrder改动已撤(语义错,弄崩8case). +#28 cases. FeatureDim165. promote按失败数最少.
+DATA_VERSION="i168-sp37"  # sp37: FeatureDim165→168. Fix0 pTopFinalPairExact顶鬼配未来高牌(#46) + Fix1 f153 midMaxCapped概率加权probableMaxTier(#110/中两对不虚高发育) + Fix3 T3组各行三条rank(dim165-167, #90 555vs333). 起点=sp36 best. 原sp36注释:  sp33+MaxAchiev概率加权+pMidGTBot不数鬼+f103/f105 foulprob gate.
 # 旧 sp33: partialEval两对/金刚 + pMidGTBot两对rank + pTopGTMid顶三条rank + pTopTrips(漏顶鬼+max非union+合法性) + eRoyalty金刚双重计数.
 # 旧 i164-sp31 (164-d): #90三条rank0-2 / #124 pPairToTrips cap / cases全删uc / outs-aware. sp31-one 跑了iter2=130, #124已落地, #90/#23/#24未.
 # 旧 sp30: i164-sp30 (draw纯花+slots / MHR rank各档安全上限 / 顶trips种子bonus). sp30-one 跑了iter-1=+3 但无#90/#124/clean-cases.
@@ -291,9 +291,9 @@ for ((iter=1; iter<=ITERS; iter++)); do
     # Phase A: gen samples — SELF-PLAY: rollout policy = 当前 BEST_CKPT (动态)
     # 跟 distillation 区别: 这里 BEST_CKPT 每 iter 都换, NN 跟自己玩.
     ROLLOUTS="${ROLLOUTS:-100}"  # gen 每候选 rollout 数, env 可调 (150=标签最干净慢 / 100=1.5x快 / 别<75太吵)
-    echo "[iter $iter] Phase A: gen $GAMES games (rollouts=$ROLLOUTS, indim 165, SELF-PLAY + exploration)..." | tee -a "$LOG"
+    echo "[iter $iter] Phase A: gen $GAMES games (rollouts=$ROLLOUTS, indim 168, SELF-PLAY + exploration)..." | tee -a "$LOG"
     GEN_ARGS=(-num-games "$GAMES" -jokers 2 -rollouts "$ROLLOUTS" -r1-cap 30
-              -phantom-opponents 2 -indim 165
+              -phantom-opponents 2 -indim 168
               -foul-cost 3 -fan-bonus-qq 10 -fan-bonus-kk 30 -fan-bonus-aa 100 -fan-bonus-trips 140
               -out-dir "$GEN_OUT")
     if [ -n "$BEST_CKPT" ] && [ -f "$BEST_CKPT" ]; then
@@ -348,7 +348,7 @@ for ((iter=1; iter<=ITERS; iter++)); do
     DS_DIRS="$DATASET_ROOT${EXTRA_DATA:+,$EXTRA_DATA}"
     [ -n "${EXTRA_DATA:-}" ] && echo "[iter $iter]   +EXTRA_DATA 旧数据集: $EXTRA_DATA" | tee -a "$LOG"
     TRAIN_ARGS=(-dataset-dir "$DS_DIRS" -dataset-keep-warm-start -hours 1 -round-min 30
-                -outdim 4 -h1 512 -h2 256 -h3 128 -indim 165
+                -outdim 4 -h1 512 -h2 256 -h3 128 -indim 168
                 -epochs 30 -lr 0.001 -warm-lr-mult 0.2 -y-recompute
                 -fan-bonus-qq 10 -fan-bonus-kk 30 -fan-bonus-aa 100 -fan-bonus-trips 140
                 -foul-cost 3 -fan-w 0.40 -foul-w 0.10 -policy-w 0.30

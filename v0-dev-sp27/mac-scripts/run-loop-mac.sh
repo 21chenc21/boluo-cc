@@ -13,13 +13,20 @@ export GCP_KEY="${GCP_KEY:-/Users/Chen/Documents/pem/gcp-chguang-new}"
 GCP="chguang@35.203.6.88"
 GCPDIR="boluo-cc/v0-dev-sp27"
 SSH="ssh -i $GCP_KEY -o StrictHostKeyChecking=no"
-DSROOT="v3-dataset-i165-sp35-gcp"; TRROOT="v3-train-i165-sp35-gcp"
+DSROOT="v3-dataset-i168-sp37-gcp"; TRROOT="v3-train-i168-sp37-gcp"
 [ -f "$GCP_KEY" ] || { echo "FATAL: GCP key 不在 $GCP_KEY"; exit 1; }
 
-# 确保 round-002 在本地 (train 首次 bootstrap best.json 用)
-mkdir -p v3-train-i165-sp33-1/iter-1
-[ -f v3-train-i165-sp33-1/iter-1/round-002-acc95.json ] || \
-  rsync -az -e "$SSH" "$GCP:$GCPDIR/v3-train-i165-sp33-1/iter-1/round-002-acc95.json" v3-train-i165-sp33-1/iter-1/
+# sp37 warm-start 起点 = sp36 太子 (iter-4 r2, 43失败). Mac 上训的 → Mac 必须有; GCP gen iter-1 fallback 也要 → 推过去.
+SEED="v3-train-i165-sp36-1/iter-4/round-002-acc94.json"
+[ -f "$SEED" ] || { echo "FATAL: sp36 太子不在本地: $SEED (它是 Mac 训的, 找 v3-train-i165-sp36-1/)"; exit 1; }
+$SSH $GCP "mkdir -p $GCPDIR/v3-train-i165-sp36-1/iter-4"
+rsync -az -e "$SSH" "$SEED" "$GCP:$GCPDIR/$SEED"
+echo "seed 已推 GCP: $SEED"
+
+# 同步 sp37 源码+gen脚本 → GCP (gen 在 GCP 每次 go build, 源码不同步=旧165-d特征全废)
+echo "同步源码 → GCP..."
+rsync -az --delete --exclude 'server-go-bin' -e "$SSH" server-go/ "$GCP:$GCPDIR/server-go/"
+rsync -az -e "$SSH" mac-scripts/gen-iter-gcp.sh "$GCP:$GCPDIR/mac-scripts/"
 
 for N in $(seq "$START" "$END"); do
   echo ""; echo "########## ITER $N  ($(date +%H:%M:%S)) ##########"

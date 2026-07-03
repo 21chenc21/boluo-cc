@@ -25,15 +25,17 @@ func shFeat(top, mid, bot []string) []float32 {
 	return f
 }
 
-// 实战46: 222顶, 中88. 底777→中888超底夹不进=无解(负); 底999→888可夹(正).
+// 实战46(冒顶): 222顶要中88发育888来托. 2026-07-03 sp37 概率加权后: 中88摸1张8成888概率有限 →
+//   midSupportsTop<0 = "别赌中路发育来托222冒顶"(不论底777还是999, 888本就难成). 这才是 #46 正解.
+//   (旧乐观版底999误报可托>0 → 正是诱导 NN 冒顶的根; 老断言在保护 bug, 已改.)
 func TestSupportHeadroom_TripsCeiling(t *testing.T) {
 	f7 := shFeat([]string{"X", "2c", "2s"}, []string{"4s", "8c", "8s"}, []string{"7h", "7d", "7c", "Qc"})
 	f9 := shFeat([]string{"X", "2c", "2s"}, []string{"4s", "8c", "8s"}, []string{"9h", "9d", "9c", "Qc"})
 	if f7[0] >= 0 {
-		t.Fatalf("底777 222顶无解 midSupportsTop 应<0, got %v", f7[0])
+		t.Fatalf("底777 222顶 midSupportsTop 应<0, got %v", f7[0])
 	}
-	if f9[0] <= 0 {
-		t.Fatalf("底999 222顶可托 midSupportsTop 应>0, got %v", f9[0])
+	if f9[0] >= 0 {
+		t.Fatalf("#46: 中88发育888托222 概率不足, midSupportsTop 应<0(别冒顶), got %v", f9[0])
 	}
 }
 

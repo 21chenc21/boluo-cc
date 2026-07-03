@@ -5,10 +5,10 @@
 #
 # 用法 (Mac 上):  bash mac-scripts/train-iter-mac.sh <iter>
 # env: INIT_CKPT  首次 best.json 不存在时的 warm-start 起点
-#      (默认 v3-train-i165-sp33-1/iter-1/round-002-acc95.json)
+#      (默认 v3-train-i165-sp36-1/iter-4/round-002-acc94.json)
 set -euo pipefail
 ITER="${1:?用法: train-iter-mac.sh <iter>}"
-DATA_VERSION=i165-sp35; RUN=gcp
+DATA_VERSION=i168-sp37; RUN=gcp
 DATASET_ROOT="v3-dataset-${DATA_VERSION}-${RUN}"
 TRAIN_ROOT="v3-train-${DATA_VERSION}-${RUN}"
 TRAIN_OUT="$TRAIN_ROOT/iter-$ITER"
@@ -19,7 +19,7 @@ mkdir -p "$TRAIN_OUT" "$BIN" "$TRAIN_ROOT"
 
 # 首次 bootstrap best.json = round-002 (warm-start 起点); 用真文件不用 symlink
 if [ ! -f "$BEST" ]; then
-  INIT="${INIT_CKPT:-v3-train-i165-sp33-1/iter-1/round-002-acc95.json}"
+  INIT="${INIT_CKPT:-v3-train-i165-sp36-1/iter-4/round-002-acc94.json}"
   [ -f "$INIT" ] || { echo "FATAL: INIT_CKPT 不存在: $INIT"; exit 1; }
   cp "$INIT" "$BEST"; echo "首次 bootstrap: best.json ← $INIT"
 fi
@@ -35,7 +35,7 @@ bench_fail() {  # echo "<fail> <line>"
 touch "$TRAIN_OUT/.iter_started"
 echo "=== train iter-$ITER (warm-start $BEST, 读 $DATASET_ROOT 全部累积) ==="
 "$BIN/ofc-train" -dataset-dir "$DATASET_ROOT" -dataset-keep-warm-start -hours 1 -round-min 30 \
-  -outdim 4 -h1 512 -h2 256 -h3 128 -indim 165 \
+  -outdim 4 -h1 512 -h2 256 -h3 128 -indim 168 \
   -epochs 30 -lr 0.001 -warm-lr-mult 0.2 -y-recompute \
   -fan-bonus-qq 10 -fan-bonus-kk 30 -fan-bonus-aa 100 -fan-bonus-trips 140 \
   -foul-cost 3 -fan-w 0.40 -foul-w 0.10 -policy-w 0.30 \

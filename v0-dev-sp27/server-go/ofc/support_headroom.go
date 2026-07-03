@@ -194,8 +194,23 @@ func fillSupportHeadroom(f []float32, gs *GameState, rankRem [13]int, suitRem [4
 	botV := rowMadeScore(gs.Bottom)
 	midSlots := 5 - len(gs.Middle)
 	botSlots := 5 - len(gs.Bottom)
-	// 中道天花板 = 底道当前成手 (保守; 底前瞻发育由 dim1 单独管)
-	midMaxCapped := maxAchievableCmpCapped(gs.Middle, midSlots, rankRem, suitRem, jokerRem, botV)
+	// 中道天花板 = 底道当前成手 (保守; 底前瞻发育由 dim1 单独管).
+	// midMaxCapped 概率加权 (2026-07-03 sp37, 跟 MaxAchiev f117/118 的 probableMaxTier 同口径):
+	//   "还能发育多高"按真实概率折 — improbable 高tier(#110 金刚靠摸最后1张6~2.5%)被压回, 不当空中楼阁满值.
+	//   顺/三条/葫芦/金刚不假设摸鬼来烧, 同花/对子仍数鬼. probableMaxTier∈[0,1] → 还原 cmp-score(×8tier×13),
+	//   cap 底天花板, floor 中当前成手. (旧乐观 maxAchievableCmpCapped 只要理论摸得到就当满值 → f153 虚高, #110.)
+	cs := cardsSeenRemaining(gs)
+	deckTotal := jokerRem
+	for _, r := range rankRem {
+		deckTotal += r
+	}
+	midMaxCapped := int(probableMaxTier(gs.Middle, midSlots, rankRem, suitRem, jokerRem, deckTotal, cs)*8*13 + 0.5)
+	if midMaxCapped > botV {
+		midMaxCapped = botV
+	}
+	if midMaxCapped < midV {
+		midMaxCapped = midV
+	}
 	botMax := maxAchievableCmpCapped(gs.Bottom, botSlots, rankRem, suitRem, jokerRem, 999)
 	f[0] = clampF(float32(midMaxCapped-topV)/supportScale, -1, 1)
 	f[1] = clampF(float32(botMax-midV)/supportScale, -1, 1)

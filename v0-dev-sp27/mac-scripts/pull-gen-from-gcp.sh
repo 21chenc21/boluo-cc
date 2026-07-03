@@ -8,7 +8,7 @@ set -euo pipefail
 ITER="${1:?用法: pull-gen-from-gcp.sh <iter>}"
 GCP_HOST="${GCP_HOST:-chguang@35.203.6.88}"
 GCP_KEY="${GCP_KEY:-$HOME/.ssh/gcp-chguang-new}"
-BASE="v3-dataset-i165-sp35-gcp/iter-$ITER"
+BASE="v3-dataset-i168-sp37-gcp/iter-$ITER"
 REMOTE="boluo-cc/v0-dev-sp27/$BASE"
 [ -f "$GCP_KEY" ] || { echo "FATAL: GCP key 不在 $GCP_KEY (把 gcp-chguang-new 拷到 Mac ~/.ssh/)"; exit 1; }
 mkdir -p "$BASE"
@@ -16,4 +16,4 @@ echo "拉 iter-$ITER: $GCP_HOST:~/$REMOTE → $BASE"
 rsync -az -e "ssh -i $GCP_KEY -o StrictHostKeyChecking=no" \
   "$GCP_HOST:$REMOTE/" "$BASE/"
 echo "iter-$ITER: $(find "$BASE" -name '*.jsonl.gz'|wc -l) 文件 / $(du -sh "$BASE"|cut -f1)"
-echo "累积总数据 (train 会全读): $(find v3-dataset-i165-sp35-gcp -name '*.jsonl.gz'|wc -l) 文件"
+echo "累积总数据 (train 会全读): $(find v3-dataset-i168-sp37-gcp -name '*.jsonl.gz'|wc -l) 文件"

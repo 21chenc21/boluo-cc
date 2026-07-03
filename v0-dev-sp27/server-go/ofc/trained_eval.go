@@ -379,6 +379,11 @@ func BuildFeatures(gs *GameState, inDim int) []float32 {
 	if inDim == FeatureDimV3 {
 		return BuildFeaturesV3(gs)
 	}
+	if inDim == 165 {
+		// 旧 sp32-sp36 layout (无 T3 组三条rank). 新 168-d 的前 165 维不变 → 截前 165. 兼容 sp33/sp36 ckpt
+		// (gen 拿 sp36 best 当 rollout policy / bench 旧 ckpt 都走此分支 — 2026-07-03 漏加会静默掉进 V2 兜底!).
+		return BuildFeaturesV3(gs)[:165]
+	}
 	if inDim == 163 {
 		// 旧 sp29 layout (无 C 组进范可行性). 新 164-d 的前 163 维不变 → 截前 163.
 		return BuildFeaturesV3(gs)[:163]

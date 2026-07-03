@@ -27,11 +27,11 @@ func makeStateV3(t *testing.T, top, mid, bot []string) *GameState {
 func TestV3_Dim(t *testing.T) {
 	gs := NewGameState(2)
 	f := BuildFeaturesV3(gs)
-	if len(f) != 165 {
-		t.Fatalf("V3 dim: got %d, want 165", len(f))
+	if len(f) != 168 {
+		t.Fatalf("V3 dim: got %d, want 168", len(f))
 	}
-	if FeatureDimV3 != 165 {
-		t.Fatalf("FeatureDimV3 const: got %d, want 165", FeatureDimV3)
+	if FeatureDimV3 != 168 {
+		t.Fatalf("FeatureDimV3 const: got %d, want 168", FeatureDimV3)
 	}
 	if FeatureDimV3Base != 147 {
 		t.Fatalf("FeatureDimV3Base const: got %d, want 147", FeatureDimV3Base)

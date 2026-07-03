@@ -48,7 +48,8 @@ import (
 // 2026-06-21 sp28: 160 → 161, 追加"顶trips范种子合法性" Z3 组 (dim160). 追加法 pad 0.
 // 2026-06-25 sp29: 161 → 163, 追加"顺draw紧密度质量" B 组 (dim161-162, 中/底). 追加法 pad 0. (#122卡顺细化)
 // 2026-06-29 sp32: 164 → 165, 追加"强成手放错行" W2 组 (dim164). 追加法 pad 0. (#23/#24 中KK>底QQ倒置)
-const FeatureDimV3 = 165
+// 2026-07-03 sp37: 165 → 168, 追加"各行三条 rank" T3 组 (dim165-167, 顶/中/底). 追加法 pad 0. (#90 中555 vs 333 无rank区分)
+const FeatureDimV3 = 168
 
 // FeatureDimV3Base — 成手行序前的 147-d layout. 太子 ckpt 是此 dim; gen 用太子当 rollout 时建 147-d 特征.
 const FeatureDimV3Base = 147
@@ -179,6 +180,9 @@ func BuildFeaturesV3(gs *GameState) []float32 {
 
 	// 2026-06-29 W2 组: 强成手放错行 (dim164). 治 #23/#24 中KK>底QQ 倒置. 追加法 warm-start pad 0.
 	fillStrongHandMisplaced(f[164:165], gs)
+
+	// 2026-07-03 T3 组: 各行三条 rank (3 dim, idx 165-167). 治 #90 中555 vs 333 无rank区分. 追加法 warm-start pad 0.
+	fillTripsRank(f[165:168], gs, f[79]) // f79=pMidGTBot, gate 中 trips rank (同 fillPairRank)
 
 	return f
 }
@@ -364,6 +368,25 @@ func fillPairRank(f []float32, gs *GameState, topEv HandValue, midFoulProb float
 	f[4] = pairToFeat(twoPairHighRank(gs.Bottom))
 }
 
+// ============ Group T3: 各行三条 rank (3 dim, idx 165-167) ============
+// 2026-07-03 (#90): 补 row-trips-rank. 有 pair-rank(f103)/two-pair-rank(f105) 却漏 trips-rank →
+//   中 555 vs 333 同 tier 同 royalty 无区分, NN 抛硬币. 顶/底 raw rank(-1哨兵); 中 rank×(1-foulprob) gate(同 fillPairRank 口径, 无对/无trips→0中性).
+func fillTripsRank(f []float32, gs *GameState, midFoulProb float32) {
+	pairToFeat := func(r int) float32 {
+		if r < 0 {
+			return -1.0
+		}
+		return float32(r) / 12.0
+	}
+	f[0] = pairToFeat(tripsRankRow(gs.Top))
+	if mt := tripsRankRow(gs.Middle); mt < 0 {
+		f[1] = 0
+	} else {
+		f[1] = float32(mt) / 12.0 * (1 - midFoulProb)
+	}
+	f[2] = pairToFeat(tripsRankRow(gs.Bottom))
+}
+
 // ============ Group V: 对升 trips 条件概率 (5 dim, idx 107-111) ============
 
 func fillPairToTrips(f []float32, gs *GameState, rankRem [13]int, suitRem [4]int, jokerRem, deckTotal int) {
@@ -403,7 +426,7 @@ func fillTopFantasyLocks(f []float32, gs *GameState, topEv, midEv HandValue, ran
 		f[1] = 1 // AA (cap-aware, 不会因 joker+A 被 mid pair-K cap 时误 fire)
 	}
 	if hasTrips {
-		f[2] = 1
+		f[2] = 1 // 顶trips 是诚实事实(顶是不是trips); foul-free-ness 由 f163 FantasyReachable 单独carry, 不在此 gate(否则与f163冗余+抹掉"顶222有空可保"的合法早局信号, 见 TestV3_TopTrips_Lock).
 	}
 
 	// T3: max pair rank reachable (future), 考虑 mid cap
@@ -1060,12 +1083,20 @@ func jokerTopMadePairRank(top []Card) int {
 
 func pTopFinalPairExact(gs *GameState, r uint8, rankRem [13]int, jokerRem, deckTotal, topSlots int) float32 {
 	// 简化: 假设 = P(top 至少 2 张 r) - P(top ≥ 3 张 r)
-	topHasR := countRankInRow(gs.Top, int(r))
-	// 2026-06-14 (uniform): 顶上鬼锁的对子 rank (鬼配最高真单张) 算进 topHasR — 鬼已成对锁范.
-	// 修 F_fantasyGran 鬼锁 AA/KK 范误判: 满顶 [As Kc X]=AA (countRankInRow 不数鬼→原 0) +
-	// partial 顶含鬼 [Ac X] (原 hypergeo 漏鬼→低估). 统一处理满顶/partial, 含升三条概率. ypk 89X.
-	if jokerTopMadePairRank(gs.Top) == int(r) {
-		topHasR++
+	topReal := countRankInRow(gs.Top, int(r))
+	// 2026-07-03 (#46): 顶上的鬼可当 rank r — 既能配现有真 r (锁对), 也能配"未来摸的 r"(有空位且 r 还活).
+	//   旧版 jokerTopMadePairRank 把鬼贪心配给最高真单张(如 [🃏 2c]→配2c锁22) → 对 Q/K/A 算 topHasR=0 →
+	//   needFor2=2 → 1空摸2张=0, 把"顶留空摸AKQ上高对范"的概率清零 (exp的对子范上限被抹掉→NN低估exp选冒顶).
+	//   修: 只要鬼能促成 pair-of-r (真r已有 或 有空位+r可摸), 就把顶上鬼计入 topHasR (need−1). 与 pTopTrips 顶鬼修法一致.
+	topJokers := 0
+	for _, c := range gs.Top {
+		if c.IsJoker() {
+			topJokers++
+		}
+	}
+	topHasR := topReal
+	if topReal >= 1 || (topSlots >= 1 && rankRem[int(r)] >= 1) {
+		topHasR += topJokers
 	}
 	deckR := rankRem[int(r)] + jokerRem // joker 可顶
 	needFor2 := 2 - topHasR
@@ -1833,6 +1864,26 @@ func p2PairToFH(row []Card, rankRem [13]int, jokerRem, deckTotal, slots, cardsSe
 // ============================================================
 // Row inspection helpers
 // ============================================================
+
+// tripsRankRow — row 当前已成三条(或更强含三条: 葫芦/金刚)的三条 rank (含 joker wild, 贪心取最高可成). -1 if 无三条.
+//   治 #90: 中做 555 vs 333 同为 trips 同 tier 同 royalty, 但无特征区分 rank → NN 抛硬币. 补 rank 信号.
+func tripsRankRow(row []Card) int {
+	var rankCnt [13]int
+	jokers := 0
+	for _, c := range row {
+		if c.IsJoker() {
+			jokers++
+		} else {
+			rankCnt[c.Rank()]++
+		}
+	}
+	for r := 12; r >= 0; r-- {
+		if rankCnt[r]+jokers >= 3 {
+			return r
+		}
+	}
+	return -1
+}
 
 // maxPairRankRow — row 中最大 pair 的 rank (含 joker wild). -1 if no pair.
 func maxPairRankRow(row []Card) int {
