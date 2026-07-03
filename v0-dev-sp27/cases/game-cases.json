@@ -9944,9 +9944,22 @@
      "Xj0",
      "8c"
     ]
+   },
+   {
+    "top": [
+     "Xj0",
+     "8c"
+    ],
+    "middle": [
+     "2c",
+     "5h"
+    ],
+    "bottom": [
+     "9s"
+    ]
    }
   ],
-  "note": "4A used 无A → 鬼上顶博KK/QQ范. 主旨X→顶NN本就对, 差在 8c进中 vs 进底凑89(0.66 te). 2026-06-19 加 R1MidOverBotCardPenalty(R1 1-2-2 中真牌>底真牌+2, 豁免底2张同花draw) → rk1(中2c8c, 8>底5)被罚, 期望(中2c5h全<底89)不罚 → 转绿. 回归守护."
+  "note": "4A used 无A → 鬼上顶博KK/QQ范. 主旨X→顶NN本就对, 差在 8c进中 vs 进底凑89(0.66 te). 2026-06-19 加 R1MidOverBotCardPenalty(R1 1-2-2 中真牌>底真牌+2, 豁免底2张同花draw) → rk1(中2c8c, 8>底5)被罚, 期望(中2c5h全<底89)不罚 → 转绿. 回归守护. [2026-07-03 用户标预期: 鬼配8c=88上顶也接受; 追KK/QQ范靠后续规则(注意此变体是鬼配低单张放弃范)]"
  },
  {
   "name": "55 [R1]: 4A+3K used, dealt K → joker 必上顶 (KK 锁 Fantasy)",
