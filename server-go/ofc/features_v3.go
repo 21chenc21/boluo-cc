@@ -51,7 +51,8 @@ import (
 // 2026-06-25 sp29: 161 → 163, 追加"顺draw紧密度质量" B 组 (dim161-162, 中/底). 追加法 pad 0. (#122卡顺细化)
 // 2026-06-29 sp32: 164 → 165, 追加"强成手放错行" W2 组 (dim164). 追加法 pad 0. (#23/#24 中KK>底QQ倒置)
 // 2026-07-03 sp37: 165 → 168, 追加"各行三条 rank" T3 组 (dim165-167, 顶/中/底). 追加法 pad 0. (#90 中555 vs 333 无rank区分)
-const FeatureDimV3 = 168
+// 2026-07-04 sp39: 168 → 169, 追加"范EV专用" FE 组 (dim168, f0Bonus×(1-pFoul)/140). 追加法 pad 0. (#110/#120 范EV被f97淹没)
+const FeatureDimV3 = 169
 
 // FeatureDimV3Base — 成手行序前的 147-d layout. 太子 ckpt 是此 dim; gen 用太子当 rollout 时建 147-d 特征.
 const FeatureDimV3Base = 147
@@ -186,6 +187,12 @@ func BuildFeaturesV3(gs *GameState) []float32 {
 
 	// 2026-07-03 T3 组: 各行三条 rank (3 dim, idx 165-167). 治 #90 中555 vs 333 无rank区分. 追加法 warm-start pad 0.
 	fillTripsRank(f[165:168], gs, f[79]) // f79=pMidGTBot, gate 中 trips rank (同 fillPairRank)
+
+	// 2026-07-04 sp39 FE 组: 范 EV 专用维 (dim168). 治 #110/#120 "范EV被f97/300淹没" —
+	//   f97 是唯一乘出范bonus数值的聚合特征, 但 /300 归一把 +9 分真实EV差压成 0.029, 干不过 f9 顶成对 one-hot(±1.0).
+	//   本维 = f0Bonus×(1-pFoul)/140 纯范EV通道(不掺皇室): 分子≤140(各范路互斥) → 天然[0,1]零饱和.
+	//   #110 实测 exp 0.257 vs AI 0.149 (Δ=0.108, f97 的 4 倍音量). 追加法 warm-start pad 0.
+	f[168] = clampF((f[90]*V3FanBonusQQ+f[91]*V3FanBonusKK+f[92]*V3FanBonusAA+f[93]*V3FanBonusTrips)*(1-f[89])/140.0, 0, 1)
 
 	return f
 }

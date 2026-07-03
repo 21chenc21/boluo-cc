@@ -13,7 +13,7 @@ export GCP_KEY="${GCP_KEY:-/Users/Chen/Documents/pem/gcp-chguang-new}"
 GCP="chguang@35.203.6.88"
 GCPDIR="boluo-cc/v0-dev-sp27"
 SSH="ssh -i $GCP_KEY -o StrictHostKeyChecking=no"
-DSROOT="v3-dataset-i168-sp39-gcp"; TRROOT="v3-train-i168-sp39-gcp"
+DSROOT="v3-dataset-i169-sp39-gcp"; TRROOT="v3-train-i169-sp39-gcp"
 [ -f "$GCP_KEY" ] || { echo "FATAL: GCP key 不在 $GCP_KEY"; exit 1; }
 
 # sp38 warm-start 起点 = sp37 iter-1 太子 (41失败, 168-d). Mac 上训的 → Mac 必须有; GCP gen iter-1 fallback 也要 → 推过去.

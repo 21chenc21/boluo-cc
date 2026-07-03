@@ -6,7 +6,7 @@
 set -uo pipefail
 export PATH=$PATH:/usr/local/go/bin
 ITER="${1:?用法: gen-iter-gcp.sh <iter> [rollout-ckpt]}"
-DATA_VERSION=i168-sp39; RUN=gcp
+DATA_VERSION=i169-sp39; RUN=gcp
 DATASET_ROOT="v3-dataset-${DATA_VERSION}-${RUN}"
 TRAIN_ROOT="v3-train-${DATA_VERSION}-${RUN}"
 CKPT="${2:-}"
