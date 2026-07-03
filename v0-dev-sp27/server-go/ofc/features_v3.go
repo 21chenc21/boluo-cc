@@ -209,7 +209,12 @@ func fillProbabilities(f []float32, gs *GameState, rankRem [13]int, suitRem [4]i
 	cs := cardsSeenRemaining(gs)
 
 	// Top (3 dim, idx 0-2 in group X)
-	f[0] = pTopPairQKA(gs, rankRem, jokerRem, deckTotal, topSlots)
+	// 2026-07-03 (#50): 中满对时把 pair rank 传下去 cap 顶Q+对 (>中对=foul假范). 照抄 f90-92.
+	midPairCap := -1
+	if len(gs.Middle) == 5 && midEv.Type == TypePair {
+		midPairCap = int((midEv.Value - 1000000) / 50625)
+	}
+	f[0] = pTopPairQKA(gs, rankRem, jokerRem, deckTotal, topSlots, midPairCap)
 	f[1] = pTopTrips(gs, rankRem, jokerRem, deckTotal, topSlots)
 	f[2] = pTopNoFoulVsMid(topEv, midEv)
 
@@ -1046,9 +1051,14 @@ func logComb(n, k int) float64 {
 // ============================================================
 
 // pTopPairQKA — P(top final pair Q/K/A 任一)
-func pTopPairQKA(gs *GameState, rankRem [13]int, jokerRem, deckTotal, topSlots int) float32 {
+func pTopPairQKA(gs *GameState, rankRem [13]int, jokerRem, deckTotal, topSlots, midPairCap int) float32 {
+	// 2026-07-03 (#50): midPairCap≥0 (中满对时=中对rank) → 顶Q+对若 >midPairCap 会foul, 该假范判0.
+	//   照抄 fillFantasyGranular f90-92 口径, 补 f69 漏网. R5/中满时确定foul, 100%生效.
 	// 已经 pair Q+ ?
-	if maxPairRankRow(gs.Top) >= int(RankQ) {
+	if tp := maxPairRankRow(gs.Top); tp >= int(RankQ) {
+		if midPairCap >= 0 && tp > midPairCap {
+			return 0 // 顶已成Q+对 > 中对 → foul → 假范
+		}
 		return 1
 	}
 	if topSlots == 0 {
@@ -1058,6 +1068,9 @@ func pTopPairQKA(gs *GameState, rankRem [13]int, jokerRem, deckTotal, topSlots i
 	// 简化: 各 rank 独立估算 + 取 max (不严格但快)
 	maxP := float32(0)
 	for _, r := range []int{int(RankQ), int(RankK), int(RankA)} {
+		if midPairCap >= 0 && r > midPairCap {
+			continue // 该 rank 的对会 > 中 → foul, 跳过
+		}
 		topHasR := countRankInRow(gs.Top, r)
 		needed := 2 - topHasR - jokerRem // joker 能凑 1 张 (假设可用)
 		if needed <= 0 {
