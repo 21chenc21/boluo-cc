@@ -786,14 +786,17 @@ func fillDiscardExtra(f []float32, gs *GameState) {
 	dSuit := d.Suit()
 	dRank := int(d.Rank())
 
-	// N2-0: bot 主色 ≥3 且弃牌同色
+	// N2-0: bot 主色 ≥3 且弃牌同色 → 浪费了底花draw的牌.
+	// 2026-07-03 (#124 bug): 加"底花draw还活着"判据 — 底有空位且能凑满5张同花才算浪费.
+	//   旧版只查 suitCnt≥3, 底满(如JJ99两对含3黑桃)时假触发(底根本不能成花). botSlots+suitCnt<5 或无空位=死花.
 	suitCnt := [4]int{}
 	for _, c := range gs.Bottom {
 		if !c.IsJoker() {
 			suitCnt[c.Suit()]++
 		}
 	}
-	if suitCnt[dSuit] >= 3 {
+	botSlots := 5 - len(gs.Bottom)
+	if suitCnt[dSuit] >= 3 && botSlots > 0 && suitCnt[dSuit]+botSlots >= 5 {
 		f[0] = 1
 	}
 
