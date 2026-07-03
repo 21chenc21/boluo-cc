@@ -35,7 +35,7 @@ bench_fail() {  # echo "<fail> <line>"
 touch "$TRAIN_OUT/.iter_started"
 echo "=== train iter-$ITER (warm-start $BEST, 读 $DATASET_ROOT 全部累积) ==="
 "$BIN/ofc-train" -dataset-dir "$DATASET_ROOT" -dataset-keep-warm-start -hours 1 -round-min 30 \
-  -outdim 4 -h1 512 -h2 256 -h3 128 -indim 168 \
+  -outdim 4 -h1 512 -h2 256 -h3 128 -indim 169 \
   -epochs 30 -lr 0.001 -warm-lr-mult 0.2 -y-recompute \
   -fan-bonus-qq 10 -fan-bonus-kk 30 -fan-bonus-aa 100 -fan-bonus-trips 140 \
   -foul-cost 6 -fan-w 0.40 -foul-w 0.10 -policy-w 0.30 \

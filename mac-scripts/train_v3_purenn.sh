@@ -291,9 +291,9 @@ for ((iter=1; iter<=ITERS; iter++)); do
     # Phase A: gen samples — SELF-PLAY: rollout policy = 当前 BEST_CKPT (动态)
     # 跟 distillation 区别: 这里 BEST_CKPT 每 iter 都换, NN 跟自己玩.
     ROLLOUTS="${ROLLOUTS:-100}"  # gen 每候选 rollout 数, env 可调 (150=标签最干净慢 / 100=1.5x快 / 别<75太吵)
-    echo "[iter $iter] Phase A: gen $GAMES games (rollouts=$ROLLOUTS, indim 168, SELF-PLAY + exploration)..." | tee -a "$LOG"
+    echo "[iter $iter] Phase A: gen $GAMES games (rollouts=$ROLLOUTS, indim 169, SELF-PLAY + exploration)..." | tee -a "$LOG"
     GEN_ARGS=(-num-games "$GAMES" -jokers 2 -rollouts "$ROLLOUTS" -r1-cap 30
-              -phantom-opponents 2 -indim 168
+              -phantom-opponents 2 -indim 169
               -foul-cost 6 -fan-bonus-qq 10 -fan-bonus-kk 30 -fan-bonus-aa 100 -fan-bonus-trips 140
               -out-dir "$GEN_OUT")
     if [ -n "$BEST_CKPT" ] && [ -f "$BEST_CKPT" ]; then
@@ -348,7 +348,7 @@ for ((iter=1; iter<=ITERS; iter++)); do
     DS_DIRS="$DATASET_ROOT${EXTRA_DATA:+,$EXTRA_DATA}"
     [ -n "${EXTRA_DATA:-}" ] && echo "[iter $iter]   +EXTRA_DATA 旧数据集: $EXTRA_DATA" | tee -a "$LOG"
     TRAIN_ARGS=(-dataset-dir "$DS_DIRS" -dataset-keep-warm-start -hours 1 -round-min 30
-                -outdim 4 -h1 512 -h2 256 -h3 128 -indim 168
+                -outdim 4 -h1 512 -h2 256 -h3 128 -indim 169
                 -epochs 30 -lr 0.001 -warm-lr-mult 0.2 -y-recompute
                 -fan-bonus-qq 10 -fan-bonus-kk 30 -fan-bonus-aa 100 -fan-bonus-trips 140
                 -foul-cost 6 -fan-w 0.40 -foul-w 0.10 -policy-w 0.30
