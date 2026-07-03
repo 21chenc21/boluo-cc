@@ -132,7 +132,7 @@ func BuildFeaturesV3(gs *GameState) []float32 {
 
 	// V3 新 (12 组)
 	fillProbabilities(f[69:90], gs, rankRem, suitRem, jokerRem, deckTotal, topEvalCapped, midEval, botEval)
-	fillFantasyGranular(f[90:94], gs, midEval, rankRem, jokerRem, deckTotal) // sp16: 传 midEval 做 cap
+	fillFantasyGranular(f[90:94], gs, midEval, rankRem, suitRem, jokerRem, deckTotal) // sp16: 传 midEval 做 cap
 	fillExpectedRoyalty(f[94:97], gs, rankRem, suitRem, jokerRem, deckTotal, topEvalCapped, midEval, botEval)
 	fillSummary(f[97:102], gs, topEvalCapped, midEval, botEval, f) // 用前面的 P 值
 	fillPairRank(f[102:107], gs, topEvalCapped, f[79]) // f79=pMidGTBot, gate 中强度
@@ -225,7 +225,7 @@ func fillProbabilities(f []float32, gs *GameState, rankRem [13]int, suitRem [4]i
 		midPairCap = int((midEv.Value - 1000000) / 50625)
 	}
 	f[0] = pTopPairQKA(gs, rankRem, jokerRem, deckTotal, topSlots, midPairCap)
-	f[1] = pTopTrips(gs, rankRem, jokerRem, deckTotal, topSlots)
+	f[1] = pTopTrips(gs, rankRem, suitRem, jokerRem, deckTotal, topSlots)
 	f[2] = pTopNoFoulVsMid(topEv, midEv)
 
 	// Mid (8 dim, idx 3-10) — 2026-07-03 (#104/#124) draw-support-gate:
@@ -283,7 +283,7 @@ func fillProbabilities(f []float32, gs *GameState, rankRem [13]int, suitRem [4]i
 // 2026-05-20 sp16.1: cap-aware 但只在 mid full pair 时锁 (mid partial 可升 trips/FH).
 // case 50: mid full pair-K → AA top cap → P=0 ✓
 // 反例: mid 4 张 pair-K partial → 可能升 trips → P(AA) 不该置 0
-func fillFantasyGranular(f []float32, gs *GameState, midEv HandValue, rankRem [13]int, jokerRem, deckTotal int) {
+func fillFantasyGranular(f []float32, gs *GameState, midEv HandValue, rankRem [13]int, suitRem [4]int, jokerRem, deckTotal int) {
 	topSlots := 3 - len(gs.Top)
 	// 只有 mid full + pair 才锁 (partial 可升级类型)
 	midFull := len(gs.Middle) == 5
@@ -314,7 +314,7 @@ func fillFantasyGranular(f []float32, gs *GameState, midEv HandValue, rankRem [1
 	if midPairCap >= 0 || topBeatsFullMid(gs) {
 		f[3] = 0
 	} else {
-		f[3] = pTopTrips(gs, rankRem, jokerRem, deckTotal, topSlots)
+		f[3] = pTopTrips(gs, rankRem, suitRem, jokerRem, deckTotal, topSlots)
 	}
 }
 
@@ -328,7 +328,7 @@ func fillExpectedRoyalty(f []float32, gs *GameState, rankRem [13]int, suitRem [4
 	midSlots := 5 - len(gs.Middle)
 	botSlots := 5 - len(gs.Bottom)
 
-	f[0] = eRoyaltyTop(gs, topEv, rankRem, jokerRem, deckTotal, topSlots) / 250.0 // sp16: cap-aware
+	f[0] = eRoyaltyTop(gs, topEv, rankRem, suitRem, jokerRem, deckTotal, topSlots) / 250.0 // sp16: cap-aware
 	f[1] = eRoyaltyMid(gs, rankRem, suitRem, jokerRem, deckTotal, midSlots) / 30.0
 	f[2] = eRoyaltyBot(gs, rankRem, suitRem, jokerRem, deckTotal, botSlots) / 60.0
 }
@@ -1184,7 +1184,21 @@ func pTopFinalPairExact(gs *GameState, r uint8, rankRem [13]int, jokerRem, deckT
 }
 
 // pTopTrips — P(top final trips, any rank)
-func pTopTrips(gs *GameState, rankRem [13]int, jokerRem, deckTotal, topSlots int) float32 {
+// pMidBeatsTripsRank — P(中道最终 > 顶 r-trips) = 顺 ∪ 花 ∪ 葫芦+ ∪ (trips rank>r) 组合概率.
+// 2026-07-04 (用户抓): pTopTrips 里 legalFactor=0.3 拍桶 → 换真概率. 机器全现成 (draw-support-gate 同款).
+func pMidBeatsTripsRank(gs *GameState, r int, rankRem [13]int, suitRem [4]int, jokerRem, deckTotal, midSlots, cs int) float32 {
+	pS := pRowStraight(gs.Middle, rankRem, jokerRem, deckTotal, midSlots, cs)
+	pF := pRowFlush(gs.Middle, suitRem, jokerRem, deckTotal, midSlots, cs)
+	pFH := pRowAtLeast(gs.Middle, TypeFullHouse, rankRem, suitRem, jokerRem, deckTotal, midSlots, cs)
+	pTr := float32(0)
+	if r < 12 {
+		pTr = pRowTripsAtLeastRank(gs.Middle, r+1, rankRem, jokerRem, deckTotal, midSlots, cs)
+	}
+	p := 1 - (1-pS)*(1-pF)*(1-pFH)*(1-pTr)
+	return clampF(p, 0, 1)
+}
+
+func pTopTrips(gs *GameState, rankRem [13]int, suitRem [4]int, jokerRem, deckTotal, topSlots int) float32 {
 	// 2026-07-01 (#110 bug): 旧版 topHasR=countRankInRow 不数顶上的鬼 → 孤鬼顶[🃏](2空)被当成
 	//   "顶0张要摸3张成trips"=0 → exp 靠鬼成 trips 范的概率被清零(f93=0). 顶上的鬼可当任意 rank, 计入 need.
 	topJokers := 0
@@ -1213,6 +1227,9 @@ func pTopTrips(gs *GameState, rankRem [13]int, jokerRem, deckTotal, topSlots int
 	midCur := int(rowMadeScore(gs.Middle))
 	midTier := midCur / 13
 	midFull := len(gs.Middle) == 5
+	midSlots := 5 - len(gs.Middle)
+	cs := cardsSeenRemaining(gs)
+	// 中托住概率缓存: pMidBeatsTripsRank 对 r 单调递减且只差 pTr 项, 逐 r 现算 (13 次, 便宜).
 	pNone := float32(1) // P(没成任何合法 trips 范)
 	for r := 0; r < 13; r++ {
 		have := countRankInRow(gs.Top, r) + topJokers
@@ -1224,13 +1241,14 @@ func pTopTrips(gs *GameState, rankRem [13]int, jokerRem, deckTotal, topSlots int
 			pMake = hypergeoAtLeast(deckTotal, rankRem[r]+jokerRem, topSlots, need)
 		}
 		legalFactor := float32(1)
-		// 顶 r-trips(tier3) > 中现成手(两对tier2/三条tier3低rank) → foul, 要中再发育成金刚/葫芦(>顶trips)才合法.
-		//   满中不能发育 → 0; partial 中能发育 → 0.3 折扣. (顺子/同花/葫芦/金刚 tier≥4 比顶trips高, 永不触发=合法.)
+		// 顶 r-trips(tier3) > 中现成手(两对tier2/三条tier3低rank) → foul, 要中最终 > 顶r-trips 才合法.
+		//   满中不能发育 → 0; partial 中 → 真概率 P(中>r-trips)=顺∪花∪葫芦+∪trips(rank>r)
+		//   (2026-07-04 用户抓: 原 0.3 拍桶, 中差1张葫芦和中还空4张一个价 → 换 pMidBeatsTripsRank).
 		if midTier >= int(HtTwoPair) && int(HtThreeKind)*13+r > midCur {
 			if midFull {
 				legalFactor = 0 // 满中两对/低三条锁死, 顶更高trips必foul
 			} else {
-				legalFactor = 0.3 // 中发育成金刚葫芦的粗略概率
+				legalFactor = pMidBeatsTripsRank(gs, r, rankRem, suitRem, jokerRem, deckTotal, midSlots, cs)
 			}
 		}
 		pNone *= (1 - pMake*legalFactor)
@@ -1812,7 +1830,7 @@ func pFoulFinal(gs *GameState, topEv, midEv, botEv HandValue, rankRem [13]int, s
 // 用 topEv (=topEvalCapped) 提取真实 pair rank — 反映 mid cap 后的真值.
 // case 49 R5: top [X Kh 8h] cap 后 = pair-8 = +3 royalty (旧版 countRankInRow 不算 joker → 漏)
 // case 50 R5: top [X 2c As] cap 后 = pair-2 = 0 royalty (joker 不能当 A 因 mid KK 撞 foul)
-func eRoyaltyTop(gs *GameState, topEv HandValue, rankRem [13]int, jokerRem, deckTotal, topSlots int) float32 {
+func eRoyaltyTop(gs *GameState, topEv HandValue, rankRem [13]int, suitRem [4]int, jokerRem, deckTotal, topSlots int) float32 {
 	cs := cardsSeenRemaining(gs)
 	r := float32(0)
 	// 当前 top eval (cap-aware) 直接给定值
@@ -1832,7 +1850,7 @@ func eRoyaltyTop(gs *GameState, topEv HandValue, rankRem [13]int, jokerRem, deck
 	}
 	// future expected: 估计后续 round 升级到 trips / 高 pair 的概率
 	// 简化: 对每个 rank 估算 future hits, 加权 royalty
-	pTrips := pTopTrips(gs, rankRem, jokerRem, deckTotal, topSlots)
+	pTrips := pTopTrips(gs, rankRem, suitRem, jokerRem, deckTotal, topSlots)
 	r += pTrips * 5 // future trips 增量 (减小权重避免双倍计)
 	for rk := 4; rk < 13; rk++ {
 		royalty := float32(rk - 3)
