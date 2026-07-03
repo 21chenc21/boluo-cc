@@ -269,8 +269,9 @@ func fillFantasyGranular(f []float32, gs *GameState, midEv HandValue, rankRem [1
 	} else {
 		f[2] = pTopFinalPairExact(gs, RankA, rankRem, jokerRem, deckTotal, topSlots)
 	}
-	// Trips: top trips type=3 > mid pair type=1 必 foul, 仅 mid full pair 时锁.
-	if midPairCap >= 0 {
+	// Trips: 顶trips范 foul-gate — 中已满且中撑不住顶trips(顶最强手值>中) → 假范锁0.
+	//   2026-07-03 (#6): 旧版只 mid full pair 锁, 漏 mid full trips(444<AAA)等. 收窄到"中满"避开早局合法trips(222+空中能发育托).
+	if midPairCap >= 0 || topBeatsFullMid(gs) {
 		f[3] = 0
 	} else {
 		f[3] = pTopTrips(gs, rankRem, jokerRem, deckTotal, topSlots)
@@ -405,6 +406,13 @@ func fillPairToTrips(f []float32, gs *GameState, rankRem [13]int, suitRem [4]int
 	f[4] = p2PairToFH(gs.Bottom, rankRem, jokerRem, deckTotal, botSlots, cs)
 }
 
+// topBeatsFullMid — 顶(鬼打满取最强手值) 是否 > 已满的中道 (→ 顶想成该强度会 foul, 该假范 gate).
+//   2026-07-03 (#6): 收窄 foul-gate 判据 — 仅"中满(定型)且顶>中"才算撑不住; 中未满(能发育托)不算.
+//   顶含鬼时 rowMadeScore 取"鬼打满"手值(顶想追的最强), 跟中满值比: >中 = 追那强度必foul.
+func topBeatsFullMid(gs *GameState) bool {
+	return len(gs.Middle) == 5 && rowMadeScore(gs.Top) > rowMadeScore(gs.Middle)
+}
+
 // ============ Group T: 顶配 fantasy 锁信号 (4 dim, idx 112-115) ============
 
 // 2026-05-20 sp15 fix: 用 cap-aware topEvalCapped 提取 pair rank, 不再 maxPairRankRow (无 cap)
@@ -425,8 +433,10 @@ func fillTopFantasyLocks(f []float32, gs *GameState, topEv, midEv HandValue, ran
 	if topPairRank == int(RankA) {
 		f[1] = 1 // AA (cap-aware, 不会因 joker+A 被 mid pair-K cap 时误 fire)
 	}
-	if hasTrips {
-		f[2] = 1 // 顶trips 是诚实事实(顶是不是trips); foul-free-ness 由 f163 FantasyReachable 单独carry, 不在此 gate(否则与f163冗余+抹掉"顶222有空可保"的合法早局信号, 见 TestV3_TopTrips_Lock).
+	if hasTrips && !topBeatsFullMid(gs) {
+		// 2026-07-03 (#6): 顶trips范 foul-gate 收窄版 — 只在"中已满且撑不住顶trips(顶>中满)"时清零(=假范, 顶想成trips必foul).
+		//   中未满(能发育托)不 gate → 保留"顶222有空可保"的合法早局trips(TestV3_TopTrips_Lock). 治 AAA>中444满 冒顶.
+		f[2] = 1
 	}
 
 	// T3: max pair rank reachable (future), 考虑 mid cap
@@ -1727,7 +1737,8 @@ func pFoulFinal(gs *GameState, topEv, midEv, botEv HandValue, rankRem [13]int, s
 		if topRaw.Type > midRaw.Type {
 			return 1
 		}
-		// 同 type 加比较 value (top eval value 跟 mid 不同尺度, 跳过细节比)
+		// 同 type 不比 rank: 顶含鬼时鬼可打低避 foul (顶[As Ad 🃏] 可当 AA≤中444, 非必 foul).
+		// 用 rowMadeScore(鬼打满)比会误判必foul (2026-07-03 用户纠: 别拿鬼最大化去比 foul).
 	}
 
 	// 估算 P(将来 foul)
