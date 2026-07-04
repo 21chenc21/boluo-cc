@@ -35,19 +35,27 @@ func newCardPool(rng *rand.Rand) *cardPool {
 	return &cardPool{used: map[string]bool{}, rng: rng}
 }
 
-// take — rank 固定, 随机可用花色. rank ∈ [0,12] (2=0 … A=12)
-func (p *cardPool) take(rank int) ofc.Card {
-	for tries := 0; tries < 32; tries++ {
-		s := p.rng.Intn(4)
+// tryTake — rank 固定, 确定性扫 4 花色(随机顺序). 真耗尽才返回 false.
+// (2026-07-04 崩过: 旧版随机试32次, 3/4占用时 1e-4 概率误报耗尽, 3400次调用必中.)
+func (p *cardPool) tryTake(rank int) (ofc.Card, bool) {
+	for _, s := range p.rng.Perm(4) {
 		id := fmt.Sprintf("%c%c", rankChars[rank], suitChars[s])
 		if !p.used[id] {
 			p.used[id] = true
 			c, _ := ofc.ParseCard(id)
-			return c
+			return c, true
 		}
 	}
-	// 4 花色全占 (调用方保证不发生: 单 rank 最多取 4 张)
-	panic("cardPool: rank exhausted")
+	return ofc.Card{}, false
+}
+
+// take — rank 固定取一张. 调用方保证该 rank 未耗尽 (takeN ≤4).
+func (p *cardPool) take(rank int) ofc.Card {
+	c, ok := p.tryTake(rank)
+	if !ok {
+		panic("cardPool: rank exhausted")
+	}
+	return c
 }
 
 // takeN — 同 rank 取 N 张
@@ -59,7 +67,7 @@ func (p *cardPool) takeN(rank, n int) []ofc.Card {
 	return out
 }
 
-// takeLow — 随机低牌 rank ∈ [lo,hi], 避开 avoid ranks
+// takeLow — 随机低牌 rank ∈ [lo,hi], 避开 avoid ranks. rank 耗尽则换 rank 重抽.
 func (p *cardPool) takeLow(lo, hi int, avoid ...int) ofc.Card {
 	for {
 		r := lo + p.rng.Intn(hi-lo+1)
@@ -70,8 +78,11 @@ func (p *cardPool) takeLow(lo, hi int, avoid ...int) ofc.Card {
 				break
 			}
 		}
-		if !bad {
-			return p.take(r)
+		if bad {
+			continue
+		}
+		if c, ok := p.tryTake(r); ok {
+			return c
 		}
 	}
 }
