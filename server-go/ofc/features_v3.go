@@ -526,8 +526,8 @@ func fillTopFantasyLocks(f []float32, gs *GameState, topEv, midEv HandValue, ran
 				for _, v := range rankRem {
 					dt += v
 				}
-				f[2] = pMidBeatsTripsRank(gs, tr, rankRem, suitRem, jokerRem, dt,
-					5-len(gs.Middle), cardsSeenRemaining(gs))
+				f[2] = pTopTripsChainLegal(gs, tr, rankRem, suitRem, jokerRem, dt,
+					5-len(gs.Middle), 5-len(gs.Bottom), cardsSeenRemaining(gs))
 			}
 		} else {
 			f[2] = 1
@@ -1253,6 +1253,41 @@ func pMidBeatsTripsRank(gs *GameState, r int, rankRem [13]int, suitRem [4]int, j
 	return clampF(p, 0, 1)
 }
 
+// pTopTripsChainLegal — P(顶r-trips 合法链: 中最终>顶trips 且 底最终≥中那条路).
+// 2026-07-05 sp43b (#46 用户抓): pMidBeatsTripsRank 只算第一环 — 中888超222后, 底777Q还得反超888(仅FH 4 outs).
+// 组件式: 中走trips路→底须>该trips; 中走顺→底须≥顺; 花→≥花; FH→≥FH. 链=1-∏(1-p中路×p底跟).
+func pTopTripsChainLegal(gs *GameState, r int, rankRem [13]int, suitRem [4]int, jokerRem, deckTotal, midSlots, botSlots, cs int) float32 {
+	mid, bot := gs.Middle, gs.Bottom
+	// 中超 trips-r 的四条路
+	mTr := float32(0)
+	if r < 12 {
+		mTr = pRowTripsAtLeastRank(mid, r+1, rankRem, jokerRem, deckTotal, midSlots, cs)
+	}
+	mS := pRowStraight(mid, rankRem, jokerRem, deckTotal, midSlots, cs)
+	mF := pRowFlush(mid, suitRem, jokerRem, deckTotal, midSlots, cs)
+	mFH := pRowAtLeast(mid, TypeFullHouse, rankRem, suitRem, jokerRem, deckTotal, midSlots, cs)
+	// 底跟上各路 (tier-level, trips 用 rank-aware; 高 tier 并集)
+	bS := pRowStraight(bot, rankRem, jokerRem, deckTotal, botSlots, cs)
+	bF := pRowFlush(bot, suitRem, jokerRem, deckTotal, botSlots, cs)
+	bFH := pRowAtLeast(bot, TypeFullHouse, rankRem, suitRem, jokerRem, deckTotal, botSlots, cs)
+	union := func(ps ...float32) float32 {
+		q := float32(1)
+		for _, p := range ps {
+			q *= (1 - p)
+		}
+		return clampF(1-q, 0, 1)
+	}
+	// 底>中trips路(rank>r 的trips, 保守用 r+1): trips更高∪顺∪花∪FH
+	bTr := float32(0)
+	if r < 12 {
+		bTr = union(pRowTripsAtLeastRank(bot, r+1, rankRem, jokerRem, deckTotal, botSlots, cs), bS, bF, bFH)
+	}
+	bGEs := union(bS, bF, bFH) // 底≥顺
+	bGEf := union(bF, bFH)     // 底≥花
+	chain := 1 - (1-mTr*bTr)*(1-mS*bGEs)*(1-mF*bGEf)*(1-mFH*bFH)
+	return clampF(chain, 0, 1)
+}
+
 func pTopTrips(gs *GameState, rankRem [13]int, suitRem [4]int, jokerRem, deckTotal, topSlots int) float32 {
 	// 2026-07-01 (#110 bug): 旧版 topHasR=countRankInRow 不数顶上的鬼 → 孤鬼顶[🃏](2空)被当成
 	//   "顶0张要摸3张成trips"=0 → exp 靠鬼成 trips 范的概率被清零(f93=0). 顶上的鬼可当任意 rank, 计入 need.
@@ -1286,8 +1321,9 @@ func pTopTrips(gs *GameState, rankRem [13]int, suitRem [4]int, jokerRem, deckTot
 				if len(gs.Middle) == 5 {
 					return 0
 				}
-				return pMidBeatsTripsRank(gs, tr, rankRem, suitRem, jokerRem, deckTotal,
-					5-len(gs.Middle), cardsSeenRemaining(gs))
+				// sp43b (#46): 链条版 — 中超顶trips 还得底跟上 (777Q 只能FH反超888, 0.2×0.3≈0.06 而非 0.2)
+				return pTopTripsChainLegal(gs, tr, rankRem, suitRem, jokerRem, deckTotal,
+					5-len(gs.Middle), 5-len(gs.Bottom), cardsSeenRemaining(gs))
 			}
 			return 1
 		}
@@ -1320,7 +1356,8 @@ func pTopTrips(gs *GameState, rankRem [13]int, suitRem [4]int, jokerRem, deckTot
 			if midFull {
 				legalFactor = 0 // 满中两对/低三条锁死, 顶更高trips必foul
 			} else {
-				legalFactor = pMidBeatsTripsRank(gs, r, rankRem, suitRem, jokerRem, deckTotal, midSlots, cs)
+				// sp43b: 链条版 (中超 + 底跟)
+				legalFactor = pTopTripsChainLegal(gs, r, rankRem, suitRem, jokerRem, deckTotal, midSlots, 5-len(gs.Bottom), cs)
 			}
 		}
 		pNone *= (1 - pMake*legalFactor)

@@ -61,10 +61,16 @@ func TestPMidBeatsTripsRank(t *testing.T) {
 		t.Errorf("outs全死 P(中>777) 应≈0(≤0.05), got %.3f", pWeak)
 	}
 
-	// 端到端: pTopTrips 里非法 trips(777>中两对) 的折扣现在跟 outs 联动
+	// 端到端 (sp43b 链条版): 老 strong/weak 的底都是满两对 9T — 无论中怎么长, 底都跟不上 → 链=0 (正确判死)
 	ptS := pTopTrips(gS, rrS, srS, jS, dtS, 1)
 	ptW := pTopTrips(gW, rrW, srW, jW, dtW, 1)
-	if ptS <= ptW {
-		t.Errorf("中能长成葫芦时 顶777范概率应 > 中锁死: strong=%.4f weak=%.4f", ptS, ptW)
+	if ptS != 0 || ptW != 0 {
+		t.Errorf("底满两对跟不上任何中超手, 链应=0: strong=%.4f weak=%.4f", ptS, ptW)
+	}
+	// 活底变体: 底 999T+1空(FH draw) 能跟上中FH → 链 > 0
+	gL, rrL, srL, jL, dtL := build([]string{"6h", "6d", "4c", "4d"}, []string{"9c", "9d", "9h", "Tc"})
+	ptL := pTopTrips(gL, rrL, srL, jL, dtL, 1)
+	if ptL <= 0 {
+		t.Errorf("底999T有FH draw能跟, 链应>0, got %.4f", ptL)
 	}
 }

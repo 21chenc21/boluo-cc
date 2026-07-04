@@ -40,8 +40,9 @@ func TestTopTripsFoulGate(t *testing.T) {
 	gEarly := st([]string{"2c", "2d", "2h"}, []string{"5h", "6h"}, []string{"9s", "9d"})
 	fE := BuildFeaturesV3(gEarly)
 	// 2026-07-05 sp43 概率化: 中56两张+3空位要最终>222, f114=真概率 (顺/花/FH/trips>2 组合), 应显著>0 但≠1
-	if fE[114] < 0.3 || fE[114] > 1 {
-		t.Errorf("顶222+中未满: f114 应为真概率∈[0.3,1], got %.2f", fE[114])
+	// sp43b 链条版(中超×底跟)是乘法, 数值更小但更诚实
+	if fE[114] < 0.05 || fE[114] > 1 {
+		t.Errorf("顶222+中未满(底也有空): f114 链条概率应∈[0.05,1], got %.2f", fE[114])
 	}
 
 	// 合法: 顶222 中满且中是顺(>222trips 托得住) → 不 gate
