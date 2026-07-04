@@ -46,7 +46,7 @@ func (p *cardPool) tryTake(rank int) (ofc.Card, bool) {
 			return c, true
 		}
 	}
-	return ofc.Card{}, false
+	return 0, false
 }
 
 // take — rank 固定取一张. 调用方保证该 rank 未耗尽 (takeN ≤4).
