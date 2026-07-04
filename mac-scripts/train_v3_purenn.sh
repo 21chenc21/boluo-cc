@@ -133,6 +133,8 @@ trap '_cleanup_partial; echo "[v3-sp] killed (SIGTERM)"; exit 143' TERM
 
 ITERS="${1:-5}"
 GAMES="${2:-200}"
+# 每次启动唯一标签 (重启不撞旧目录). 首次启动目录形如 r0704-2100-iter-1.
+LAUNCH_TAG="r$(date +%m%d-%H%M)-"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 V0_DIR="$(dirname "$SCRIPT_DIR")"
@@ -282,8 +284,10 @@ for ((iter=1; iter<=ITERS; iter++)); do
     ITER_TS=$(date +%H:%M:%S)
     echo "=== ITER $iter / $ITERS ($ITER_TS) ===" | tee -a "$LOG"
 
-    GEN_OUT="$DATASET_ROOT/iter-$iter"
-    TRAIN_OUT="$TRAIN_ROOT/iter-$iter"
+    # 2026-07-04 sp42: 目录带启动标签 — 重启后 iter 从 1 重编, 撞老目录会让 Ctrl-C 的
+    # 清理 trap rm -rf 误删历史 gen 数据 / 新 ckpt 同名覆盖老 ckpt. LAUNCH_TAG 保证不撞.
+    GEN_OUT="$DATASET_ROOT/${LAUNCH_TAG}iter-$iter"
+    TRAIN_OUT="$TRAIN_ROOT/${LAUNCH_TAG}iter-$iter"
     mkdir -p "$GEN_OUT" "$TRAIN_OUT"
     touch "$TRAIN_OUT/.iter_started"
     CUR_GEN_OUT="$GEN_OUT"; CUR_TRAIN_OUT="$TRAIN_OUT"  # 中断清理标记: 本iter未完成时 trap 会删这俩
