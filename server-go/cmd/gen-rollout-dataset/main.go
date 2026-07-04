@@ -387,9 +387,17 @@ func genOneGame(gameIdx int, rng *rand.Rand, cfg *ofc.RolloutConfig, seed *seedS
 	if seed != nil {
 		// 2026-07-04 sp41: 种子家族开局 — 摆上构造的中局, 种子占用的牌从 deck 剔除.
 		startRound = seed.startRound
-		state.Top = append(state.Top, seed.top...)
-		state.Middle = append(state.Middle, seed.mid...)
-		state.Bottom = append(state.Bottom, seed.bot...)
+		// 必须走 PlaceCard (顺带记 UsedCards) — 直接赋值行会让 GetRemainingDeck 把种子牌
+		// 再发一遍 → 同rank×5 → Evaluate5 panic (2026-07-04 实翻车).
+		for _, c := range seed.top {
+			state.PlaceCard(c, ofc.RowTop)
+		}
+		for _, c := range seed.mid {
+			state.PlaceCard(c, ofc.RowMiddle)
+		}
+		for _, c := range seed.bot {
+			state.PlaceCard(c, ofc.RowBottom)
+		}
 		inSeed := map[string]bool{}
 		for _, c := range seed.seedCards() {
 			inSeed[c.ID()] = true
