@@ -79,15 +79,16 @@ func TestV3_TopTrips_Lock(t *testing.T) {
 	// trips 2 (低 rank)
 	gs := makeStateV3(t, []string{"2c", "2d", "2h"}, nil, nil)
 	f := BuildFeaturesV3(gs)
-	if f[114] != 1 {
-		t.Errorf("T2 top_currently_trips (2-2-2): got %.2f, want 1 (any rank trips)", f[114])
+	// 2026-07-05 sp43: f114 概率化 — 空中道时 = P(中最终托住顶trips), 不再拍1.
+	if f[114] < 0.4 || f[114] > 1 {
+		t.Errorf("T2 top_currently_trips (2-2-2, 空中): 应为真概率∈[0.4,1], got %.2f", f[114])
 	}
 
 	// trips Q
 	gs2 := makeStateV3(t, []string{"Qc", "Qd", "Qh"}, nil, nil)
 	f2 := BuildFeaturesV3(gs2)
-	if f2[114] != 1 {
-		t.Errorf("T2 top_currently_trips (Q-Q-Q): got %.2f, want 1", f2[114])
+	if f2[114] <= 0.2 || f2[114] >= f[114] {
+		t.Errorf("T2 QQQ 比 222 更难托: 应 0.2<f2[114]<f[114](222), got %.2f vs %.2f", f2[114], f[114])
 	}
 }
 

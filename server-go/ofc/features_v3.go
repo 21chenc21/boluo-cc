@@ -140,7 +140,7 @@ func BuildFeaturesV3(gs *GameState) []float32 {
 	fillSummary(f[97:102], gs, topEvalCapped, midEval, botEval, f) // 用前面的 P 值
 	fillPairRank(f[102:107], gs, topEvalCapped, f[79]) // f79=pMidGTBot, gate 中强度
 	fillPairToTrips(f[107:112], gs, rankRem, suitRem, jokerRem, deckTotal)
-	fillTopFantasyLocks(f[112:116], gs, topEvalCapped, midEval, rankRem, jokerRem)
+	fillTopFantasyLocks(f[112:116], gs, topEvalCapped, midEval, rankRem, suitRem, jokerRem)
 	fillMaxAchievable(f[116:119], gs, rankRem, suitRem, jokerRem)
 	fillLastRound(f[119:121], gs)
 	fillCommitment(f[121:125], gs)
@@ -451,7 +451,12 @@ func fillTripsRank(f []float32, gs *GameState, midFoulProb float32) {
 		}
 		return float32(r) / 12.0
 	}
-	f[0] = pairToFeat(tripsRankRow(gs.Top))
+	// 2026-07-05 sp43 (#6): 顶trips压死满中 = 假范foul线, 同 topBeatsFullMid gate → -1 (视同无trips).
+	if tt := tripsRankRow(gs.Top); tt >= 0 && topBeatsFullMid(gs) {
+		f[0] = -1.0
+	} else {
+		f[0] = pairToFeat(tt)
+	}
 	if mt := tripsRankRow(gs.Middle); mt < 0 {
 		f[1] = 0
 	} else {
@@ -490,7 +495,7 @@ func topBeatsFullMid(gs *GameState) bool {
 // 2026-05-20 sp15 fix: 用 cap-aware topEvalCapped 提取 pair rank, 不再 maxPairRankRow (无 cap)
 // case 50 R5 教训: top=[X 2c As] + mid KK pair → joker cap 后 top 是 pair-2 不是 AA.
 // 旧版 maxPairRankRow 算 joker+A=AA → T_topLock[0]+[1] 都 1.0 → NN 误信 fantasy 实=+20 over-est.
-func fillTopFantasyLocks(f []float32, gs *GameState, topEv, midEv HandValue, rankRem [13]int, jokerRem int) {
+func fillTopFantasyLocks(f []float32, gs *GameState, topEv, midEv HandValue, rankRem [13]int, suitRem [4]int, jokerRem int) {
 	// 从 cap-aware topEv 提 pair rank (joker cap 后真值)
 	topPairRank := -1
 	if topEv.Type == TypePair {
@@ -505,10 +510,28 @@ func fillTopFantasyLocks(f []float32, gs *GameState, topEv, midEv HandValue, ran
 	if topPairRank == int(RankA) {
 		f[1] = 1 // AA (cap-aware, 不会因 joker+A 被 mid pair-K cap 时误 fire)
 	}
-	if hasTrips && !topBeatsFullMid(gs) {
-		// 2026-07-03 (#6): 顶trips范 foul-gate 收窄版 — 只在"中已满且撑不住顶trips(顶>中满)"时清零(=假范, 顶想成trips必foul).
-		//   中未满(能发育托)不 gate → 保留"顶222有空可保"的合法早局trips(TestV3_TopTrips_Lock). 治 AAA>中444满 冒顶.
-		f[2] = 1
+	if hasTrips {
+		// 2026-07-03 (#6) 满中gate → 2026-07-05 sp43 (#46) 概率化: 顶trips>中现值时,
+		//   满中锁死→0; 未满→×P(中最终>顶trips) 真概率 (同 pTopTrips 满顶分支口径).
+		//   中空/中已托住 → 1 (合法早局trips, TestV3_TopTrips_Lock).
+		tr := tripsRankRow(gs.Top)
+		if tr < 0 {
+			tr = 0
+		}
+		if int(HtThreeKind)*13+tr > int(rowMadeScore(gs.Middle)) {
+			if len(gs.Middle) == 5 {
+				f[2] = 0
+			} else {
+				dt := jokerRem
+				for _, v := range rankRem {
+					dt += v
+				}
+				f[2] = pMidBeatsTripsRank(gs, tr, rankRem, suitRem, jokerRem, dt,
+					5-len(gs.Middle), cardsSeenRemaining(gs))
+			}
+		} else {
+			f[2] = 1
+		}
 	}
 
 	// T3: max pair rank reachable (future), 考虑 mid cap
@@ -1241,15 +1264,32 @@ func pTopTrips(gs *GameState, rankRem [13]int, suitRem [4]int, jokerRem, deckTot
 	}
 	if topSlots == 0 {
 		// 含鬼也算: 顶满且(真三条 或 真对+鬼 或 双鬼)
-		if hasRealTripsTop(gs.Top) || topJokers >= 2 {
-			return 1
-		}
-		if topJokers == 1 {
+		// 2026-07-05 sp43 (#6 AAA冒顶): 满顶trips但压死满中 → 假trips范(foul线), 同 topBeatsFullMid gate.
+		//   sp38 修了 f93/f114 漏了这个分支 — [As 🃏 Ad]顶 vs 满中444: f70 报1 → net 当+140范抬轿.
+		made := hasRealTripsTop(gs.Top) || topJokers >= 2
+		if !made && topJokers == 1 {
 			for r := 0; r < 13; r++ {
 				if countRankInRow(gs.Top, r) >= 2 {
-					return 1 // 真对 + 鬼 = trips
+					made = true // 真对 + 鬼 = trips
+					break
 				}
 			}
+		}
+		if made {
+			// 顶trips已锁: 合法性 = 中最终 > 顶trips. 满中锁死→0; 未满→真概率 (同 0.3拍桶修复口径).
+			//   #46: 顶222 vs 中对8(4张) → P(中长成>222) ≈ 0.1, 不是 1.
+			tr := tripsRankRow(gs.Top)
+			if tr < 0 {
+				tr = 0
+			}
+			if int(HtThreeKind)*13+tr > int(rowMadeScore(gs.Middle)) {
+				if len(gs.Middle) == 5 {
+					return 0
+				}
+				return pMidBeatsTripsRank(gs, tr, rankRem, suitRem, jokerRem, deckTotal,
+					5-len(gs.Middle), cardsSeenRemaining(gs))
+			}
+			return 1
 		}
 		return 0
 	}
