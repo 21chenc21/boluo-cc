@@ -1,8 +1,11 @@
 package ofc
 
 import (
+	"fmt"
 	"math"
+	"os"
 	"sort"
+	"strings"
 )
 
 // features_v3.go — 147-d feature extractor.
@@ -157,6 +160,12 @@ func BuildFeaturesV3(gs *GameState) []float32 {
 	// (注: 只清 dim130; dim129 弃牌 rank 连续值在别处有用, 一起清会掉 1 个 std case.)
 	// fanProb head 本就正确偏 Qd, 但 DefaultMultiHeadCfg.FanBoost=0 没接线, 救不了 value head —— 故从特征侧治本.
 	f[130] = 0
+	// 2026-07-04 sp42: f129(弃牌rank) + f146(拆connector) 同族固化清零 — dim130 的连续版/花色版兄弟.
+	// 因果反置: 弃什么是 policy 选的动作, 拿动作反推局面价值 = 果解释因 ("弃K≈好局面"伪相关).
+	// 证据: #23 最后1.85分几乎全是它俩撑的(probe zero双维 gap -0.55 翻正);
+	//       iter-4 太子全场 OOD mask → 21→19 失败(#23翻✓), 无 case 结构性依赖. f145(浪费活花draw)诚实信号保留.
+	f[129] = 0
+	f[146] = 0
 
 	// 2026-06-14 sp26 追加: O 组 成手行序 (3 dim, idx 147-149).
 	// 2026-07-04 sp39 砍(固化清零, 同 f130): partial 行冤罚假信号 (#23/#24), 详见文件头 O 组注释.
@@ -194,8 +203,31 @@ func BuildFeaturesV3(gs *GameState) []float32 {
 	//   #110 实测 exp 0.257 vs AI 0.149 (Δ=0.108, f97 的 4 倍音量). 追加法 warm-start pad 0.
 	f[168] = clampF((f[90]*V3FanBonusQQ+f[91]*V3FanBonusKK+f[92]*V3FanBonusAA+f[93]*V3FanBonusTrips)*(1-f[89])/140.0, 0, 1)
 
+	// 2026-07-04 调试钩子: OFC_MASK_DIMS="129,146" 清零指定维 (评估"砍某特征"的 OOD 方向, 生产不设=零开销).
+	for _, d := range maskDims {
+		if d < len(f) {
+			f[d] = 0
+		}
+	}
+
 	return f
 }
+
+// maskDims — OFC_MASK_DIMS env 解析 (进程启动一次). 仅调试用.
+var maskDims = func() []int {
+	v := os.Getenv("OFC_MASK_DIMS")
+	if v == "" {
+		return nil
+	}
+	var out []int
+	for _, s := range strings.Split(v, ",") {
+		var d int
+		if _, err := fmt.Sscanf(strings.TrimSpace(s), "%d", &d); err == nil {
+			out = append(out, d)
+		}
+	}
+	return out
+}()
 
 // fillFantasyReachable — 进范可行性 (C组, dim163). 1=范foul-free可达, 0=已失范或只能靠foul(假范).
 //   复用 hard_rules.go 的 FantasyLost(逐行独立) + fantasyOnlyViaFoul(中→底链). 见 #116.

@@ -401,8 +401,8 @@ func TestV3_N_DiscardPremium(t *testing.T) {
 	gs := NewGameState(2)
 	gs.SetDiscard(mustParse("Ah"))
 	f := BuildFeaturesV3(gs)
-	if math.Abs(float64(f[129]-1.0)) > 0.01 {
-		t.Errorf("N0 discard rank=A: got %.3f, want 1.0", f[129])
+	if f[129] != 0 { // 2026-07-04 sp42 固化清零
+		t.Errorf("N0(dim129) sp42 已固化清零, got %.3f, want 0", f[129])
 	}
 	if f[130] != 0 {
 		t.Errorf("N1(dim130) 已固化清零, got %.3f, want 0", f[130])
@@ -427,8 +427,8 @@ func TestV3_N_DiscardJoker(t *testing.T) {
 	gs := NewGameState(2)
 	gs.SetDiscard(MakeJoker())
 	f := BuildFeaturesV3(gs)
-	if f[129] != 1 || f[130] != 0 {
-		t.Errorf("N joker: N0=%.2f N1=%.2f, want N0=1 N1=0(固化清零)", f[129], f[130])
+	if f[129] != 0 || f[130] != 0 {
+		t.Errorf("N joker: N0=%.2f N1=%.2f, sp42 双双固化清零 want 0/0", f[129], f[130])
 	}
 }
 
@@ -457,8 +457,8 @@ func TestV3_N2_BreakConnector(t *testing.T) {
 	gs := makeStateV3(t, nil, nil, []string{"5h", "Td"})
 	gs.SetDiscard(mustParse("6c")) // rank 4 (6)
 	f := BuildFeaturesV3(gs)
-	if f[146] != 1 {
-		t.Errorf("N2-1 break_connector (bot 5h, discard 6c): got %.2f, want 1", f[146])
+	if f[146] != 0 { // 2026-07-04 sp42 固化清零 (因果反置, 防复活)
+		t.Errorf("N2-1(dim146) sp42 已固化清零, got %.2f, want 0", f[146])
 	}
 }
 
