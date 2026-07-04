@@ -294,7 +294,7 @@ for ((iter=1; iter<=ITERS; iter++)); do
     echo "[iter $iter] Phase A: gen $GAMES games (rollouts=$ROLLOUTS, indim 169, SELF-PLAY + exploration)..." | tee -a "$LOG"
     GEN_ARGS=(-num-games "$GAMES" -jokers 2 -rollouts "$ROLLOUTS" -r1-cap 30
               -phantom-opponents 2 -indim 169
-              -mcts-margin 2.5 -mcts-sims 500 -mcts-topk 5 -traj-explore 0.15 -traj-topk 3
+              -mcts-margin 2.5 -mcts-sims 500 -mcts-topk 5 -traj-explore 0.15 -traj-topk 3 -seed-family-frac 0.25
               -foul-cost 6 -fan-bonus-qq 10 -fan-bonus-kk 30 -fan-bonus-aa 100 -fan-bonus-trips 140
               -out-dir "$GEN_OUT")
     if [ -n "$BEST_CKPT" ] && [ -f "$BEST_CKPT" ]; then

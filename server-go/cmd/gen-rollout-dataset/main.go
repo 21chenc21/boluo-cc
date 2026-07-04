@@ -61,6 +61,9 @@ var (
 	mctsTopK    = flag.Int("mcts-topk", 5, "margin触发后升级的候选数")
 	trajExplore = flag.Float64("traj-explore", 0, "轨迹探索率: 此概率下沿 Q前traj-topk名随机一个前进 (policyTarget仍标argmax, 只改轨迹走向; 0=关). 治premium pre-state组合洞(#23/#24)")
 	trajTopK    = flag.Int("traj-topk", 3, "轨迹探索的采样池大小")
+
+	// 2026-07-04 sp41: 种子家族 gen (种家族不种case, 见 seed_families.go)
+	seedFamilyFrac = flag.Float64("seed-family-frac", 0, "此比例的局从种子家族中局开局 (0=关). 家族: lockBottom(#23/24) / jokerTopSeed(#110/120)")
 )
 
 // Sample — 跟 train.go schema 兼容
@@ -374,10 +377,32 @@ func joinIDs(ids []string) string {
 	return out
 }
 
-func genOneGame(gameIdx int, rng *rand.Rand, cfg *ofc.RolloutConfig) []Sample {
+func genOneGame(gameIdx int, rng *rand.Rand, cfg *ofc.RolloutConfig, seed *seedSpec) []Sample {
 	state := ofc.NewGameState(*numJokers)
 	deck := ofc.MakeDeck(*numJokers)
 	shuffleDeck(deck, rng)
+
+	startRound := 1
+	myNeed := 17 // 后续还要从 deck 发给自己的张数
+	if seed != nil {
+		// 2026-07-04 sp41: 种子家族开局 — 摆上构造的中局, 种子占用的牌从 deck 剔除.
+		startRound = seed.startRound
+		state.Top = append(state.Top, seed.top...)
+		state.Middle = append(state.Middle, seed.mid...)
+		state.Bottom = append(state.Bottom, seed.bot...)
+		inSeed := map[string]bool{}
+		for _, c := range seed.seedCards() {
+			inSeed[c.ID()] = true
+		}
+		filtered := deck[:0]
+		for _, c := range deck {
+			if !inSeed[c.ID()] {
+				filtered = append(filtered, c)
+			}
+		}
+		deck = filtered
+		myNeed = (5 - startRound) * 3 // startRound 的发牌来自 seed.dealt
+	}
 
 	opponents := 0
 	slot := 0
@@ -388,19 +413,19 @@ func genOneGame(gameIdx int, rng *rand.Rand, cfg *ofc.RolloutConfig) []Sample {
 		}
 	}
 	maxPhantom := phantomCountFor(5, slot, opponents)
-	if len(deck)-maxPhantom < 17 {
-		maxPhantom = len(deck) - 17
+	if len(deck)-maxPhantom < myNeed {
+		maxPhantom = len(deck) - myNeed
 		if maxPhantom < 0 {
 			maxPhantom = 0
 		}
 	}
 	phantomReserveStart := len(deck) - maxPhantom
 
-	myCards := deck[:17]
+	myCards := deck[:myNeed]
 	phantomAdded := 0
 	out := make([]Sample, 0, 200)
 
-	for round := 1; round <= 5; round++ {
+	for round := startRound; round <= 5; round++ {
 		state.Round = round
 
 		want := phantomCountFor(round, slot, opponents)
@@ -413,7 +438,14 @@ func genOneGame(gameIdx int, rng *rand.Rand, cfg *ofc.RolloutConfig) []Sample {
 		}
 
 		var dealt []ofc.Card
-		if round == 1 {
+		if seed != nil {
+			if round == seed.startRound {
+				dealt = seed.dealt
+			} else {
+				start := (round - seed.startRound - 1) * 3
+				dealt = myCards[start : start+3]
+			}
+		} else if round == 1 {
 			dealt = myCards[0:5]
 		} else {
 			start := 5 + (round-2)*3
@@ -688,8 +720,15 @@ func main() {
 		progressEvery = 1
 	}
 
+	seededCount := 0
 	for gameIdx := 0; gameIdx < *numGames; gameIdx++ {
-		samples := genOneGame(gameIdx, rng, &cfg)
+		// 2026-07-04 sp41: 种子家族 — 此概率下从结构约束内随机化的中局开局 (治深组合数据荒区).
+		var seed *seedSpec
+		if *seedFamilyFrac > 0 && rng.Float64() < *seedFamilyFrac {
+			seed = makeFamilySeed(rng)
+			seededCount++
+		}
+		samples := genOneGame(gameIdx, rng, &cfg, seed)
 		for _, s := range samples {
 			if err := writers[s.Round].Write(s); err != nil {
 				log.Printf("write err: %v", err)
@@ -705,5 +744,5 @@ func main() {
 		}
 	}
 
-	log.Printf("[gen] done: %d games, %d samples in %.1f min", doneGames.Load(), totalSamples.Load(), time.Since(startT).Minutes())
+	log.Printf("[gen] done: %d games (seeded %d), %d samples in %.1f min", doneGames.Load(), seededCount, totalSamples.Load(), time.Since(startT).Minutes())
 }
