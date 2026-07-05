@@ -860,6 +860,9 @@ func main() {
 		ofc.PolicyBoost = float32(v)
 		log.Printf("[server] POLICY_BOOST=%.2f (head3 policy logit bias in prerank)", v)
 	}
+	if envStr("OFC_KEEP_FILTERS", "") != "" {
+		ofc.KeepFiltersPureNN = true
+	}
 	if v := envStr("OFC_SERVE_SEARCH", ""); v != "" {
 		var m float64
 		fmt.Sscanf(v, "%f", &m)

@@ -340,11 +340,17 @@ func main() {
 	if os.Getenv("OFC_DEBUG_TRACE") != "" {
 		ofc.MctsDebugTrace = true
 	}
+	if os.Getenv("OFC_KEEP_FILTERS") != "" {
+		ofc.KeepFiltersPureNN = true
+	}
 	if v := os.Getenv("OFC_SERVE_SEARCH"); v != "" {
 		var m float64
 		fmt.Sscanf(v, "%f", &m)
 		ofc.ServeSearchMargin = float32(m)
-		fmt.Printf("[bench-cases] OFC_SERVE_SEARCH=%.2f: 薄边轻搜索 ON (top-2 交替50/批, cap %d)\n", m, ofc.ServeSearchCap)
+		if os.Getenv("OFC_SERVE_SEARCH_LOG") != "" {
+			ofc.ServeSearchLog = func(line string) { fmt.Println(line) }
+		}
+		fmt.Printf("[bench-cases] OFC_SERVE_SEARCH=%.2f: 薄边轻搜索 ON (cap %d)\n", m, ofc.ServeSearchCap)
 	}
 
 	// Load cases
@@ -486,8 +492,9 @@ func featGroup(i int) string {
 var labelProbeEnabled bool
 
 // labelProbe — 直接量两个 post-state 的平均 rollout label(EV). NN 学的是 label, 这是金标准:
-//   标签偏 exp 但 NN 选 AI → over-value 特征压住区分特征(找 feature cap, 治得了);
-//   标签偏 AI → reward 不够/case 判断本身问题(调 reward 或重审 case). 见 reference_diagnosis_method.
+//
+//	标签偏 exp 但 NN 选 AI → over-value 特征压住区分特征(找 feature cap, 治得了);
+//	标签偏 AI → reward 不够/case 判断本身问题(调 reward 或重审 case). 见 reference_diagnosis_method.
 func labelProbe(aiState, expState *ofc.GameState, round int, cfg *ofc.RolloutConfig) {
 	// 2026-06-29 fix: 用 gen 的 fan/foul 校准 (DefaultRolloutConfig 是 AA=80/FoulCost=6, gen 是 AA=100/FoulCost=3)
 	//   → 量的 EV 才跟 NN 真训练的 label 一致. 否则绝对值偏.

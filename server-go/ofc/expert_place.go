@@ -793,6 +793,21 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 	// === MctsDisabled: R2-R5 跳过 rollout, 直接 prerank top-1 (纯MLP模式) ===
 	// 2026-05-23: MctsTopKSampleRN 控制 R2-R5 sample (默认 0 = top-1 deterministic 保 endgame).
 	if MctsDisabled || er.Cfg.PureMLP {
+		// 2026-07-05: 保险丝 — R5 支配过滤 (label盲区 tie-break, #90 555vs333)
+		if KeepFiltersPureNN && state.Round == 5 && len(uniq) > 1 {
+			sts := make([]*GameState, len(uniq))
+			for i := range uniq {
+				sts[i] = uniq[i].gs
+			}
+			km := r5DominanceKeep(sts)
+			kept := uniq[:0]
+			for i := range uniq {
+				if km[i] {
+					kept = append(kept, uniq[i])
+				}
+			}
+			uniq = kept
+		}
 		if len(uniq) > 0 {
 			pick := 0
 			if MctsTopKSampleRN > 1 {
@@ -1089,6 +1104,60 @@ func serveSearchConsequential(a, b *GameState) bool {
 		de = -de
 	}
 	return de > 0.08
+}
+
+// KeepFiltersPureNN — 2026-07-05 (用户: 硬规则只留两根保险丝, 适配纯NN+搜索栈):
+// pureMLP 模式下也启用 R5 支配过滤 (label 盲区: 555vs333 同royalty, NN/搜索都分不出, 见#90).
+// env OFC_KEEP_FILTERS=1 开.
+var KeepFiltersPureNN bool
+
+// r5DominanceKeep — R5 收官广义支配过滤 (2026-07-05 用户: 支配过滤只应用到 R5).
+// 完局板逐行比牌力: A 三行 ≥ B 且至少一行 > (或 A 不foul B foul) → B 必劣删除.
+// 计分(royalty+对战行胜负)对每行牌力单调 → 数学上零误伤. 治 label 盲区 (#90 555vs333, h2h价值不在solo-reward里).
+func r5DominanceKeep(states []*GameState) []bool {
+	n := len(states)
+	type ev struct {
+		foul    bool
+		t, m, b int64
+	}
+	evs := make([]ev, n)
+	for i, gs := range states {
+		sc := gs.Score()
+		evs[i] = ev{foul: sc.Foul, t: int64(sc.TopEval.Value), m: int64(sc.MidEval.Value), b: int64(sc.BotEval.Value)}
+	}
+	dominates := func(a, b ev) bool {
+		if a.foul {
+			return false
+		}
+		if b.foul {
+			return true
+		}
+		if a.t < b.t || a.m < b.m || a.b < b.b {
+			return false
+		}
+		return a.t > b.t || a.m > b.m || a.b > b.b
+	}
+	keep := make([]bool, n)
+	any := false
+	for i := 0; i < n; i++ {
+		dominated := false
+		for j := 0; j < n; j++ {
+			if i != j && dominates(evs[j], evs[i]) {
+				dominated = true
+				break
+			}
+		}
+		if !dominated {
+			keep[i] = true
+			any = true
+		}
+	}
+	if !any {
+		for i := range keep {
+			keep[i] = true
+		}
+	}
+	return keep
 }
 
 // tryAcquireSearchSlot — 先非阻塞抢, 抢不到排队至多 ServeSearchWait. 超时 → 调用方退回纯NN.
