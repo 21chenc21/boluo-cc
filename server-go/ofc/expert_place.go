@@ -220,8 +220,22 @@ func (er *ExpertRollout) ExpertPlace5(state *GameState, cards []Card) {
 						sts = append(sts, candidates[i].gs)
 					}
 				}
-				pick = er.serveMarginSearchK(sts, 1)
+				var n int
+				var means []float64
+				pick, n, means = er.serveMarginSearchK(sts, 1)
 				releaseSearchSlot()
+				tag := "KEEP"
+				if pick != 0 {
+					tag = "OVERRIDE"
+				}
+				line := fmt.Sprintf("[serve-search] R1 %s n=%d means=%.2f NN=%s → 选=%s",
+					tag, n, means, placementStr(candidates[0].gs), placementStr(candidates[pick].gs))
+				if ServeSearchLog != nil {
+					ServeSearchLog(line)
+				}
+				if er.SearchAudit != nil {
+					*er.SearchAudit = append(*er.SearchAudit, line)
+				}
 			}
 			for i, c := range cards {
 				state.PlaceCard(c, candidates[pick].placement[i])
@@ -810,8 +824,22 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 						sts = append(sts, uniq[i].gs)
 					}
 				}
-				pick = er.serveMarginSearchK(sts, state.Round)
+				var n int
+				var means []float64
+				pick, n, means = er.serveMarginSearchK(sts, state.Round)
 				releaseSearchSlot()
+				tag := "KEEP"
+				if pick != 0 {
+					tag = "OVERRIDE"
+				}
+				line := fmt.Sprintf("[serve-search] R%d %s n=%d means=%.2f NN=%s → 选=%s",
+					state.Round, tag, n, means, placementStr(uniq[0].gs), placementStr(uniq[pick].gs))
+				if ServeSearchLog != nil {
+					ServeSearchLog(line)
+				}
+				if er.SearchAudit != nil {
+					*er.SearchAudit = append(*er.SearchAudit, line)
+				}
 			}
 			action := uniq[pick].action
 			state.UsedCards[cards[action.DiscardIdx].ID()] = true
@@ -1084,9 +1112,13 @@ func tryAcquireSearchSlot() bool {
 }
 func releaseSearchSlot() { <-serveSearchSlots }
 
+// ServeSearchLog — 搜索审计钩子 (2026-07-05 用户: 排锅要能分清搜索的锅还是NN的锅).
+// 每次搜索记一行(含未换手). server main 接 log.Printf; nil=关.
+var ServeSearchLog func(line string)
+
 // serveMarginSearchK — K 个 post-state 并行加摸 (worker=NumCPU, 每 worker 独立 ExpertRollout/Rng);
-// 每批后若 leader 领先第二名 > 2·SE合 提前停 (真平局烧满也没损失). 返回赢家下标.
-func (er *ExpertRollout) serveMarginSearchK(states []*GameState, round int) int {
+// 每批后若 leader 领先第二名 > 2·SE合 提前停 (真平局烧满也没损失). 返回赢家下标+统计.
+func (er *ExpertRollout) serveMarginSearchK(states []*GameState, round int) (int, int, []float64) {
 	K := len(states)
 	W := runtime.NumCPU()
 	if W > ServeSearchWorkers {
@@ -1172,12 +1204,16 @@ func (er *ExpertRollout) serveMarginSearchK(states []*GameState, round int) int 
 	if best != 0 && sum[best]/float64(cnt[best])-sum[0]/float64(cnt[0]) < 1.5 {
 		best = 0
 	}
+	means := make([]float64, K)
+	for i := 0; i < K; i++ {
+		means[i] = sum[i] / float64(cnt[i])
+	}
 	if MctsDebugTrace {
 		fmt.Printf("=== serveMarginSearchK: K=%d n=%d/侧 → 选[%d] (means:", K, cnt[0], best)
 		for i := 0; i < K; i++ {
-			fmt.Printf(" %.2f", sum[i]/float64(cnt[i]))
+			fmt.Printf(" %.2f", means[i])
 		}
 		fmt.Println(") ===")
 	}
-	return best
+	return best, cnt[0], means
 }

@@ -11,14 +11,16 @@ import (
 //   - AA pair:      AAFanBonus    (默认 200)
 //   - KK pair:      KKFanBonus    (默认 100)
 //   - QQ pair:      QQFanBonus    (默认 50)
+//
 // Foul 扣分: FoulCost (默认 6; 注: 游戏计分 ScoreHand.Score=-20 是真实对局分, 不进 silver-label)
 //
 // 这些 knob 直接编码到 silver-label 里 (mcScore = Royalties + fanBonus 或 -FoulCost),
 // 训练时调高某类 → MLP 学到偏好. 不是 rollout policy bias, 是用户价值函数声明.
 //
 // Epsilon — rollout policy ε-greedy 探索率 (训练用, 推理建议 0).
-//   每 step ε 概率 random pick action (而非 max-MLP), 让训练分布不被 MLP 当前认知锁死.
-//   推荐 0.1 (10%); 0=纯 greedy.
+//
+//	每 step ε 概率 random pick action (而非 max-MLP), 让训练分布不被 MLP 当前认知锁死.
+//	推荐 0.1 (10%); 0=纯 greedy.
 type RolloutConfig struct {
 	R1Mult        float32
 	FoulCost      float32 // foul 扣分 (默认 6, 真实 head-to-head -6 net loss 对齐)
@@ -94,6 +96,10 @@ type ExpertRollout struct {
 	// 让 stage3 能拿到 isFan / isFoul flag, 不只 royalty 数值.
 	// 不并发安全 — 单 goroutine 串行 stage3 use.
 	LastResult RolloutResult
+
+	// SearchAudit — serve 薄边搜索审计 (2026-07-05 排锅用): 每次搜索(KEEP/OVERRIDE)追加一行.
+	// server 每请求挂一个 slice → 随 response 落 solve_log. nil=关.
+	SearchAudit *[]string
 }
 
 // RolloutResult — 单次 rollout 的详细结果 (Path X)
@@ -310,4 +316,3 @@ func (er *ExpertRollout) QuickRolloutDetailed(state *GameState, currentRound int
 	r := er.LastResult
 	return r.RawRoyalty, r.IsFantasy, r.IsFoul
 }
-
