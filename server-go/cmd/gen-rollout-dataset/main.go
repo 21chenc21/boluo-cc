@@ -1,15 +1,16 @@
 // gen-rollout-dataset — 用 direct K-rollout-per-candidate 当 teacher 生成 student NN 训练数据.
 //
 // 跟 gen-mcts-dataset 区别:
-//   mcts:    PUCT 探索, sims 分配不均, 候选 visits=1..N 不一致 → 信号有 noise
-//   rollout: 每候选强制 K independent rollouts, SE = σ/√K 已知, 信号 clean
+//
+//	mcts:    PUCT 探索, sims 分配不均, 候选 visits=1..N 不一致 → 信号有 noise
+//	rollout: 每候选强制 K independent rollouts, SE = σ/√K 已知, 信号 clean
 //
 // 算法 (每 decision):
-//   1. enumerate actions (含 hard rule filter)
-//   2. 每 candidate 跑 K rollouts (并行 worker pool)
-//   3. mean Q = sum / K
-//   4. PolicyTarget: 1 if winner (max Q), 0 else (one-hot)
-//   5. apply winner action, 继续下 round
+//  1. enumerate actions (含 hard rule filter)
+//  2. 每 candidate 跑 K rollouts (并行 worker pool)
+//  3. mean Q = sum / K
+//  4. PolicyTarget: 1 if winner (max Q), 0 else (one-hot)
+//  5. apply winner action, 继续下 round
 //
 // 输出 jsonl.gz, 跟 train.go -dataset-dir 兼容.
 package main
@@ -63,13 +64,15 @@ var (
 	trajTopK    = flag.Int("traj-topk", 3, "轨迹探索的采样池大小")
 
 	// 2026-07-04 sp41: 种子家族 gen (种家族不种case, 见 seed_families.go)
-	seedFamilyFrac = flag.Float64("seed-family-frac", 0, "此比例的局从种子家族中局开局 (0=关). 家族: lockBottom(#23/24) / jokerTopSeed(#110/120)")
+	seedFamilyFrac = flag.Float64("seed-family-frac", 0, "此比例的局从种子家族中局开局 (0=关). 家族: lockBottom/jokerTopSeed/foulBait/r1micro")
+	seedStates     = flag.String("seed-states", "", "真人板 JSON (solve_log 提取), 与家族种子并行的真实状态源")
+	seedStatesFrac = flag.Float64("seed-states-frac", 0, "此比例的局从真人板开局 (0=关)")
 )
 
 // Sample — 跟 train.go schema 兼容
 type Sample struct {
 	Features     []float32 `json:"features"`
-	McScore      float32   `json:"mcScore"`      // mean Q over K rollouts
+	McScore      float32   `json:"mcScore"` // mean Q over K rollouts
 	FanRate      float32   `json:"fanRate,omitempty"`
 	FoulRate     float32   `json:"foulRate,omitempty"`
 	PolicyTarget float32   `json:"policyTarget,omitempty"` // one-hot: 1 for max-Q winner, 0 else
@@ -245,8 +248,8 @@ func rolloutCand(post *ofc.GameState, round int, K int, cfg *ofc.RolloutConfig, 
 // candidateInfo — 决策时的候选
 type candidateInfo struct {
 	postState *ofc.GameState
-	r1Place   []ofc.Row              // R1 use
-	rnAction  *ofc.RoundNAction      // R2-R5 use
+	r1Place   []ofc.Row         // R1 use
+	rnAction  *ofc.RoundNAction // R2-R5 use
 	isR1      bool
 }
 
@@ -302,8 +305,8 @@ func enumerateAndFilter(state *ofc.GameState, dealt []ofc.Card, round int) []can
 		actions := ofc.GenerateRoundNActions(dealt, state)
 		seen := make(map[string]bool, len(actions))
 		type cand struct {
-			action    *ofc.RoundNAction
-			gs        *ofc.GameState
+			action *ofc.RoundNAction
+			gs     *ofc.GameState
 		}
 		cands := make([]cand, 0, len(actions))
 		for i := range actions {
@@ -397,6 +400,9 @@ func genOneGame(gameIdx int, rng *rand.Rand, cfg *ofc.RolloutConfig, seed *seedS
 		}
 		for _, c := range seed.bot {
 			state.PlaceCard(c, ofc.RowBottom)
+		}
+		for _, c := range seed.extraUsed {
+			state.UsedCards[c.ID()] = true // 真人板: 对手可见/已弃 — deck-aware
 		}
 		inSeed := map[string]bool{}
 		for _, c := range seed.seedCards() {
@@ -718,6 +724,10 @@ func main() {
 		os.Exit(0)
 	}()
 
+	if *seedStates != "" {
+		n := loadRealSeeds(*seedStates)
+		log.Printf("[gen] seed-states: 载入 %d 个真人板 (来自 %s)", n, *seedStates)
+	}
 	doneGames := atomic.Int64{}
 	totalSamples := atomic.Int64{}
 	rngSeed := time.Now().UnixNano()
@@ -732,7 +742,13 @@ func main() {
 	for gameIdx := 0; gameIdx < *numGames; gameIdx++ {
 		// 2026-07-04 sp41: 种子家族 — 此概率下从结构约束内随机化的中局开局 (治深组合数据荒区).
 		var seed *seedSpec
-		if *seedFamilyFrac > 0 && rng.Float64() < *seedFamilyFrac {
+		if *seedStatesFrac > 0 && rng.Float64() < *seedStatesFrac {
+			seed = pickRealSeed(rng)
+			if seed != nil {
+				seededCount++
+			}
+		}
+		if seed == nil && *seedFamilyFrac > 0 && rng.Float64() < *seedFamilyFrac {
 			seed = makeFamilySeed(rng)
 			seededCount++
 		}

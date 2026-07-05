@@ -9,7 +9,10 @@ import (
 	"fmt"
 	"math/rand"
 
+	"encoding/json"
 	"github.com/boluo/v0-server/ofc"
+	"log"
+	"os"
 )
 
 // seedSpec — 家族种子: 构造的中局 + 该轮发牌
@@ -19,6 +22,7 @@ type seedSpec struct {
 	mid        []ofc.Card
 	bot        []ofc.Card
 	dealt      []ofc.Card
+	extraUsed  []ofc.Card // 行外已见牌 (真人板: 对手可见牌/已弃牌) — 记 UsedCards + 剔 deck
 	family     string
 }
 
@@ -116,8 +120,8 @@ func pickRank(rng *rand.Rand, lo, hi int, avoid ...int) int {
 // 决策张力: 锁死底两对(exp线, 中道窄窗) vs 留活/劈对(AI旧病).
 func seedLockBottom(rng *rand.Rand) *seedSpec {
 	p := newCardPool(rng)
-	topRank := pickRank(rng, 11, 12)              // K/A
-	botRank := pickRank(rng, 8, 10)               // T/J/Q
+	topRank := pickRank(rng, 11, 12)                    // K/A
+	botRank := pickRank(rng, 8, 10)                     // T/J/Q
 	dealtRank := pickRank(rng, 9, 12, topRank, botRank) // J~A, 避开已用
 
 	s := &seedSpec{family: "lockBottom"}
@@ -221,15 +225,128 @@ func seedFoulBait(rng *rand.Rand) *seedSpec {
 	return s
 }
 
+// ============ F5: R1 微摆位 (#94/#75/std1 家族, 2026-07-06) ============
+// R1 五张的精细分配: 大对+大侧牌(94型) / 大对+低连张材料(75型) / 高对+杂牌+鬼(std1型).
+// 老师(margin 600)在几百变体里演示"什么时候 245 是底顺材料、什么时候 2 是该上头的废牌" —
+// context-dependent 偏好只能数据教, 不能规则拍 (2026-07-05 实验: #75 的 2c 该下底).
+func seedR1Micro(rng *rand.Rand) *seedSpec {
+	p := newCardPool(rng)
+	s := &seedSpec{family: "r1micro", startRound: 1}
+	switch rng.Intn(3) {
+	case 0: // 94型: 大对(T~Q) + 两张大侧牌(K/A) + 杂牌
+		pr := pickRank(rng, 8, 10)
+		s.dealt = append(p.takeN(pr, 2), p.take(pickRank(rng, 11, 12)), p.take(pickRank(rng, 11, 12)), p.takeLow(2, 7, pr))
+	case 1: // 75型: 大对(T~A) + 三张低连张材料 (base..base+2 或带gap)
+		pr := pickRank(rng, 8, 12)
+		base := rng.Intn(4) // 2..5
+		s.dealt = append(p.takeN(pr, 2), p.take(base), p.take(base+1), p.take(base+3))
+	default: // std1型: 高对(K/A) + 鬼 + 两张杂牌
+		pr := pickRank(rng, 11, 12)
+		s.dealt = append(p.takeN(pr, 2), p.joker(0), p.takeLow(0, 5, pr), p.takeLow(4, 9, pr))
+	}
+	return s
+}
+
+// ============ 真人板种子 (sp46, 2026-07-06): prod solve_log 的真实人类板 ============
+// serve 分布直接进训练分布 — 治"陌生板"的正餐. JSON 格式:
+//
+//	[{"round":3,"top":["Ac"],"middle":["5c","6c"],"bottom":["3h","9s"],"dealt":["Kh","Ks","4d"],"used":["Ad","Ah"]},...]
+//
+// label 照旧 rollout 真值; 无效条目(牌数不对/重牌)跳过.
+type realStateJSON struct {
+	Round  int      `json:"round"`
+	Top    []string `json:"top"`
+	Middle []string `json:"middle"`
+	Bottom []string `json:"bottom"`
+	Dealt  []string `json:"dealt"`
+	Used   []string `json:"used"`
+}
+
+var realSeeds []*seedSpec
+
+func loadRealSeeds(path string) int {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		log.Printf("[gen] seed-states 读取失败: %v", err)
+		return 0
+	}
+	var rows []realStateJSON
+	if err := json.Unmarshal(data, &rows); err != nil {
+		log.Printf("[gen] seed-states 解析失败: %v", err)
+		return 0
+	}
+	parse := func(ss []string, seen map[string]bool) ([]ofc.Card, bool) {
+		var out []ofc.Card
+		for _, x := range ss {
+			c, ok := ofc.ParseCard(x)
+			if !ok || seen[c.ID()] {
+				return nil, false
+			}
+			seen[c.ID()] = true
+			out = append(out, c)
+		}
+		return out, true
+	}
+	for _, r := range rows {
+		if r.Round < 1 || r.Round > 5 {
+			continue
+		}
+		wantPlaced := 0
+		wantDealt := 5
+		if r.Round >= 2 {
+			wantPlaced = 5 + 2*(r.Round-2)
+			wantDealt = 3
+		}
+		if len(r.Top)+len(r.Middle)+len(r.Bottom) != wantPlaced || len(r.Dealt) != wantDealt {
+			continue
+		}
+		seen := map[string]bool{}
+		top, ok1 := parse(r.Top, seen)
+		mid, ok2 := parse(r.Middle, seen)
+		bot, ok3 := parse(r.Bottom, seen)
+		dealt, ok4 := parse(r.Dealt, seen)
+		if !ok1 || !ok2 || !ok3 || !ok4 {
+			continue
+		}
+		// used 里剔掉已在行/dealt 的 (solve_log 的 usedCards 通常含全部)
+		var extra []ofc.Card
+		for _, x := range r.Used {
+			c, ok := ofc.ParseCard(x)
+			if !ok || seen[c.ID()] {
+				continue
+			}
+			seen[c.ID()] = true
+			extra = append(extra, c)
+		}
+		if len(top) > 3 || len(mid) > 5 || len(bot) > 5 {
+			continue
+		}
+		realSeeds = append(realSeeds, &seedSpec{
+			startRound: r.Round, top: top, mid: mid, bot: bot,
+			dealt: dealt, extraUsed: extra, family: "realboard",
+		})
+	}
+	return len(realSeeds)
+}
+
+func pickRealSeed(rng *rand.Rand) *seedSpec {
+	if len(realSeeds) == 0 {
+		return nil
+	}
+	return realSeeds[rng.Intn(len(realSeeds))]
+}
+
 // makeFamilySeed — 均匀选一个家族
 func makeFamilySeed(rng *rand.Rand) *seedSpec {
 	switch r := rng.Intn(10); {
-	case r < 4:
+	case r < 3:
 		return seedLockBottom(rng)
-	case r < 8:
+	case r < 6:
 		return seedJokerTopSeed(rng)
+	case r < 8:
+		return seedFoulBait(rng)
 	default:
-		return seedFoulBait(rng) // 20%
+		return seedR1Micro(rng) // 20%
 	}
 }
 
@@ -240,5 +357,6 @@ func (s *seedSpec) seedCards() []ofc.Card {
 	out = append(out, s.mid...)
 	out = append(out, s.bot...)
 	out = append(out, s.dealt...)
+	out = append(out, s.extraUsed...)
 	return out
 }
