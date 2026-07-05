@@ -110,7 +110,7 @@ SCRIPT_VERSION="2026-06-17-purenn"
 #     - Mark cases 35/37/40/45 as warn (AI 选合理但不在 expecteds)
 #     - sp17 iter-1 r1 deployed 8002, bench: 59通过/4警告/0 真错.
 #     - DATA_VERSION → i147-sp18 (rollout policy 含 sp17 best, 数据 fresh).
-DATA_VERSION="i169-sp40"  # sp40: 0.3拍桶→pMidBeatsTripsRank真概率 + margin触发升级rollout(薄边2.5/500×5) + 轨迹top3探索0.15(治#23/24组合洞) + seedBonus概率加权(topFanProb×2×8). 承sp39(169-d): 砍O组+FE范EV维. 起点=sp38 iter-1太子(29).
+DATA_VERSION="i169-sp46"  # sp46: f89鬼降级修复(#46 顶[🃏22]真foul=0旧算0.8, foul链三处: pTopGTMid/pFoulFinal/pMidGTBot 进攻行用jokerFloorRow) + 真人板种子0.12. 承sp40: pMidBeatsTripsRank真概率+margin升级rollout+轨迹探索+seedBonus概率加权. 起点=sp40-1 r0705-0448-iter-1太子(7).
 # 旧 sp33: partialEval两对/金刚 + pMidGTBot两对rank + pTopGTMid顶三条rank + pTopTrips(漏顶鬼+max非union+合法性) + eRoyalty金刚双重计数.
 # 旧 i164-sp31 (164-d): #90三条rank0-2 / #124 pPairToTrips cap / cases全删uc / outs-aware. sp31-one 跑了iter2=130, #124已落地, #90/#23/#24未.
 # 旧 sp30: i164-sp30 (draw纯花+slots / MHR rank各档安全上限 / 顶trips种子bonus). sp30-one 跑了iter-1=+3 但无#90/#124/clean-cases.

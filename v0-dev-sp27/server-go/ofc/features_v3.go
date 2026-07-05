@@ -1,8 +1,11 @@
 package ofc
 
 import (
+	"fmt"
 	"math"
+	"os"
 	"sort"
+	"strings"
 )
 
 // features_v3.go — 147-d feature extractor.
@@ -38,8 +41,10 @@ import (
 //   LR: 137-144  Tier 2: bot/mid locked-royalty tier + bot/mid 4-flush + bot 4-straight open/gutshot +
 //                mid 4-straight combined + pair_kicker_rank_max
 //   N2: 145-146  弃牌副信号 (Tier 3 EXTRA): break_bot_suit_commitment / break_connector
-//   O:  147-149  成手行序 (2026-06-14 sp26 追加, partial+rank-aware): 中-顶 / 底-中 / 最紧 margin.
-//                负 = "强成手压上层"倒置. 太子(147-d)不含此组, warm-start auto-pad 0.
+//   O:  147-149  [已砍, 固化清零] 成手行序 (2026-06-14 sp26 追加; 2026-07-04 sp39 砍, 同 f130 先例).
+//                砍因(#23/#24): rank-blind made-score 差把 partial 行当成手罚(中22+3空位 vs 顶AA = -0.923 冤罚),
+//                假信号 ±0.9 碾压真概率特征(f79/f88/f89). sp26 时概率特征全是 stub 才需要它, 修好后=劣化冗余:
+//                满行真倒置 f89=1 已覆盖(foul -6 一口价, 分级无意义); partial 翻身概率 f79/pTopGTMid 承担.
 
 // 2026-06-14 sp26: 147 → 150, 追加"成手行序" O 组 (dim147-149). 太子(147-d) warm-start 自动 pad 0.
 // 2026-06-19 sp28: 150 → 154, 追加"前瞻支撑夹缝" W 组 (dim150-153). 旧 ckpt warm-start 自动 pad 0.
@@ -49,7 +54,8 @@ import (
 // 2026-06-25 sp29: 161 → 163, 追加"顺draw紧密度质量" B 组 (dim161-162, 中/底). 追加法 pad 0. (#122卡顺细化)
 // 2026-06-29 sp32: 164 → 165, 追加"强成手放错行" W2 组 (dim164). 追加法 pad 0. (#23/#24 中KK>底QQ倒置)
 // 2026-07-03 sp37: 165 → 168, 追加"各行三条 rank" T3 组 (dim165-167, 顶/中/底). 追加法 pad 0. (#90 中555 vs 333 无rank区分)
-const FeatureDimV3 = 168
+// 2026-07-04 sp39: 168 → 169, 追加"范EV专用" FE 组 (dim168, f0Bonus×(1-pFoul)/140). 追加法 pad 0. (#110/#120 范EV被f97淹没)
+const FeatureDimV3 = 169
 
 // FeatureDimV3Base — 成手行序前的 147-d layout. 太子 ckpt 是此 dim; gen 用太子当 rollout 时建 147-d 特征.
 const FeatureDimV3Base = 147
@@ -129,12 +135,12 @@ func BuildFeaturesV3(gs *GameState) []float32 {
 
 	// V3 新 (12 组)
 	fillProbabilities(f[69:90], gs, rankRem, suitRem, jokerRem, deckTotal, topEvalCapped, midEval, botEval)
-	fillFantasyGranular(f[90:94], gs, midEval, rankRem, jokerRem, deckTotal) // sp16: 传 midEval 做 cap
+	fillFantasyGranular(f[90:94], gs, midEval, rankRem, suitRem, jokerRem, deckTotal) // sp16: 传 midEval 做 cap
 	fillExpectedRoyalty(f[94:97], gs, rankRem, suitRem, jokerRem, deckTotal, topEvalCapped, midEval, botEval)
 	fillSummary(f[97:102], gs, topEvalCapped, midEval, botEval, f) // 用前面的 P 值
 	fillPairRank(f[102:107], gs, topEvalCapped, f[79]) // f79=pMidGTBot, gate 中强度
 	fillPairToTrips(f[107:112], gs, rankRem, suitRem, jokerRem, deckTotal)
-	fillTopFantasyLocks(f[112:116], gs, topEvalCapped, midEval, rankRem, jokerRem)
+	fillTopFantasyLocks(f[112:116], gs, topEvalCapped, midEval, rankRem, suitRem, jokerRem)
 	fillMaxAchievable(f[116:119], gs, rankRem, suitRem, jokerRem)
 	fillLastRound(f[119:121], gs)
 	fillCommitment(f[121:125], gs)
@@ -154,8 +160,15 @@ func BuildFeaturesV3(gs *GameState) []float32 {
 	// (注: 只清 dim130; dim129 弃牌 rank 连续值在别处有用, 一起清会掉 1 个 std case.)
 	// fanProb head 本就正确偏 Qd, 但 DefaultMultiHeadCfg.FanBoost=0 没接线, 救不了 value head —— 故从特征侧治本.
 	f[130] = 0
+	// 2026-07-04 sp42: f129(弃牌rank) + f146(拆connector) 同族固化清零 — dim130 的连续版/花色版兄弟.
+	// 因果反置: 弃什么是 policy 选的动作, 拿动作反推局面价值 = 果解释因 ("弃K≈好局面"伪相关).
+	// 证据: #23 最后1.85分几乎全是它俩撑的(probe zero双维 gap -0.55 翻正);
+	//       iter-4 太子全场 OOD mask → 21→19 失败(#23翻✓), 无 case 结构性依赖. f145(浪费活花draw)诚实信号保留.
+	f[129] = 0
+	f[146] = 0
 
-	// 2026-06-14 sp26 追加: O 组 成手行序 (3 dim, idx 147-149). 治"强成手压上层"倒置.
+	// 2026-06-14 sp26 追加: O 组 成手行序 (3 dim, idx 147-149).
+	// 2026-07-04 sp39 砍(固化清零, 同 f130): partial 行冤罚假信号 (#23/#24), 详见文件头 O 组注释.
 	fillMadeRowOrder(f[147:150], gs)
 
 	// 2026-06-19 sp28 追加: W 组 前瞻支撑夹缝 (4 dim, idx 150-153). 治"上行承诺要下行前瞻发育托住"gap.
@@ -184,8 +197,37 @@ func BuildFeaturesV3(gs *GameState) []float32 {
 	// 2026-07-03 T3 组: 各行三条 rank (3 dim, idx 165-167). 治 #90 中555 vs 333 无rank区分. 追加法 warm-start pad 0.
 	fillTripsRank(f[165:168], gs, f[79]) // f79=pMidGTBot, gate 中 trips rank (同 fillPairRank)
 
+	// 2026-07-04 sp39 FE 组: 范 EV 专用维 (dim168). 治 #110/#120 "范EV被f97/300淹没" —
+	//   f97 是唯一乘出范bonus数值的聚合特征, 但 /300 归一把 +9 分真实EV差压成 0.029, 干不过 f9 顶成对 one-hot(±1.0).
+	//   本维 = f0Bonus×(1-pFoul)/140 纯范EV通道(不掺皇室): 分子≤140(各范路互斥) → 天然[0,1]零饱和.
+	//   #110 实测 exp 0.257 vs AI 0.149 (Δ=0.108, f97 的 4 倍音量). 追加法 warm-start pad 0.
+	f[168] = clampF((f[90]*V3FanBonusQQ+f[91]*V3FanBonusKK+f[92]*V3FanBonusAA+f[93]*V3FanBonusTrips)*(1-f[89])/140.0, 0, 1)
+
+	// 2026-07-04 调试钩子: OFC_MASK_DIMS="129,146" 清零指定维 (评估"砍某特征"的 OOD 方向, 生产不设=零开销).
+	for _, d := range maskDims {
+		if d < len(f) {
+			f[d] = 0
+		}
+	}
+
 	return f
 }
+
+// maskDims — OFC_MASK_DIMS env 解析 (进程启动一次). 仅调试用.
+var maskDims = func() []int {
+	v := os.Getenv("OFC_MASK_DIMS")
+	if v == "" {
+		return nil
+	}
+	var out []int
+	for _, s := range strings.Split(v, ",") {
+		var d int
+		if _, err := fmt.Sscanf(strings.TrimSpace(s), "%d", &d); err == nil {
+			out = append(out, d)
+		}
+	}
+	return out
+}()
 
 // fillFantasyReachable — 进范可行性 (C组, dim163). 1=范foul-free可达, 0=已失范或只能靠foul(假范).
 //   复用 hard_rules.go 的 FantasyLost(逐行独立) + fantasyOnlyViaFoul(中→底链). 见 #116.
@@ -215,7 +257,7 @@ func fillProbabilities(f []float32, gs *GameState, rankRem [13]int, suitRem [4]i
 		midPairCap = int((midEv.Value - 1000000) / 50625)
 	}
 	f[0] = pTopPairQKA(gs, rankRem, jokerRem, deckTotal, topSlots, midPairCap)
-	f[1] = pTopTrips(gs, rankRem, jokerRem, deckTotal, topSlots)
+	f[1] = pTopTrips(gs, rankRem, suitRem, jokerRem, deckTotal, topSlots)
 	f[2] = pTopNoFoulVsMid(topEv, midEv)
 
 	// Mid (8 dim, idx 3-10) — 2026-07-03 (#104/#124) draw-support-gate:
@@ -273,7 +315,7 @@ func fillProbabilities(f []float32, gs *GameState, rankRem [13]int, suitRem [4]i
 // 2026-05-20 sp16.1: cap-aware 但只在 mid full pair 时锁 (mid partial 可升 trips/FH).
 // case 50: mid full pair-K → AA top cap → P=0 ✓
 // 反例: mid 4 张 pair-K partial → 可能升 trips → P(AA) 不该置 0
-func fillFantasyGranular(f []float32, gs *GameState, midEv HandValue, rankRem [13]int, jokerRem, deckTotal int) {
+func fillFantasyGranular(f []float32, gs *GameState, midEv HandValue, rankRem [13]int, suitRem [4]int, jokerRem, deckTotal int) {
 	topSlots := 3 - len(gs.Top)
 	// 只有 mid full + pair 才锁 (partial 可升级类型)
 	midFull := len(gs.Middle) == 5
@@ -304,7 +346,7 @@ func fillFantasyGranular(f []float32, gs *GameState, midEv HandValue, rankRem [1
 	if midPairCap >= 0 || topBeatsFullMid(gs) {
 		f[3] = 0
 	} else {
-		f[3] = pTopTrips(gs, rankRem, jokerRem, deckTotal, topSlots)
+		f[3] = pTopTrips(gs, rankRem, suitRem, jokerRem, deckTotal, topSlots)
 	}
 }
 
@@ -318,7 +360,7 @@ func fillExpectedRoyalty(f []float32, gs *GameState, rankRem [13]int, suitRem [4
 	midSlots := 5 - len(gs.Middle)
 	botSlots := 5 - len(gs.Bottom)
 
-	f[0] = eRoyaltyTop(gs, topEv, rankRem, jokerRem, deckTotal, topSlots) / 250.0 // sp16: cap-aware
+	f[0] = eRoyaltyTop(gs, topEv, rankRem, suitRem, jokerRem, deckTotal, topSlots) / 250.0 // sp16: cap-aware
 	f[1] = eRoyaltyMid(gs, rankRem, suitRem, jokerRem, deckTotal, midSlots) / 30.0
 	f[2] = eRoyaltyBot(gs, rankRem, suitRem, jokerRem, deckTotal, botSlots) / 60.0
 }
@@ -409,7 +451,12 @@ func fillTripsRank(f []float32, gs *GameState, midFoulProb float32) {
 		}
 		return float32(r) / 12.0
 	}
-	f[0] = pairToFeat(tripsRankRow(gs.Top))
+	// 2026-07-05 sp43 (#6): 顶trips压死满中 = 假范foul线, 同 topBeatsFullMid gate → -1 (视同无trips).
+	if tt := tripsRankRow(gs.Top); tt >= 0 && topBeatsFullMid(gs) {
+		f[0] = -1.0
+	} else {
+		f[0] = pairToFeat(tt)
+	}
 	if mt := tripsRankRow(gs.Middle); mt < 0 {
 		f[1] = 0
 	} else {
@@ -448,7 +495,7 @@ func topBeatsFullMid(gs *GameState) bool {
 // 2026-05-20 sp15 fix: 用 cap-aware topEvalCapped 提取 pair rank, 不再 maxPairRankRow (无 cap)
 // case 50 R5 教训: top=[X 2c As] + mid KK pair → joker cap 后 top 是 pair-2 不是 AA.
 // 旧版 maxPairRankRow 算 joker+A=AA → T_topLock[0]+[1] 都 1.0 → NN 误信 fantasy 实=+20 over-est.
-func fillTopFantasyLocks(f []float32, gs *GameState, topEv, midEv HandValue, rankRem [13]int, jokerRem int) {
+func fillTopFantasyLocks(f []float32, gs *GameState, topEv, midEv HandValue, rankRem [13]int, suitRem [4]int, jokerRem int) {
 	// 从 cap-aware topEv 提 pair rank (joker cap 后真值)
 	topPairRank := -1
 	if topEv.Type == TypePair {
@@ -463,10 +510,28 @@ func fillTopFantasyLocks(f []float32, gs *GameState, topEv, midEv HandValue, ran
 	if topPairRank == int(RankA) {
 		f[1] = 1 // AA (cap-aware, 不会因 joker+A 被 mid pair-K cap 时误 fire)
 	}
-	if hasTrips && !topBeatsFullMid(gs) {
-		// 2026-07-03 (#6): 顶trips范 foul-gate 收窄版 — 只在"中已满且撑不住顶trips(顶>中满)"时清零(=假范, 顶想成trips必foul).
-		//   中未满(能发育托)不 gate → 保留"顶222有空可保"的合法早局trips(TestV3_TopTrips_Lock). 治 AAA>中444满 冒顶.
-		f[2] = 1
+	if hasTrips {
+		// 2026-07-03 (#6) 满中gate → 2026-07-05 sp43 (#46) 概率化: 顶trips>中现值时,
+		//   满中锁死→0; 未满→×P(中最终>顶trips) 真概率 (同 pTopTrips 满顶分支口径).
+		//   中空/中已托住 → 1 (合法早局trips, TestV3_TopTrips_Lock).
+		tr := tripsRankRow(gs.Top)
+		if tr < 0 {
+			tr = 0
+		}
+		if int(HtThreeKind)*13+tr > int(rowMadeScore(gs.Middle)) {
+			if len(gs.Middle) == 5 {
+				f[2] = 0
+			} else {
+				dt := jokerRem
+				for _, v := range rankRem {
+					dt += v
+				}
+				f[2] = pTopTripsChainLegal(gs, tr, rankRem, suitRem, jokerRem, dt,
+					5-len(gs.Middle), 5-len(gs.Bottom), cardsSeenRemaining(gs))
+			}
+		} else {
+			f[2] = 1
+		}
 	}
 
 	// T3: max pair rank reachable (future), 考虑 mid cap
@@ -654,17 +719,14 @@ func fillFoulMargin(f []float32, gs *GameState, topEv, midEv, botEv HandValue) {
 // 治 value head "强成手压上层"倒置 (大对爱放中道 / 89X三条不进底). partial+rank-aware,
 // 补 fillFoulMargin 两 gap: ① 满行才算 ② type-only (中KK对 vs 底44对 都 Pair → margin 0).
 // 归一化 /13 = 一个 type 级; 同type rank 差 (KK vs 44 = 9/13≈0.7) 也体现.
+// 2026-07-04 sp39 砍(固化清零, 保 dim layout, 同 f130 先例). 原逻辑: rowMadeScore 差 → 中-顶/底-中/min margin.
+// 砍因(#23/#24 实锤): partial 行被当成手罚 — exp 中22(3空位) vs 顶AA 吃 -0.923 冤罚, AI 中KK22 得 +0.923 假奖,
+// ±0.9 摆幅碾压方向正确的真概率特征(f79=0.814 偏 exp / f88 / f106). te gap +19 死钉错摆, 训练治不好.
+// 职责移交: 满行真倒置 → f89 pFoulFinal=1 (overCap -2 直报); partial 翻身概率 → f79 pMidGTBot / pTopGTMid(f89内).
 func fillMadeRowOrder(f []float32, gs *GameState) {
-	topS := rowMadeScore(gs.Top)
-	midS := rowMadeScore(gs.Middle)
-	botS := rowMadeScore(gs.Bottom)
-	f[0] = clampF(float32(midS-topS)/13.0, -1, 1) // 中-顶 行序 (正常 ≥0)
-	f[1] = clampF(float32(botS-midS)/13.0, -1, 1) // 底-中 行序 (负 = 中>底倒置, 主 bias)
-	minM := f[0]
-	if f[1] < minM {
-		minM = f[1]
-	}
-	f[2] = minM // 最紧行序 margin (负 = 某处倒置)
+	f[0] = 0
+	f[1] = 0
+	f[2] = 0
 }
 
 // safeRawEvalTop — 3-card top raw eval
@@ -1177,7 +1239,56 @@ func pTopFinalPairExact(gs *GameState, r uint8, rankRem [13]int, jokerRem, deckT
 }
 
 // pTopTrips — P(top final trips, any rank)
-func pTopTrips(gs *GameState, rankRem [13]int, jokerRem, deckTotal, topSlots int) float32 {
+// pMidBeatsTripsRank — P(中道最终 > 顶 r-trips) = 顺 ∪ 花 ∪ 葫芦+ ∪ (trips rank>r) 组合概率.
+// 2026-07-04 (用户抓): pTopTrips 里 legalFactor=0.3 拍桶 → 换真概率. 机器全现成 (draw-support-gate 同款).
+func pMidBeatsTripsRank(gs *GameState, r int, rankRem [13]int, suitRem [4]int, jokerRem, deckTotal, midSlots, cs int) float32 {
+	pS := pRowStraight(gs.Middle, rankRem, jokerRem, deckTotal, midSlots, cs)
+	pF := pRowFlush(gs.Middle, suitRem, jokerRem, deckTotal, midSlots, cs)
+	pFH := pRowAtLeast(gs.Middle, TypeFullHouse, rankRem, suitRem, jokerRem, deckTotal, midSlots, cs)
+	pTr := float32(0)
+	if r < 12 {
+		pTr = pRowTripsAtLeastRank(gs.Middle, r+1, rankRem, jokerRem, deckTotal, midSlots, cs)
+	}
+	p := 1 - (1-pS)*(1-pF)*(1-pFH)*(1-pTr)
+	return clampF(p, 0, 1)
+}
+
+// pTopTripsChainLegal — P(顶r-trips 合法链: 中最终>顶trips 且 底最终≥中那条路).
+// 2026-07-05 sp43b (#46 用户抓): pMidBeatsTripsRank 只算第一环 — 中888超222后, 底777Q还得反超888(仅FH 4 outs).
+// 组件式: 中走trips路→底须>该trips; 中走顺→底须≥顺; 花→≥花; FH→≥FH. 链=1-∏(1-p中路×p底跟).
+func pTopTripsChainLegal(gs *GameState, r int, rankRem [13]int, suitRem [4]int, jokerRem, deckTotal, midSlots, botSlots, cs int) float32 {
+	mid, bot := gs.Middle, gs.Bottom
+	// 中超 trips-r 的四条路
+	mTr := float32(0)
+	if r < 12 {
+		mTr = pRowTripsAtLeastRank(mid, r+1, rankRem, jokerRem, deckTotal, midSlots, cs)
+	}
+	mS := pRowStraight(mid, rankRem, jokerRem, deckTotal, midSlots, cs)
+	mF := pRowFlush(mid, suitRem, jokerRem, deckTotal, midSlots, cs)
+	mFH := pRowAtLeast(mid, TypeFullHouse, rankRem, suitRem, jokerRem, deckTotal, midSlots, cs)
+	// 底跟上各路 (tier-level, trips 用 rank-aware; 高 tier 并集)
+	bS := pRowStraight(bot, rankRem, jokerRem, deckTotal, botSlots, cs)
+	bF := pRowFlush(bot, suitRem, jokerRem, deckTotal, botSlots, cs)
+	bFH := pRowAtLeast(bot, TypeFullHouse, rankRem, suitRem, jokerRem, deckTotal, botSlots, cs)
+	union := func(ps ...float32) float32 {
+		q := float32(1)
+		for _, p := range ps {
+			q *= (1 - p)
+		}
+		return clampF(1-q, 0, 1)
+	}
+	// 底>中trips路(rank>r 的trips, 保守用 r+1): trips更高∪顺∪花∪FH
+	bTr := float32(0)
+	if r < 12 {
+		bTr = union(pRowTripsAtLeastRank(bot, r+1, rankRem, jokerRem, deckTotal, botSlots, cs), bS, bF, bFH)
+	}
+	bGEs := union(bS, bF, bFH) // 底≥顺
+	bGEf := union(bF, bFH)     // 底≥花
+	chain := 1 - (1-mTr*bTr)*(1-mS*bGEs)*(1-mF*bGEf)*(1-mFH*bFH)
+	return clampF(chain, 0, 1)
+}
+
+func pTopTrips(gs *GameState, rankRem [13]int, suitRem [4]int, jokerRem, deckTotal, topSlots int) float32 {
 	// 2026-07-01 (#110 bug): 旧版 topHasR=countRankInRow 不数顶上的鬼 → 孤鬼顶[🃏](2空)被当成
 	//   "顶0张要摸3张成trips"=0 → exp 靠鬼成 trips 范的概率被清零(f93=0). 顶上的鬼可当任意 rank, 计入 need.
 	topJokers := 0
@@ -1188,15 +1299,33 @@ func pTopTrips(gs *GameState, rankRem [13]int, jokerRem, deckTotal, topSlots int
 	}
 	if topSlots == 0 {
 		// 含鬼也算: 顶满且(真三条 或 真对+鬼 或 双鬼)
-		if hasRealTripsTop(gs.Top) || topJokers >= 2 {
-			return 1
-		}
-		if topJokers == 1 {
+		// 2026-07-05 sp43 (#6 AAA冒顶): 满顶trips但压死满中 → 假trips范(foul线), 同 topBeatsFullMid gate.
+		//   sp38 修了 f93/f114 漏了这个分支 — [As 🃏 Ad]顶 vs 满中444: f70 报1 → net 当+140范抬轿.
+		made := hasRealTripsTop(gs.Top) || topJokers >= 2
+		if !made && topJokers == 1 {
 			for r := 0; r < 13; r++ {
 				if countRankInRow(gs.Top, r) >= 2 {
-					return 1 // 真对 + 鬼 = trips
+					made = true // 真对 + 鬼 = trips
+					break
 				}
 			}
+		}
+		if made {
+			// 顶trips已锁: 合法性 = 中最终 > 顶trips. 满中锁死→0; 未满→真概率 (同 0.3拍桶修复口径).
+			//   #46: 顶222 vs 中对8(4张) → P(中长成>222) ≈ 0.1, 不是 1.
+			tr := tripsRankRow(gs.Top)
+			if tr < 0 {
+				tr = 0
+			}
+			if int(HtThreeKind)*13+tr > int(rowMadeScore(gs.Middle)) {
+				if len(gs.Middle) == 5 {
+					return 0
+				}
+				// sp43b (#46): 链条版 — 中超顶trips 还得底跟上 (777Q 只能FH反超888, 0.2×0.3≈0.06 而非 0.2)
+				return pTopTripsChainLegal(gs, tr, rankRem, suitRem, jokerRem, deckTotal,
+					5-len(gs.Middle), 5-len(gs.Bottom), cardsSeenRemaining(gs))
+			}
+			return 1
 		}
 		return 0
 	}
@@ -1206,6 +1335,9 @@ func pTopTrips(gs *GameState, rankRem [13]int, jokerRem, deckTotal, topSlots int
 	midCur := int(rowMadeScore(gs.Middle))
 	midTier := midCur / 13
 	midFull := len(gs.Middle) == 5
+	midSlots := 5 - len(gs.Middle)
+	cs := cardsSeenRemaining(gs)
+	// 中托住概率缓存: pMidBeatsTripsRank 对 r 单调递减且只差 pTr 项, 逐 r 现算 (13 次, 便宜).
 	pNone := float32(1) // P(没成任何合法 trips 范)
 	for r := 0; r < 13; r++ {
 		have := countRankInRow(gs.Top, r) + topJokers
@@ -1217,13 +1349,15 @@ func pTopTrips(gs *GameState, rankRem [13]int, jokerRem, deckTotal, topSlots int
 			pMake = hypergeoAtLeast(deckTotal, rankRem[r]+jokerRem, topSlots, need)
 		}
 		legalFactor := float32(1)
-		// 顶 r-trips(tier3) > 中现成手(两对tier2/三条tier3低rank) → foul, 要中再发育成金刚/葫芦(>顶trips)才合法.
-		//   满中不能发育 → 0; partial 中能发育 → 0.3 折扣. (顺子/同花/葫芦/金刚 tier≥4 比顶trips高, 永不触发=合法.)
+		// 顶 r-trips(tier3) > 中现成手(两对tier2/三条tier3低rank) → foul, 要中最终 > 顶r-trips 才合法.
+		//   满中不能发育 → 0; partial 中 → 真概率 P(中>r-trips)=顺∪花∪葫芦+∪trips(rank>r)
+		//   (2026-07-04 用户抓: 原 0.3 拍桶, 中差1张葫芦和中还空4张一个价 → 换 pMidBeatsTripsRank).
 		if midTier >= int(HtTwoPair) && int(HtThreeKind)*13+r > midCur {
 			if midFull {
 				legalFactor = 0 // 满中两对/低三条锁死, 顶更高trips必foul
 			} else {
-				legalFactor = 0.3 // 中发育成金刚葫芦的粗略概率
+				// sp43b: 链条版 (中超 + 底跟)
+				legalFactor = pTopTripsChainLegal(gs, r, rankRem, suitRem, jokerRem, deckTotal, midSlots, 5-len(gs.Bottom), cs)
 			}
 		}
 		pNone *= (1 - pMake*legalFactor)
@@ -1506,6 +1640,11 @@ func pMidGTBot(gs *GameState, midEv, botEv HandValue, rankRem [13]int, suitRem [
 		return 0 // 确定 no foul
 	}
 	// 2026-06-29 (#51 同根): 改真概率 P(底 ≥ 中) 替换粗桶乐观 maxAchievable. P(中>底)=1-P(底≥中).
+	// 2026-07-06 (#46 同根): 中含鬼作压底威胁时用降级底线 (鬼可打低避 foul), 别拿鬼打满吓自己.
+	//   (bot 未满时 cap 链不生效, midEv 是鬼打满口径 → 假高威胁.)
+	if HasJoker(gs.Middle) {
+		midEv = evalRowSafe(jokerFloorRow(gs.Middle, 5), 5, nil)
+	}
 	cs := cardsSeenRemaining(gs)
 	if midEv.Type < TypePair {
 		// 2026-06-29 (#67): 中高牌 ≠ 安全. "中小底大"常识 — 中的高牌将来配对可能倒置.
@@ -1666,6 +1805,120 @@ func drawSeedScore(state *GameState, rankRem [13]int, suitRem [4]int, jokerRem i
 	return botSeed + midVal
 }
 
+// jokerFloorRow — 鬼降级底线行: 每张鬼换成砖牌(不配对/不连顺/不破花), 返回替换后的行.
+// foul 链威胁口径专用 (2026-07-06 #46): 含鬼行判"压下行"风险时, 强度 = 可降级的最弱合法形态,
+// 不是鬼打满的最强形态 — 顶[🃏 2c 2s] 永远可缩成 22 对(真foul=0), 旧按 222 三条算 → f89=0.8 大错.
+// naturals 的成手结构(对/三条/葫芦)是降不掉的理论底线; 砖 rank 从低往高试, 撞出顺/花就换下一个.
+func jokerFloorRow(row []Card, rowSize int) []Card {
+	nJoker := 0
+	var rankCnt [13]int
+	var suitCnt [4]int
+	for _, c := range row {
+		if c.IsJoker() {
+			nJoker++
+		} else {
+			rankCnt[c.Rank()]++
+			suitCnt[c.Suit()]++
+		}
+	}
+	if nJoker == 0 {
+		return row
+	}
+	// naturals 结构底线 type (砖牌降不掉的部分)
+	pairs, trips, quads := 0, 0, 0
+	for _, n := range rankCnt {
+		switch {
+		case n == 2:
+			pairs++
+		case n == 3:
+			trips++
+		case n >= 4:
+			quads++
+		}
+	}
+	floorType := TypeHighCard
+	switch {
+	case quads > 0:
+		floorType = TypeFourOfAKind
+	case trips > 0 && pairs > 0:
+		floorType = TypeFullHouse
+	case trips > 0:
+		floorType = TypeThreeOfAKind
+	case pairs >= 2:
+		floorType = TypeTwoPair
+	case pairs == 1:
+		floorType = TypePair
+	}
+	// 破花 suit: 取 naturals 里最少的花色
+	brickSuit := uint8(0)
+	for s := uint8(1); s < 4; s++ {
+		if suitCnt[s] < suitCnt[brickSuit] {
+			brickSuit = s
+		}
+	}
+	evalOf := func(cards []Card) HandValue {
+		if len(cards) == rowSize {
+			if rowSize == 3 {
+				return Evaluate3(cards)
+			}
+			return Evaluate5(cards)
+		}
+		return partialEval(cards)
+	}
+	// 候选砖 rank: 升序非 natural rank (不配对)
+	var cands []uint8
+	for r := uint8(0); r < 13; r++ {
+		if rankCnt[r] == 0 {
+			cands = append(cands, r)
+		}
+	}
+	sub := func(r1, r2 uint8) []Card {
+		out := append([]Card(nil), row...)
+		nth := 0
+		for i, c := range out {
+			if !c.IsJoker() {
+				continue
+			}
+			if nth == 0 {
+				out[i] = MakeCard(r1, brickSuit)
+			} else {
+				out[i] = MakeCard(r2, brickSuit)
+			}
+			nth++
+		}
+		return out
+	}
+	var best []Card
+	var bestEv HandValue
+	have := false
+	try := func(r1, r2 uint8) bool {
+		cand := sub(r1, r2)
+		ev := evalOf(cand)
+		if !have || ev.Type < bestEv.Type || (ev.Type == bestEv.Type && ev.Value < bestEv.Value) {
+			best, bestEv, have = cand, ev, true
+		}
+		return ev.Type == floorType // 达到理论底线即收工 (通常第 1-2 次就中)
+	}
+	if nJoker == 1 {
+		for _, r := range cands {
+			if try(r, r) {
+				break
+			}
+		}
+	} else {
+		done := false
+		for i := 0; i < len(cands) && !done; i++ {
+			for j := i + 1; j < len(cands) && !done; j++ {
+				done = try(cands[i], cands[j])
+			}
+		}
+	}
+	if !have {
+		return row
+	}
+	return best
+}
+
 // pFoulFinal — P(top > mid ∨ mid > bot)
 // 注: evalRowSafe 用 cap chain, 当 mid > bot 时 midEv.Type = -2 (overCap 标志). 用 raw Evaluate5 重算.
 // pTopGTMid — P(顶 > 中道最终牌型) = 顶压中犯规概率 (中道未满时). joker-aware floor + maxAchievable
@@ -1674,6 +1927,13 @@ func pTopGTMid(gs *GameState, topEv, midEv HandValue, rankRem [13]int, suitRem [
 	if len(gs.Top) == 0 || midSlots == 0 {
 		return 0 // 顶空 / 中道已满(由外层精确判)
 	}
+	topRow := gs.Top
+	if HasJoker(gs.Top) {
+		// 2026-07-06 (#46): 顶含鬼 → 威胁强度用降级底线, 不用鬼打满.
+		// 顶[🃏 2c 2s] 可缩成 22 (< 中88, 永不冒中), 旧按 222 三条要求中 FH/≥222 → f89=0.8 假警报.
+		topRow = jokerFloorRow(gs.Top, 3)
+		topEv = evalRowSafe(topRow, 3, nil)
+	}
 	topT := topEv.Type
 	if topT < TypePair {
 		return 0 // 顶高牌, 顶>中 foul 风险低
@@ -1681,7 +1941,7 @@ func pTopGTMid(gs *GameState, topEv, midEv HandValue, rankRem [13]int, suitRem [
 	// 当前顶 > 中? (先比 type, 同 type 比对子/三条 rank)
 	cur := topT > midEv.Type
 	if topT == midEv.Type {
-		cur = highestRealPairRank(gs.Top) > highestRealPairRank(gs.Middle)
+		cur = highestRealPairRank(topRow) > highestRealPairRank(gs.Middle)
 	}
 	if !cur {
 		return 0 // 中道现状已 ≥ 顶 → 无顶>中 foul
@@ -1698,8 +1958,8 @@ func pTopGTMid(gs *GameState, topEv, midEv HandValue, rankRem [13]int, suitRem [
 		topR := int((topEv.Value - 1000000) / 15)
 		// 顶 kicker (满顶才锁定; 未满=-1 待发育)
 		topKicker := -1
-		if len(gs.Top) == 3 {
-			for _, c := range gs.Top {
+		if len(topRow) == 3 {
+			for _, c := range topRow {
 				if !c.IsJoker() {
 					if r := int(c.Rank()); r != topR && r > topKicker {
 						topKicker = r
@@ -1772,16 +2032,18 @@ func pFoulFinal(gs *GameState, topEv, midEv, botEv HandValue, rankRem [13]int, s
 	}
 
 	// 用 raw eval 严格比较 (避免 cap 混淆)
+	// 2026-07-06 (#46): 必foul 判定 — 进攻行(压人的)用鬼降级底线, 防守行(被压的)用鬼打满:
+	//   仅当"底线仍压过对方最大"才是必foul. 顺带修原来对含鬼行裸调 Evaluate5/3 的未定义行为.
 	if len(gs.Middle) == 5 && len(gs.Bottom) == 5 {
-		midRaw := Evaluate5(gs.Middle)
-		botRaw := Evaluate5(gs.Bottom)
+		midRaw := Evaluate5(jokerFloorRow(gs.Middle, 5))
+		botRaw := Evaluate5Joker(gs.Bottom)
 		if midRaw.Value > botRaw.Value {
 			return 1
 		}
 	}
 	if len(gs.Top) == 3 && len(gs.Middle) == 5 {
-		topRaw := Evaluate3(gs.Top)
-		midRaw := Evaluate5(gs.Middle)
+		topRaw := Evaluate3(jokerFloorRow(gs.Top, 3))
+		midRaw := Evaluate5Joker(gs.Middle)
 		if topRaw.Type > midRaw.Type {
 			return 1
 		}
@@ -1805,7 +2067,7 @@ func pFoulFinal(gs *GameState, topEv, midEv, botEv HandValue, rankRem [13]int, s
 // 用 topEv (=topEvalCapped) 提取真实 pair rank — 反映 mid cap 后的真值.
 // case 49 R5: top [X Kh 8h] cap 后 = pair-8 = +3 royalty (旧版 countRankInRow 不算 joker → 漏)
 // case 50 R5: top [X 2c As] cap 后 = pair-2 = 0 royalty (joker 不能当 A 因 mid KK 撞 foul)
-func eRoyaltyTop(gs *GameState, topEv HandValue, rankRem [13]int, jokerRem, deckTotal, topSlots int) float32 {
+func eRoyaltyTop(gs *GameState, topEv HandValue, rankRem [13]int, suitRem [4]int, jokerRem, deckTotal, topSlots int) float32 {
 	cs := cardsSeenRemaining(gs)
 	r := float32(0)
 	// 当前 top eval (cap-aware) 直接给定值
@@ -1825,7 +2087,7 @@ func eRoyaltyTop(gs *GameState, topEv HandValue, rankRem [13]int, jokerRem, deck
 	}
 	// future expected: 估计后续 round 升级到 trips / 高 pair 的概率
 	// 简化: 对每个 rank 估算 future hits, 加权 royalty
-	pTrips := pTopTrips(gs, rankRem, jokerRem, deckTotal, topSlots)
+	pTrips := pTopTrips(gs, rankRem, suitRem, jokerRem, deckTotal, topSlots)
 	r += pTrips * 5 // future trips 增量 (减小权重避免双倍计)
 	for rk := 4; rk < 13; rk++ {
 		royalty := float32(rk - 3)
