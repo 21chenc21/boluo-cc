@@ -170,12 +170,67 @@ func seedJokerTopSeed(rng *rand.Rand) *seedSpec {
 	return s
 }
 
+// ============ F3: 必爆诱饵 (std45 家族) ============
+// 结构: 中 4 张同花(连张=SF诱饵/散张=花诱饵) + 底 4 张大牌 5-span 无花无对(max=顺) + 顶 1 高牌.
+// 诱饵张进中 → 中成花/SF(tier5/8) > 底最大顺(tier4) = 必foul. 教"f89=1 一票否决"
+// (policy 从不主动走必死线 → 数据零声量 → royalty军团(f95/f141)压过 f89. 全候选写样本, 诱饵线自带 label=-6.)
+func seedFoulBait(rng *rand.Rand) *seedSpec {
+	p := newCardPool(rng)
+	s := &seedSpec{family: "foulBait", startRound: 4}
+	suit := rng.Intn(4)
+	mkSuited := func(rank int) ofc.Card {
+		id := fmt.Sprintf("%c%c", rankChars[rank], suitChars[suit])
+		p.used[id] = true
+		c, _ := ofc.ParseCard(id)
+		return c
+	}
+	var trapRank int
+	if rng.Intn(2) == 0 {
+		// 连张: base..base+3 同花, 诱饵 = base+4 (成 SF)
+		base := rng.Intn(4) // 2..5 起
+		for r := base; r < base+4; r++ {
+			s.mid = append(s.mid, mkSuited(r))
+		}
+		trapRank = base + 4
+	} else {
+		// 散张 4 同花 (带 gap, 不成顺面), 诱饵 = 任一同花第5张 (成花)
+		ranks := []int{0, 3, 6, 9} // 2,5,8,J 带 gap
+		for _, r := range ranks {
+			s.mid = append(s.mid, mkSuited(r))
+		}
+		trapRank = 11 // K 同花
+	}
+	trap := mkSuited(trapRank)
+	// 底: 4 张 5-span 大牌区 (T~A), 无对; 花色轮转避免第二个花诱饵
+	span := []int{8, 9, 11, 12} // T J K A (Q 留作顺 out)
+	for i, r := range span {
+		st := (suit + 1 + i%3) % 4 // 错开花色, 最多2张同色
+		id := fmt.Sprintf("%c%c", rankChars[r], suitChars[st])
+		if p.used[id] {
+			s.bot = append(s.bot, p.take(r))
+		} else {
+			p.used[id] = true
+			c, _ := ofc.ParseCard(id)
+			s.bot = append(s.bot, c)
+		}
+	}
+	// 顶: 1 张 Q~A
+	s.top = []ofc.Card{p.take(pickRank(rng, 10, 12))}
+	// 发牌: 诱饵 + 2 张低牌填充 (避开诱饵花色的低牌, 别造第二诱饵)
+	s.dealt = []ofc.Card{trap, p.takeLow(0, 6), p.takeLow(0, 6)}
+	return s
+}
+
 // makeFamilySeed — 均匀选一个家族
 func makeFamilySeed(rng *rand.Rand) *seedSpec {
-	if rng.Intn(2) == 0 {
+	switch r := rng.Intn(10); {
+	case r < 4:
 		return seedLockBottom(rng)
+	case r < 8:
+		return seedJokerTopSeed(rng)
+	default:
+		return seedFoulBait(rng) // 20%
 	}
-	return seedJokerTopSeed(rng)
 }
 
 // seedCards — 种子占用的全部牌 (从 deck 剔除用)
