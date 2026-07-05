@@ -2,7 +2,13 @@ package ofc
 
 import (
 	"fmt"
+	"math"
+	"math/rand"
+	"runtime"
 	"sort"
+	"sync"
+	"sync/atomic"
+	"time"
 )
 
 // placementStr — 把 placement 摆到 state 上, 返回字符串表示 (调试用)
@@ -178,6 +184,18 @@ func (er *ExpertRollout) ExpertPlace5(state *GameState, cards []Card) {
 
 	// === MctsDisabled: 跳过 rollout, 直接 prerank top-1 (纯MLP模式) ===
 	if MctsDisabled || er.Cfg.PureMLP {
+		// 2026-07-06 sp46: 保险丝#2 — 必foul过滤 (同 Rn)
+		if KeepFiltersPureNN && len(candidates) > 1 {
+			kept := candidates[:0]
+			for i := range candidates {
+				if FoulImminentPenalty(candidates[i].gs) < 20 {
+					kept = append(kept, candidates[i])
+				}
+			}
+			if len(kept) > 0 {
+				candidates = kept
+			}
+		}
 		if len(candidates) > 0 {
 			pick := 0
 			// 2026-05-23: per-request er.Cfg.TopKSampleR1 优先, fallback global MctsTopKSample (bench-cases CLI 用)
@@ -191,6 +209,79 @@ func (er *ExpertRollout) ExpertPlace5(state *GameState, cards []Card) {
 					k = len(candidates)
 				}
 				pick = er.Rng.Intn(k)
+			}
+			// 2026-07-05: serve 薄边轻搜索 (只在确定性 top-1 模式介入, 不干扰 topk-sample)
+			trig := false
+			foulFuse := false
+			if ServeSearchMargin > 0 && pick == 0 && len(candidates) >= 2 {
+				atomic.AddInt64(&ServeSearchDecCount, 1)
+				if candidates[0].score-candidates[1].score < ServeSearchMargin {
+					for i := 1; i < len(candidates) && i < ServeSearchTopK; i++ {
+						if candidates[0].score-candidates[i].score < ServeSearchMargin &&
+							serveSearchConsequential(candidates[0].gs, candidates[i].gs) {
+							atomic.AddInt64(&ServeSearchTrigCount, 1)
+							trig = true
+							break
+						}
+					}
+				}
+				// 保险丝#3: top-1 高foul 且存在安全替代 → 无视 margin 强制验证
+				if !trig && BuildFeaturesV3(candidates[0].gs)[89] > ServeSearchFoulFuse {
+					all := make([]*GameState, len(candidates))
+					for i := range candidates {
+						all[i] = candidates[i].gs
+					}
+					if serveFoulFuseHasSafe(all) {
+						atomic.AddInt64(&ServeSearchFoulTrigCount, 1)
+						trig, foulFuse = true, true
+					}
+				}
+			}
+			if !ServeSearchDryRun && trig && tryAcquireSearchSlot() {
+				var sts []*GameState
+				var stIdx []int // sts → candidates 索引映射 (fuse 集非前缀)
+				if foulFuse {
+					all := make([]*GameState, len(candidates))
+					for i := range candidates {
+						all[i] = candidates[i].gs
+					}
+					sts = serveFoulFuseStates(all, ServeSearchTopK)
+					for _, st := range sts {
+						for i := range candidates {
+							if candidates[i].gs == st {
+								stIdx = append(stIdx, i)
+								break
+							}
+						}
+					}
+				} else {
+					for i := 0; i < len(candidates) && i < ServeSearchTopK; i++ {
+						if candidates[0].score-candidates[i].score < ServeSearchMargin {
+							sts = append(sts, candidates[i].gs)
+							stIdx = append(stIdx, i)
+						}
+					}
+				}
+				var n int
+				var means []float64
+				pick, n, means = er.serveMarginSearchK(sts, 1)
+				releaseSearchSlot()
+				tag := "KEEP"
+				if pick != 0 {
+					tag = "OVERRIDE"
+				}
+				if foulFuse {
+					tag += "-foulfuse"
+				}
+				pick = stIdx[pick]
+				line := fmt.Sprintf("[serve-search] R1 %s n=%d means=%.2f NN=%s → 选=%s",
+					tag, n, means, placementStr(candidates[0].gs), placementStr(candidates[pick].gs))
+				if ServeSearchLog != nil {
+					ServeSearchLog(line)
+				}
+				if er.SearchAudit != nil {
+					*er.SearchAudit = append(*er.SearchAudit, line)
+				}
 			}
 			for i, c := range cards {
 				state.PlaceCard(c, candidates[pick].placement[i])
@@ -493,8 +584,9 @@ func topMidKey(gs *GameState) string {
 }
 
 // topMidMadeKey — 顶exact + 中道成手cmp(type*16+rank, 忽略kicker). 底道支配过滤用:
-//   同顶+同中成手(如都55对, 仅kicker差) → 比底道成手强弱. 治 hand67: Ad该进底成broadway顺,
-//   不是进中当55的死kicker (底顺413 严格支配 底KKK312, 但旧 exact-middle key 因kicker(A/2/K)不同没分组).
+//
+//	同顶+同中成手(如都55对, 仅kicker差) → 比底道成手强弱. 治 hand67: Ad该进底成broadway顺,
+//	不是进中当55的死kicker (底顺413 严格支配 底KKK312, 但旧 exact-middle key 因kicker(A/2/K)不同没分组).
 func topMidMadeKey(gs *GameState) string {
 	t := append([]string(nil), cardIDs(gs.Top)...)
 	sort.Strings(t)
@@ -747,6 +839,34 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 	// === MctsDisabled: R2-R5 跳过 rollout, 直接 prerank top-1 (纯MLP模式) ===
 	// 2026-05-23: MctsTopKSampleRN 控制 R2-R5 sample (默认 0 = top-1 deterministic 保 endgame).
 	if MctsDisabled || er.Cfg.PureMLP {
+		// 2026-07-06 sp46: 保险丝#2 — 必foul过滤 (FoulImminentPenalty 只检100%必然case, 零误伤).
+		// 治"自信地必爆"(std45类 中SF>底max): royalty军团骗过NN时, 数学直接除名. 全候选必foul则不滤.
+		if KeepFiltersPureNN && len(uniq) > 1 {
+			kept := uniq[:0]
+			for i := range uniq {
+				if FoulImminentPenalty(uniq[i].gs) < 20 {
+					kept = append(kept, uniq[i])
+				}
+			}
+			if len(kept) > 0 {
+				uniq = kept
+			}
+		}
+		// 2026-07-05: 保险丝#1 — R5 支配过滤 (label盲区 tie-break, #90 555vs333)
+		if KeepFiltersPureNN && state.Round == 5 && len(uniq) > 1 {
+			sts := make([]*GameState, len(uniq))
+			for i := range uniq {
+				sts[i] = uniq[i].gs
+			}
+			km := r5DominanceKeep(sts)
+			kept := uniq[:0]
+			for i := range uniq {
+				if km[i] {
+					kept = append(kept, uniq[i])
+				}
+			}
+			uniq = kept
+		}
 		if len(uniq) > 0 {
 			pick := 0
 			if MctsTopKSampleRN > 1 {
@@ -755,6 +875,79 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 					k = len(uniq)
 				}
 				pick = er.Rng.Intn(k)
+			}
+			// 2026-07-05: serve 薄边轻搜索 (同 R1)
+			trigN := false
+			foulFuseN := false
+			if ServeSearchMargin > 0 && pick == 0 && len(uniq) >= 2 {
+				atomic.AddInt64(&ServeSearchDecCount, 1)
+				if uniq[0].teScore-uniq[1].teScore < ServeSearchMargin {
+					for i := 1; i < len(uniq) && i < ServeSearchTopK; i++ {
+						if uniq[0].teScore-uniq[i].teScore < ServeSearchMargin &&
+							serveSearchConsequential(uniq[0].gs, uniq[i].gs) {
+							atomic.AddInt64(&ServeSearchTrigCount, 1)
+							trigN = true
+							break
+						}
+					}
+				}
+				// 保险丝#3: top-1 高foul 且存在安全替代 → 无视 margin 强制验证
+				if !trigN && BuildFeaturesV3(uniq[0].gs)[89] > ServeSearchFoulFuse {
+					all := make([]*GameState, len(uniq))
+					for i := range uniq {
+						all[i] = uniq[i].gs
+					}
+					if serveFoulFuseHasSafe(all) {
+						atomic.AddInt64(&ServeSearchFoulTrigCount, 1)
+						trigN, foulFuseN = true, true
+					}
+				}
+			}
+			if !ServeSearchDryRun && trigN && tryAcquireSearchSlot() {
+				var sts []*GameState
+				var stIdx []int // sts → uniq 索引映射 (fuse 集非前缀)
+				if foulFuseN {
+					all := make([]*GameState, len(uniq))
+					for i := range uniq {
+						all[i] = uniq[i].gs
+					}
+					sts = serveFoulFuseStates(all, ServeSearchTopK)
+					for _, st := range sts {
+						for i := range uniq {
+							if uniq[i].gs == st {
+								stIdx = append(stIdx, i)
+								break
+							}
+						}
+					}
+				} else {
+					for i := 0; i < len(uniq) && i < ServeSearchTopK; i++ {
+						if uniq[0].teScore-uniq[i].teScore < ServeSearchMargin {
+							sts = append(sts, uniq[i].gs)
+							stIdx = append(stIdx, i)
+						}
+					}
+				}
+				var n int
+				var means []float64
+				pick, n, means = er.serveMarginSearchK(sts, state.Round)
+				releaseSearchSlot()
+				tag := "KEEP"
+				if pick != 0 {
+					tag = "OVERRIDE"
+				}
+				if foulFuseN {
+					tag += "-foulfuse"
+				}
+				pick = stIdx[pick]
+				line := fmt.Sprintf("[serve-search] R%d %s n=%d means=%.2f NN=%s → 选=%s",
+					state.Round, tag, n, means, placementStr(uniq[0].gs), placementStr(uniq[pick].gs))
+				if ServeSearchLog != nil {
+					ServeSearchLog(line)
+				}
+				if er.SearchAudit != nil {
+					*er.SearchAudit = append(*er.SearchAudit, line)
+				}
 			}
 			action := uniq[pick].action
 			state.UsedCards[cards[action.DiscardIdx].ID()] = true
@@ -939,4 +1132,288 @@ func minInt(a, b int) int {
 		return a
 	}
 	return b
+}
+
+// ServeSearchMargin/Cap — serve 端薄边轻搜索 (2026-07-05 用户拍板, 预算 200-400ms).
+// PureMLP 下, 与 top-1 teScore 差 < margin 的候选(含自身, ≤3个)交替加摸, 批间判停. 0=关.
+// 治"陌生板外推失准"(人摆的板/规则改道的板, std63 类) — 与 gen margin 升级同思想的 serve 预算版.
+var (
+	ServeSearchMargin float32
+	ServeSearchCap    = 120 // 每候选 sims 上限
+	ServeSearchBatch  = 40  // 每批 sims
+	ServeSearchTopK   = 3
+	// 2026-07-05 (用户"30并发能扛住吗"): 全局并发闸 — 同时最多 N 个搜索在跑,
+	// 抢不到坑位直接退回纯NN top-1 (搜索是增强不是依赖, 优雅降级谁都不等).
+	// 单搜索 worker 也封顶, 防一个请求吃满所有核把 5ms 纯NN请求堵在调度队列.
+	serveSearchSlots   = make(chan struct{}, 1) // 并发搜索上限 (4核prod默认1, SetServeSearchSlots 可调)
+	ServeSearchWorkers = 3                      // 单搜索 worker 上限 (留1核伺候纯NN流量)
+)
+
+// SetServeSearchSlots — 部署时按机器核数调并发搜索槽位.
+func SetServeSearchSlots(n int) {
+	if n < 1 {
+		n = 1
+	}
+	serveSearchSlots = make(chan struct{}, n)
+}
+
+// serveSearchCapForRound — 按 round 缩 sims 预算: R2 rollout 深(~15ms), 不缩 4核会 1.8s 爆预算;
+// R4/R5 浅(~5ms) 给满. 4核+3worker 口径: R2≈40×2×15/3≈400ms, R4+≈120×2×5/3≈400ms.
+func serveSearchCapForRound(round int) int {
+	switch {
+	case round <= 2:
+		return ServeSearchCap / 3
+	case round == 3:
+		return ServeSearchCap / 2
+	default:
+		return ServeSearchCap
+	}
+}
+
+// ServeSearchWait — 抢不到坑位时最多排队等这么久 (2026-07-05 用户"其他触发者不就摆错吗"):
+// 薄边手宁可多等 ~0.8s 也要搜 — 排队不烧CPU, 只有超时才降级纯NN. 0=立即降级.
+var ServeSearchWait = 800 * time.Millisecond
+
+// ServeSearchDryRun/计数器 — 触发率测量: 只数不搜 (2026-07-05 用户"怕把把都要搜索").
+var (
+	ServeSearchDryRun    bool
+	ServeSearchDecCount  int64 // 决策总数 (margin>0 时)
+	ServeSearchTrigCount int64 // 触发数 (薄边+后果判据)
+)
+
+// ServeSearchFoulFuse — 保险丝#3 (2026-07-06 用户拍板): NN top-1 是高foul线 (f89>阈值) →
+// 无视 margin 强制搜索验证. 42型"自信地错"(te gap 60, 真foul 92%) 绕过薄边触发, 这里兜住.
+// 依赖同日的 f89 鬼降级修复 — 修前 46型假警报(鬼顶可缩, 真foul 0%)会天天误触.
+var (
+	ServeSearchFoulFuse      float32 = 0.7
+	ServeSearchFoulTrigCount int64
+)
+
+// serveFoulFuseHasSafe — 保险丝#3 第二判据: 是否存在安全替代线 (f89<0.3).
+// 被迫foul场 (全候选都危) 不触发 — 搜了白搜还烧预算; fuse 的本意是"有安路不走选了绝路".
+// 首测无此判据 fuse 触发 11.3% (尾轮被迫场大量误触), 加后应显著降.
+func serveFoulFuseHasSafe(states []*GameState) bool {
+	for i := 1; i < len(states); i++ {
+		if BuildFeaturesV3(states[i])[89] < 0.3 {
+			return true
+		}
+	}
+	return false
+}
+
+// serveFoulFuseStates — 保险丝#3 的对比集: top-1 + 排名最高的安全替代线 (f89<0.3), 至多 topK 条.
+// 不能用 margin 过滤 — 高foul误选的 gap 往往巨大(42=60), 安全线在 margin 外.
+// (触发已保证有安全线; 空安全集是竞态外的兜底, 回退 top-K.)
+func serveFoulFuseStates(states []*GameState, topK int) []*GameState {
+	out := []*GameState{states[0]}
+	for i := 1; i < len(states) && len(out) < topK+1; i++ {
+		if BuildFeaturesV3(states[i])[89] < 0.3 {
+			out = append(out, states[i])
+		}
+	}
+	if len(out) == 1 {
+		for i := 1; i < len(states) && i < topK; i++ {
+			out = append(out, states[i])
+		}
+	}
+	return out
+}
+
+// serveSearchConsequential — 触发第二判据 (2026-07-05 用户"怕把把都搜"实锤: 纯分差触发率52%!).
+// 薄边里大量"真平局"(花色互换等)搜了白搜 — 只有 top-2 在 foul风险/范EV 上真分歧才值得搜.
+func serveSearchConsequential(a, b *GameState) bool {
+	fa, fb := BuildFeaturesV3(a), BuildFeaturesV3(b)
+	df := fa[89] - fb[89] // pFoulFinal
+	if df < 0 {
+		df = -df
+	}
+	if df > 0.15 {
+		return true
+	}
+	de := fa[168] - fb[168] // FE 范EV
+	if de < 0 {
+		de = -de
+	}
+	return de > 0.08
+}
+
+// KeepFiltersPureNN — 2026-07-05 (用户: 硬规则只留两根保险丝, 适配纯NN+搜索栈):
+// pureMLP 模式下也启用 R5 支配过滤 (label 盲区: 555vs333 同royalty, NN/搜索都分不出, 见#90).
+// env OFC_KEEP_FILTERS=1 开.
+var KeepFiltersPureNN bool
+
+// r5DominanceKeep — R5 收官广义支配过滤 (2026-07-05 用户: 支配过滤只应用到 R5).
+// 完局板逐行比牌力: A 三行 ≥ B 且至少一行 > (或 A 不foul B foul) → B 必劣删除.
+// 计分(royalty+对战行胜负)对每行牌力单调 → 数学上零误伤. 治 label 盲区 (#90 555vs333, h2h价值不在solo-reward里).
+func r5DominanceKeep(states []*GameState) []bool {
+	n := len(states)
+	type ev struct {
+		foul    bool
+		t, m, b int64
+	}
+	evs := make([]ev, n)
+	for i, gs := range states {
+		sc := gs.Score()
+		evs[i] = ev{foul: sc.Foul, t: int64(sc.TopEval.Value), m: int64(sc.MidEval.Value), b: int64(sc.BotEval.Value)}
+	}
+	dominates := func(a, b ev) bool {
+		if a.foul {
+			return false
+		}
+		if b.foul {
+			return true
+		}
+		if a.t < b.t || a.m < b.m || a.b < b.b {
+			return false
+		}
+		return a.t > b.t || a.m > b.m || a.b > b.b
+	}
+	keep := make([]bool, n)
+	any := false
+	for i := 0; i < n; i++ {
+		dominated := false
+		for j := 0; j < n; j++ {
+			if i != j && dominates(evs[j], evs[i]) {
+				dominated = true
+				break
+			}
+		}
+		if !dominated {
+			keep[i] = true
+			any = true
+		}
+	}
+	if !any {
+		for i := range keep {
+			keep[i] = true
+		}
+	}
+	return keep
+}
+
+// tryAcquireSearchSlot — 先非阻塞抢, 抢不到排队至多 ServeSearchWait. 超时 → 调用方退回纯NN.
+func tryAcquireSearchSlot() bool {
+	select {
+	case serveSearchSlots <- struct{}{}:
+		return true
+	default:
+	}
+	if ServeSearchWait <= 0 {
+		return false
+	}
+	t := time.NewTimer(ServeSearchWait)
+	defer t.Stop()
+	select {
+	case serveSearchSlots <- struct{}{}:
+		return true
+	case <-t.C:
+		return false
+	}
+}
+func releaseSearchSlot() { <-serveSearchSlots }
+
+// ServeSearchLog — 搜索审计钩子 (2026-07-05 用户: 排锅要能分清搜索的锅还是NN的锅).
+// 每次搜索记一行(含未换手). server main 接 log.Printf; nil=关.
+var ServeSearchLog func(line string)
+
+// serveMarginSearchK — K 个 post-state 并行加摸 (worker=NumCPU, 每 worker 独立 ExpertRollout/Rng);
+// 每批后若 leader 领先第二名 > 2·SE合 提前停 (真平局烧满也没损失). 返回赢家下标+统计.
+func (er *ExpertRollout) serveMarginSearchK(states []*GameState, round int) (int, int, []float64) {
+	K := len(states)
+	W := runtime.NumCPU()
+	if W > ServeSearchWorkers {
+		W = ServeSearchWorkers
+	}
+	var mu sync.Mutex
+	sum := make([]float64, K)
+	sumsq := make([]float64, K)
+	cnt := make([]int, K)
+
+	runBatch := func(per int) {
+		type job struct{ ci int }
+		jobs := make(chan job, K*per)
+		for ci := 0; ci < K; ci++ {
+			for k := 0; k < per; k++ {
+				jobs <- job{ci}
+			}
+		}
+		close(jobs)
+		var wg sync.WaitGroup
+		for w := 0; w < W; w++ {
+			wg.Add(1)
+			// er.Rng 是 IntnRNG 接口 (无 Int63) — 用 Intn 拼 worker seed
+			seed := int64(er.Rng.Intn(1<<30))<<31 | int64(er.Rng.Intn(1<<30))
+			go func(seed int64) {
+				defer wg.Done()
+				wer := &ExpertRollout{Rng: rand.New(rand.NewSource(seed)), Cfg: er.Cfg}
+				for j := range jobs {
+					wer.QuickRolloutDetailed(states[j.ci].Clone(), round)
+					r := wer.LastResult
+					var v float64
+					switch {
+					case r.IsFoul:
+						v = -float64(wer.Cfg.FoulCost)
+					case r.IsFantasy:
+						v = float64(r.RawRoyalty + r.FanBonus)
+					default:
+						v = float64(r.RawRoyalty)
+					}
+					mu.Lock()
+					sum[j.ci] += v
+					sumsq[j.ci] += v * v
+					cnt[j.ci]++
+					mu.Unlock()
+				}
+			}(seed)
+		}
+		wg.Wait()
+	}
+
+	capN := serveSearchCapForRound(round)
+	for cnt[0] < capN {
+		runBatch(ServeSearchBatch)
+		// leader vs runner-up 判停
+		best, second := 0, -1
+		for i := 1; i < K; i++ {
+			if sum[i]/float64(cnt[i]) > sum[best]/float64(cnt[best]) {
+				second = best
+				best = i
+			} else if second < 0 || sum[i]/float64(cnt[i]) > sum[second]/float64(cnt[second]) {
+				second = i
+			}
+		}
+		if second >= 0 {
+			mb := sum[best] / float64(cnt[best])
+			ms := sum[second] / float64(cnt[second])
+			vb := sumsq[best]/float64(cnt[best]) - mb*mb
+			vs := sumsq[second]/float64(cnt[second]) - ms*ms
+			se := math.Sqrt(vb/float64(cnt[best]) + vs/float64(cnt[second]))
+			if mb-ms > 2*se {
+				break
+			}
+		}
+	}
+	// 2026-07-05 (std14 教训): 滞回带 — NN top-1 是34万样本的先验, 挑战者须显著更好(>1.5分)才换手.
+	// 近等价平局(搜索均值差<1.5)保持 NN 原选, 防 40-sim 噪声掷反硬币推翻正确薄边选择.
+	best := 0
+	for i := 1; i < len(states); i++ {
+		if sum[i]/float64(cnt[i]) > sum[best]/float64(cnt[best]) {
+			best = i
+		}
+	}
+	if best != 0 && sum[best]/float64(cnt[best])-sum[0]/float64(cnt[0]) < 1.5 {
+		best = 0
+	}
+	means := make([]float64, K)
+	for i := 0; i < K; i++ {
+		means[i] = sum[i] / float64(cnt[i])
+	}
+	if MctsDebugTrace {
+		fmt.Printf("=== serveMarginSearchK: K=%d n=%d/侧 → 选[%d] (means:", K, cnt[0], best)
+		for i := 0; i < K; i++ {
+			fmt.Printf(" %.2f", means[i])
+		}
+		fmt.Println(") ===")
+	}
+	return best, cnt[0], means
 }
