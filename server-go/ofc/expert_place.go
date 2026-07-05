@@ -1161,11 +1161,16 @@ func (er *ExpertRollout) serveMarginSearchK(states []*GameState, round int) int 
 			}
 		}
 	}
+	// 2026-07-05 (std14 教训): 滞回带 — NN top-1 是34万样本的先验, 挑战者须显著更好(>1.5分)才换手.
+	// 近等价平局(搜索均值差<1.5)保持 NN 原选, 防 40-sim 噪声掷反硬币推翻正确薄边选择.
 	best := 0
 	for i := 1; i < len(states); i++ {
 		if sum[i]/float64(cnt[i]) > sum[best]/float64(cnt[best]) {
 			best = i
 		}
+	}
+	if best != 0 && sum[best]/float64(cnt[best])-sum[0]/float64(cnt[0]) < 1.5 {
+		best = 0
 	}
 	if MctsDebugTrace {
 		fmt.Printf("=== serveMarginSearchK: K=%d n=%d/侧 → 选[%d] (means:", K, cnt[0], best)
