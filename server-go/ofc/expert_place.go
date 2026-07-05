@@ -198,7 +198,7 @@ func (er *ExpertRollout) ExpertPlace5(state *GameState, cards []Card) {
 			}
 			// 2026-07-05: serve 薄边轻搜索 (只在确定性 top-1 模式介入, 不干扰 topk-sample)
 			if ServeSearchMargin > 0 && pick == 0 && len(candidates) >= 2 &&
-				candidates[0].score-candidates[1].score < ServeSearchMargin {
+				candidates[0].score-candidates[1].score < ServeSearchMargin && tryAcquireSearchSlot() {
 				var sts []*GameState
 				for i := 0; i < len(candidates) && i < ServeSearchTopK; i++ {
 					if candidates[0].score-candidates[i].score < ServeSearchMargin {
@@ -206,6 +206,7 @@ func (er *ExpertRollout) ExpertPlace5(state *GameState, cards []Card) {
 					}
 				}
 				pick = er.serveMarginSearchK(sts, 1)
+				releaseSearchSlot()
 			}
 			for i, c := range cards {
 				state.PlaceCard(c, candidates[pick].placement[i])
@@ -774,7 +775,7 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 			}
 			// 2026-07-05: serve 薄边轻搜索 (同 R1)
 			if ServeSearchMargin > 0 && pick == 0 && len(uniq) >= 2 &&
-				uniq[0].teScore-uniq[1].teScore < ServeSearchMargin {
+				uniq[0].teScore-uniq[1].teScore < ServeSearchMargin && tryAcquireSearchSlot() {
 				var sts []*GameState
 				for i := 0; i < len(uniq) && i < ServeSearchTopK; i++ {
 					if uniq[0].teScore-uniq[i].teScore < ServeSearchMargin {
@@ -782,6 +783,7 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 					}
 				}
 				pick = er.serveMarginSearchK(sts, state.Round)
+				releaseSearchSlot()
 			}
 			action := uniq[pick].action
 			state.UsedCards[cards[action.DiscardIdx].ID()] = true
@@ -976,13 +978,32 @@ var (
 	ServeSearchCap    = 120 // 每候选 sims 上限
 	ServeSearchBatch  = 40  // 每批 sims
 	ServeSearchTopK   = 3
+	// 2026-07-05 (用户"30并发能扛住吗"): 全局并发闸 — 同时最多 N 个搜索在跑,
+	// 抢不到坑位直接退回纯NN top-1 (搜索是增强不是依赖, 优雅降级谁都不等).
+	// 单搜索 worker 也封顶, 防一个请求吃满所有核把 5ms 纯NN请求堵在调度队列.
+	serveSearchSlots   = make(chan struct{}, 2) // 并发搜索上限 2
+	ServeSearchWorkers = 4                      // 单搜索 worker 上限
 )
+
+// tryAcquireSearchSlot — 非阻塞抢坑位. 拿不到 → 调用方退回纯NN.
+func tryAcquireSearchSlot() bool {
+	select {
+	case serveSearchSlots <- struct{}{}:
+		return true
+	default:
+		return false
+	}
+}
+func releaseSearchSlot() { <-serveSearchSlots }
 
 // serveMarginSearchK — K 个 post-state 并行加摸 (worker=NumCPU, 每 worker 独立 ExpertRollout/Rng);
 // 每批后若 leader 领先第二名 > 2·SE合 提前停 (真平局烧满也没损失). 返回赢家下标.
 func (er *ExpertRollout) serveMarginSearchK(states []*GameState, round int) int {
 	K := len(states)
 	W := runtime.NumCPU()
+	if W > ServeSearchWorkers {
+		W = ServeSearchWorkers
+	}
 	var mu sync.Mutex
 	sum := make([]float64, K)
 	sumsq := make([]float64, K)
