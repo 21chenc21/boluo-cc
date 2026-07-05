@@ -981,9 +981,30 @@ var (
 	// 2026-07-05 (用户"30并发能扛住吗"): 全局并发闸 — 同时最多 N 个搜索在跑,
 	// 抢不到坑位直接退回纯NN top-1 (搜索是增强不是依赖, 优雅降级谁都不等).
 	// 单搜索 worker 也封顶, 防一个请求吃满所有核把 5ms 纯NN请求堵在调度队列.
-	serveSearchSlots   = make(chan struct{}, 2) // 并发搜索上限 2
-	ServeSearchWorkers = 4                      // 单搜索 worker 上限
+	serveSearchSlots   = make(chan struct{}, 1) // 并发搜索上限 (4核prod默认1, SetServeSearchSlots 可调)
+	ServeSearchWorkers = 3                      // 单搜索 worker 上限 (留1核伺候纯NN流量)
 )
+
+// SetServeSearchSlots — 部署时按机器核数调并发搜索槽位.
+func SetServeSearchSlots(n int) {
+	if n < 1 {
+		n = 1
+	}
+	serveSearchSlots = make(chan struct{}, n)
+}
+
+// serveSearchCapForRound — 按 round 缩 sims 预算: R2 rollout 深(~15ms), 不缩 4核会 1.8s 爆预算;
+// R4/R5 浅(~5ms) 给满. 4核+3worker 口径: R2≈40×2×15/3≈400ms, R4+≈120×2×5/3≈400ms.
+func serveSearchCapForRound(round int) int {
+	switch {
+	case round <= 2:
+		return ServeSearchCap / 3
+	case round == 3:
+		return ServeSearchCap / 2
+	default:
+		return ServeSearchCap
+	}
+}
 
 // tryAcquireSearchSlot — 非阻塞抢坑位. 拿不到 → 调用方退回纯NN.
 func tryAcquireSearchSlot() bool {
@@ -1049,7 +1070,8 @@ func (er *ExpertRollout) serveMarginSearchK(states []*GameState, round int) int 
 		wg.Wait()
 	}
 
-	for cnt[0] < ServeSearchCap {
+	capN := serveSearchCapForRound(round)
+	for cnt[0] < capN {
 		runBatch(ServeSearchBatch)
 		// leader vs runner-up 判停
 		best, second := 0, -1
