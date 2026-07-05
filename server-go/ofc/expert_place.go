@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"sort"
 	"sync"
+	"time"
 )
 
 // placementStr — 把 placement 摆到 state 上, 返回字符串表示 (调试用)
@@ -1006,12 +1007,26 @@ func serveSearchCapForRound(round int) int {
 	}
 }
 
-// tryAcquireSearchSlot — 非阻塞抢坑位. 拿不到 → 调用方退回纯NN.
+// ServeSearchWait — 抢不到坑位时最多排队等这么久 (2026-07-05 用户"其他触发者不就摆错吗"):
+// 薄边手宁可多等 ~0.8s 也要搜 — 排队不烧CPU, 只有超时才降级纯NN. 0=立即降级.
+var ServeSearchWait = 800 * time.Millisecond
+
+// tryAcquireSearchSlot — 先非阻塞抢, 抢不到排队至多 ServeSearchWait. 超时 → 调用方退回纯NN.
 func tryAcquireSearchSlot() bool {
 	select {
 	case serveSearchSlots <- struct{}{}:
 		return true
 	default:
+	}
+	if ServeSearchWait <= 0 {
+		return false
+	}
+	t := time.NewTimer(ServeSearchWait)
+	defer t.Stop()
+	select {
+	case serveSearchSlots <- struct{}{}:
+		return true
+	case <-t.C:
 		return false
 	}
 }
