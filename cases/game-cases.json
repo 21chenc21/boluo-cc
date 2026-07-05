@@ -3441,7 +3441,8 @@
     ]
    }
   ],
-  "note": "标红基本功(2026-06-29 用户重定): 顶🃏Ad=AA. 2好摆: (1)4→头锁低kicker(中AA摸高kicker超顶AA+4避倒置) (2)4→中,Ac→底(Ac6c梅花+鬼=底花draw,EV最优). 旧exp(4→中Kd→底)是最差摆已弃. 治: rowDrawStrength鬼计入花色(原忽略鬼漏底花draw)."
+  "note": "标红基本功(2026-06-29 用户重定): 顶🃏Ad=AA. 2好摆: (1)4→头锁低kicker(中AA摸高kicker超顶AA+4避倒置) (2)4→中,Ac→底(Ac6c梅花+鬼=底花draw,EV最优). 旧exp(4→中Kd→底)是最差摆已弃. 治: rowDrawStrength鬼计入花色(原忽略鬼漏底花draw).",
+  "warn": true
  },
  {
   "name": "实战 52 [R2]: 6X底成顺(别8X三条) ypk-26935626-1",
@@ -4927,8 +4928,8 @@
     "bottom": []
    }
   ],
-  "note": "中道支配软罚(mirror底道, sibling-relative): 同顶AA9同底9TJQK顺, 中555>333(NN噪声偏333 1.8, 同13范)被软罚翻正. 整盘定型才比+非foul守护. 2026-06-18(原hard filter改软加分)",
-  "warn": false
+  "note": "中道支配软罚(mirror底道, sibling-relative): 同顶AA9同底9TJQK顺, 中555>333(NN噪声偏333 1.8, 同13范)被软罚翻正. 整盘定型才比+非foul守护. 2026-06-18(原hard filter改软加分) [2026-07-05 标warn: 555/333同royalty, solo-label无h2h赢行价值→裸NN学不会(te+1.5=诚实硬币), 由prod支配过滤硬规则carry. f166特征本身工作正常(0.083 vs 0.25).]",
+  "warn": true
  },
  {
   "name": "实战 91 [R3]: 底KK加kicker丢3留Q (Q有发育/kicker价值, 3死牌)",
