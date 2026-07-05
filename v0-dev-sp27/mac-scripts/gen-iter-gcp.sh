@@ -1,23 +1,26 @@
 #!/usr/bin/env bash
 # GCP gen farm — 8-shard 纯NN gen + 聚合进度. 不 train (Mac 负责 train).
 # 用法 (GCP 上):  bash mac-scripts/gen-iter-gcp.sh <iter> [rollout-ckpt]
-#   rollout-ckpt 缺省: 有 best.json 用它, 否则用 sp36 太子 iter-4 r2 (sp37 首轮).
+#   rollout-ckpt 缺省: 有 best.json 用它, 否则用 sp38 iter-1 r1 太子(29失败) (sp39 首轮).
 # env: GEN_SHARDS(默认8) GAMES(默认1000)
 set -uo pipefail
 export PATH=$PATH:/usr/local/go/bin
 ITER="${1:?用法: gen-iter-gcp.sh <iter> [rollout-ckpt]}"
-DATA_VERSION=i168-sp38; RUN=gcp
+DATA_VERSION=i169-sp40; RUN=gcp
 DATASET_ROOT="v3-dataset-${DATA_VERSION}-${RUN}"
 TRAIN_ROOT="v3-train-${DATA_VERSION}-${RUN}"
 CKPT="${2:-}"
 if [ -z "$CKPT" ]; then
   if [ -f "$TRAIN_ROOT/best.json" ]; then CKPT="$TRAIN_ROOT/best.json"
-  else CKPT="v3-train-i168-sp37-gcp/iter-1/round-002-acc94.json"; fi
+  else CKPT="v3-train-i168-sp38-gcp/iter-1/round-001-acc93.json"; fi
 fi
 SHARDS="${GEN_SHARDS:-8}"; GAMES="${GAMES:-1000}"
 BIN=server-go-bin; mkdir -p "$BIN"
 ( cd server-go && go build -o "../$BIN/gen-rollout-dataset" ./cmd/gen-rollout-dataset ) || { echo "FATAL: build 失败"; exit 1; }
 [ -f "$CKPT" ] || { echo "FATAL: rollout ckpt 不存在: $CKPT"; exit 1; }
+# sp46: 真人板种子 (prod ofc_hands 对手视角重建, 5891条/1327手). 缺文件必须 fail loud, 不许静默退化.
+HUMAN_SEEDS="${HUMAN_SEEDS:-human-board-seeds.json}"
+[ -f "$HUMAN_SEEDS" ] || { echo "FATAL: 真人板种子不存在: $HUMAN_SEEDS (git pull 或 rsync 补上)"; exit 1; }
 GEN_OUT="$DATASET_ROOT/iter-$ITER"; rm -rf "$GEN_OUT"; mkdir -p "$GEN_OUT"
 per=$((GAMES/SHARDS)); rem=$((GAMES%SHARDS)); pids=()
 echo "gen iter-$ITER: $SHARDS 片 × ~$per 局 (共 $GAMES), rollout=$CKPT, out=$GEN_OUT"
@@ -25,7 +28,9 @@ t0=$(date +%s)
 for k in $(seq 0 $((SHARDS-1))); do
   g=$per; [ "$k" -lt "$rem" ] && g=$((per+1))
   DISABLE_HARD_RULES=1 DISABLE_SOFT_RULES=1 "$BIN/gen-rollout-dataset" \
-    -num-games "$g" -jokers 2 -rollouts 100 -r1-cap 30 -phantom-opponents 2 -indim 168 \
+    -num-games "$g" -jokers 2 -rollouts 100 -r1-cap 30 -phantom-opponents 2 -indim 169 \
+    -mcts-margin 2.5 -mcts-sims 500 -mcts-topk 8 -traj-explore 0.15 -traj-topk 3 -seed-family-frac 0.25 \
+    -seed-states "$HUMAN_SEEDS" -seed-states-frac 0.12 \
     -foul-cost 6 -fan-bonus-qq 10 -fan-bonus-kk 30 -fan-bonus-aa 100 -fan-bonus-trips 140 \
     -weights "$CKPT" -out-dir "$GEN_OUT/shard$k" > "$GEN_OUT/shard$k.log" 2>&1 &
   pids+=($!); sleep 1.2   # 错开>1s: gen 无 -seed, 靠时间seed区分

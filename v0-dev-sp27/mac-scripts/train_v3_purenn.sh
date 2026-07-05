@@ -110,7 +110,7 @@ SCRIPT_VERSION="2026-06-17-purenn"
 #     - Mark cases 35/37/40/45 as warn (AI 选合理但不在 expecteds)
 #     - sp17 iter-1 r1 deployed 8002, bench: 59通过/4警告/0 真错.
 #     - DATA_VERSION → i147-sp18 (rollout policy 含 sp17 best, 数据 fresh).
-DATA_VERSION="i168-sp38"  # sp38: pRowFlush数行内鬼(#1真bug,治留花) + foul-cost 3→6(治#6/#46/#24/#75 foul欠权重,AAA冒顶类). 起点=sp37 iter-1太子(41). 承sp37(dim165→168): Fix0 pTopFinalPairExact顶鬼(#46)/Fix1 f153概率加权(#110)/Fix3 T3三条rank(#90).
+DATA_VERSION="i169-sp40"  # sp40: 0.3拍桶→pMidBeatsTripsRank真概率 + margin触发升级rollout(薄边2.5/500×5) + 轨迹top3探索0.15(治#23/24组合洞) + seedBonus概率加权(topFanProb×2×8). 承sp39(169-d): 砍O组+FE范EV维. 起点=sp38 iter-1太子(29).
 # 旧 sp33: partialEval两对/金刚 + pMidGTBot两对rank + pTopGTMid顶三条rank + pTopTrips(漏顶鬼+max非union+合法性) + eRoyalty金刚双重计数.
 # 旧 i164-sp31 (164-d): #90三条rank0-2 / #124 pPairToTrips cap / cases全删uc / outs-aware. sp31-one 跑了iter2=130, #124已落地, #90/#23/#24未.
 # 旧 sp30: i164-sp30 (draw纯花+slots / MHR rank各档安全上限 / 顶trips种子bonus). sp30-one 跑了iter-1=+3 但无#90/#124/clean-cases.
@@ -133,6 +133,8 @@ trap '_cleanup_partial; echo "[v3-sp] killed (SIGTERM)"; exit 143' TERM
 
 ITERS="${1:-5}"
 GAMES="${2:-200}"
+# 每次启动唯一标签 (重启不撞旧目录). 首次启动目录形如 r0704-2100-iter-1.
+LAUNCH_TAG="r$(date +%m%d-%H%M)-"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 V0_DIR="$(dirname "$SCRIPT_DIR")"
@@ -282,8 +284,10 @@ for ((iter=1; iter<=ITERS; iter++)); do
     ITER_TS=$(date +%H:%M:%S)
     echo "=== ITER $iter / $ITERS ($ITER_TS) ===" | tee -a "$LOG"
 
-    GEN_OUT="$DATASET_ROOT/iter-$iter"
-    TRAIN_OUT="$TRAIN_ROOT/iter-$iter"
+    # 2026-07-04 sp42: 目录带启动标签 — 重启后 iter 从 1 重编, 撞老目录会让 Ctrl-C 的
+    # 清理 trap rm -rf 误删历史 gen 数据 / 新 ckpt 同名覆盖老 ckpt. LAUNCH_TAG 保证不撞.
+    GEN_OUT="$DATASET_ROOT/${LAUNCH_TAG}iter-$iter"
+    TRAIN_OUT="$TRAIN_ROOT/${LAUNCH_TAG}iter-$iter"
     mkdir -p "$GEN_OUT" "$TRAIN_OUT"
     touch "$TRAIN_OUT/.iter_started"
     CUR_GEN_OUT="$GEN_OUT"; CUR_TRAIN_OUT="$TRAIN_OUT"  # 中断清理标记: 本iter未完成时 trap 会删这俩
@@ -291,11 +295,20 @@ for ((iter=1; iter<=ITERS; iter++)); do
     # Phase A: gen samples — SELF-PLAY: rollout policy = 当前 BEST_CKPT (动态)
     # 跟 distillation 区别: 这里 BEST_CKPT 每 iter 都换, NN 跟自己玩.
     ROLLOUTS="${ROLLOUTS:-100}"  # gen 每候选 rollout 数, env 可调 (150=标签最干净慢 / 100=1.5x快 / 别<75太吵)
-    echo "[iter $iter] Phase A: gen $GAMES games (rollouts=$ROLLOUTS, indim 168, SELF-PLAY + exploration)..." | tee -a "$LOG"
+    echo "[iter $iter] Phase A: gen $GAMES games (rollouts=$ROLLOUTS, indim 169, SELF-PLAY + exploration)..." | tee -a "$LOG"
     GEN_ARGS=(-num-games "$GAMES" -jokers 2 -rollouts "$ROLLOUTS" -r1-cap 30
-              -phantom-opponents 2 -indim 168
+              -phantom-opponents 2 -indim 169
+              -mcts-margin 2.5 -mcts-sims 500 -mcts-topk 5 -traj-explore 0.15 -traj-topk 3 -seed-family-frac 0.25
               -foul-cost 6 -fan-bonus-qq 10 -fan-bonus-kk 30 -fan-bonus-aa 100 -fan-bonus-trips 140
               -out-dir "$GEN_OUT")
+    # sp46: 真人板种子 (prod ofc_hands 对手视角, 5891条). 有文件就挂; 没有则警告继续 (Mac 可能没同步).
+    HUMAN_SEEDS="${HUMAN_SEEDS:-human-board-seeds.json}"
+    if [ -f "$HUMAN_SEEDS" ]; then
+        GEN_ARGS+=(-seed-states "$HUMAN_SEEDS" -seed-states-frac 0.12)
+        echo "[iter $iter]   真人板种子: $HUMAN_SEEDS (frac 0.12)" | tee -a "$LOG"
+    else
+        echo "[iter $iter]   ⚠️ 真人板种子缺失 ($HUMAN_SEEDS) — 本 iter 无真人板" | tee -a "$LOG"
+    fi
     if [ -n "$BEST_CKPT" ] && [ -f "$BEST_CKPT" ]; then
         GEN_ARGS+=(-weights "$BEST_CKPT")
         echo "[iter $iter]   rollout policy = $BEST_CKPT (失败 $BEST_FAIL, 通过 $BEST_TC/$BENCH_TOTAL_CASES)" | tee -a "$LOG"
@@ -348,7 +361,7 @@ for ((iter=1; iter<=ITERS; iter++)); do
     DS_DIRS="$DATASET_ROOT${EXTRA_DATA:+,$EXTRA_DATA}"
     [ -n "${EXTRA_DATA:-}" ] && echo "[iter $iter]   +EXTRA_DATA 旧数据集: $EXTRA_DATA" | tee -a "$LOG"
     TRAIN_ARGS=(-dataset-dir "$DS_DIRS" -dataset-keep-warm-start -hours 1 -round-min 30
-                -outdim 4 -h1 512 -h2 256 -h3 128 -indim 168
+                -outdim 4 -h1 512 -h2 256 -h3 128 -indim 169
                 -epochs 30 -lr 0.001 -warm-lr-mult 0.2 -y-recompute
                 -fan-bonus-qq 10 -fan-bonus-kk 30 -fan-bonus-aa 100 -fan-bonus-trips 140
                 -foul-cost 6 -fan-w 0.40 -foul-w 0.10 -policy-w 0.30
