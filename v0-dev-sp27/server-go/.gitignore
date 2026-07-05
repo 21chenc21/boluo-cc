@@ -1,5 +1,5 @@
 # 训练/运行产物, 不进 git
-gen-rollout-dataset
+/gen-rollout-dataset
 server-go-bin/
 *.test
 *.log
