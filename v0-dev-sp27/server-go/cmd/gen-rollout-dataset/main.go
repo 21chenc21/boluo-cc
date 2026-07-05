@@ -1,15 +1,16 @@
 // gen-rollout-dataset — 用 direct K-rollout-per-candidate 当 teacher 生成 student NN 训练数据.
 //
 // 跟 gen-mcts-dataset 区别:
-//   mcts:    PUCT 探索, sims 分配不均, 候选 visits=1..N 不一致 → 信号有 noise
-//   rollout: 每候选强制 K independent rollouts, SE = σ/√K 已知, 信号 clean
+//
+//	mcts:    PUCT 探索, sims 分配不均, 候选 visits=1..N 不一致 → 信号有 noise
+//	rollout: 每候选强制 K independent rollouts, SE = σ/√K 已知, 信号 clean
 //
 // 算法 (每 decision):
-//   1. enumerate actions (含 hard rule filter)
-//   2. 每 candidate 跑 K rollouts (并行 worker pool)
-//   3. mean Q = sum / K
-//   4. PolicyTarget: 1 if winner (max Q), 0 else (one-hot)
-//   5. apply winner action, 继续下 round
+//  1. enumerate actions (含 hard rule filter)
+//  2. 每 candidate 跑 K rollouts (并行 worker pool)
+//  3. mean Q = sum / K
+//  4. PolicyTarget: 1 if winner (max Q), 0 else (one-hot)
+//  5. apply winner action, 继续下 round
 //
 // 输出 jsonl.gz, 跟 train.go -dataset-dir 兼容.
 package main
@@ -53,12 +54,25 @@ var (
 	fanBonusKK    = flag.Float64("fan-bonus-kk", 40, "")
 	fanBonusAA    = flag.Float64("fan-bonus-aa", 100, "")
 	fanBonusTrips = flag.Float64("fan-bonus-trips", 120, "")
+
+	// 2026-07-04 sp40: 薄边决策升级 + 轨迹探索.
+	//   #23 实测: 真EV差1~3分的贴近候选, 100次rollout(SE±1.8)会选错, 600次才稳定翻对.
+	mctsMargin  = flag.Float64("mcts-margin", 0, "top1-top2 Q差<margin → 前mcts-topk名各加摸mcts-sims次合并重选 (0=关)")
+	mctsSims    = flag.Int("mcts-sims", 500, "margin触发后每候选加摸次数")
+	mctsTopK    = flag.Int("mcts-topk", 5, "margin触发后升级的候选数")
+	trajExplore = flag.Float64("traj-explore", 0, "轨迹探索率: 此概率下沿 Q前traj-topk名随机一个前进 (policyTarget仍标argmax, 只改轨迹走向; 0=关). 治premium pre-state组合洞(#23/#24)")
+	trajTopK    = flag.Int("traj-topk", 3, "轨迹探索的采样池大小")
+
+	// 2026-07-04 sp41: 种子家族 gen (种家族不种case, 见 seed_families.go)
+	seedFamilyFrac = flag.Float64("seed-family-frac", 0, "此比例的局从种子家族中局开局 (0=关). 家族: lockBottom/jokerTopSeed/foulBait/r1micro")
+	seedStates     = flag.String("seed-states", "", "真人板 JSON (solve_log 提取), 与家族种子并行的真实状态源")
+	seedStatesFrac = flag.Float64("seed-states-frac", 0, "此比例的局从真人板开局 (0=关)")
 )
 
 // Sample — 跟 train.go schema 兼容
 type Sample struct {
 	Features     []float32 `json:"features"`
-	McScore      float32   `json:"mcScore"`      // mean Q over K rollouts
+	McScore      float32   `json:"mcScore"` // mean Q over K rollouts
 	FanRate      float32   `json:"fanRate,omitempty"`
 	FoulRate     float32   `json:"foulRate,omitempty"`
 	PolicyTarget float32   `json:"policyTarget,omitempty"` // one-hot: 1 for max-Q winner, 0 else
@@ -234,8 +248,8 @@ func rolloutCand(post *ofc.GameState, round int, K int, cfg *ofc.RolloutConfig, 
 // candidateInfo — 决策时的候选
 type candidateInfo struct {
 	postState *ofc.GameState
-	r1Place   []ofc.Row              // R1 use
-	rnAction  *ofc.RoundNAction      // R2-R5 use
+	r1Place   []ofc.Row         // R1 use
+	rnAction  *ofc.RoundNAction // R2-R5 use
 	isR1      bool
 }
 
@@ -291,8 +305,8 @@ func enumerateAndFilter(state *ofc.GameState, dealt []ofc.Card, round int) []can
 		actions := ofc.GenerateRoundNActions(dealt, state)
 		seen := make(map[string]bool, len(actions))
 		type cand struct {
-			action    *ofc.RoundNAction
-			gs        *ofc.GameState
+			action *ofc.RoundNAction
+			gs     *ofc.GameState
 		}
 		cands := make([]cand, 0, len(actions))
 		for i := range actions {
@@ -366,10 +380,43 @@ func joinIDs(ids []string) string {
 	return out
 }
 
-func genOneGame(gameIdx int, rng *rand.Rand, cfg *ofc.RolloutConfig) []Sample {
+func genOneGame(gameIdx int, rng *rand.Rand, cfg *ofc.RolloutConfig, seed *seedSpec) []Sample {
 	state := ofc.NewGameState(*numJokers)
 	deck := ofc.MakeDeck(*numJokers)
 	shuffleDeck(deck, rng)
+
+	startRound := 1
+	myNeed := 17 // 后续还要从 deck 发给自己的张数
+	if seed != nil {
+		// 2026-07-04 sp41: 种子家族开局 — 摆上构造的中局, 种子占用的牌从 deck 剔除.
+		startRound = seed.startRound
+		// 必须走 PlaceCard (顺带记 UsedCards) — 直接赋值行会让 GetRemainingDeck 把种子牌
+		// 再发一遍 → 同rank×5 → Evaluate5 panic (2026-07-04 实翻车).
+		for _, c := range seed.top {
+			state.PlaceCard(c, ofc.RowTop)
+		}
+		for _, c := range seed.mid {
+			state.PlaceCard(c, ofc.RowMiddle)
+		}
+		for _, c := range seed.bot {
+			state.PlaceCard(c, ofc.RowBottom)
+		}
+		for _, c := range seed.extraUsed {
+			state.UsedCards[c.ID()] = true // 真人板: 对手可见/已弃 — deck-aware
+		}
+		inSeed := map[string]bool{}
+		for _, c := range seed.seedCards() {
+			inSeed[c.ID()] = true
+		}
+		filtered := deck[:0]
+		for _, c := range deck {
+			if !inSeed[c.ID()] {
+				filtered = append(filtered, c)
+			}
+		}
+		deck = filtered
+		myNeed = (5 - startRound) * 3 // startRound 的发牌来自 seed.dealt
+	}
 
 	opponents := 0
 	slot := 0
@@ -380,19 +427,19 @@ func genOneGame(gameIdx int, rng *rand.Rand, cfg *ofc.RolloutConfig) []Sample {
 		}
 	}
 	maxPhantom := phantomCountFor(5, slot, opponents)
-	if len(deck)-maxPhantom < 17 {
-		maxPhantom = len(deck) - 17
+	if len(deck)-maxPhantom < myNeed {
+		maxPhantom = len(deck) - myNeed
 		if maxPhantom < 0 {
 			maxPhantom = 0
 		}
 	}
 	phantomReserveStart := len(deck) - maxPhantom
 
-	myCards := deck[:17]
+	myCards := deck[:myNeed]
 	phantomAdded := 0
 	out := make([]Sample, 0, 200)
 
-	for round := 1; round <= 5; round++ {
+	for round := startRound; round <= 5; round++ {
 		state.Round = round
 
 		want := phantomCountFor(round, slot, opponents)
@@ -405,7 +452,14 @@ func genOneGame(gameIdx int, rng *rand.Rand, cfg *ofc.RolloutConfig) []Sample {
 		}
 
 		var dealt []ofc.Card
-		if round == 1 {
+		if seed != nil {
+			if round == seed.startRound {
+				dealt = seed.dealt
+			} else {
+				start := (round - seed.startRound - 1) * 3
+				dealt = myCards[start : start+3]
+			}
+		} else if round == 1 {
 			dealt = myCards[0:5]
 		} else {
 			start := 5 + (round-2)*3
@@ -463,6 +517,48 @@ func genOneGame(gameIdx int, rng *rand.Rand, cfg *ofc.RolloutConfig) []Sample {
 			}(workerSeed)
 		}
 		wg.Wait()
+
+		// 2026-07-04 sp40: margin 触发升级 — top1/top2 Q 贴近时前 K 名各加摸 mctsSims 次, 合并均值重排.
+		//   同时修两件事: 轨迹薄边选对(#23 KK下底 600sims 才翻) + 贴近候选的 label 更准.
+		if *mctsMargin > 0 && len(results) >= 2 {
+			order := make([]int, len(results))
+			for i := range order {
+				order[i] = i
+			}
+			sort.Slice(order, func(a, b int) bool { return results[order[a]].q > results[order[b]].q })
+			if float64(results[order[0]].q-results[order[1]].q) < *mctsMargin {
+				topN := *mctsTopK
+				if topN > len(order) {
+					topN = len(order)
+				}
+				extra := make([]candResult, topN)
+				jobs2 := make(chan int, topN)
+				for j := 0; j < topN; j++ {
+					jobs2 <- j
+				}
+				close(jobs2)
+				var wg2 sync.WaitGroup
+				for w := 0; w < W; w++ {
+					wg2.Add(1)
+					seed2 := rng.Int63()
+					go func(seed int64) {
+						defer wg2.Done()
+						wr := rand.New(rand.NewSource(seed))
+						for j := range jobs2 {
+							extra[j] = rolloutCand(cands[order[j]].postState, round, *mctsSims, cfg, wr)
+						}
+					}(seed2)
+				}
+				wg2.Wait()
+				k1, k2 := float32(*rolloutsPerCand), float32(*mctsSims)
+				for j := 0; j < topN; j++ {
+					i := order[j]
+					results[i].q = (results[i].q*k1 + extra[j].q*k2) / (k1 + k2)
+					results[i].fanRate = (results[i].fanRate*k1 + extra[j].fanRate*k2) / (k1 + k2)
+					results[i].foulRate = (results[i].foulRate*k1 + extra[j].foulRate*k2) / (k1 + k2)
+				}
+			}
+		}
 
 		// 找 winner (max Q)
 		bestIdx := 0
@@ -523,8 +619,25 @@ func genOneGame(gameIdx int, rng *rand.Rand, cfg *ofc.RolloutConfig) []Sample {
 			}
 		}
 
+		// 2026-07-04 sp40: 轨迹探索 — 小概率沿 Q 前 trajTopK 名随机一个前进 (不是乱抽全体).
+		//   samples/policyTarget 上面已按 argmax 写完, 这里只改"游戏往哪走" → 让 premium 次优线
+		//   (KK下底/鬼守顶) 的下游 pre-state 进数据, 治组合洞 (#23/#24 全数据集 0 样本的自我强化闭环).
+		walkIdx := bestIdx
+		if *trajExplore > 0 && len(results) >= 2 && rng.Float64() < *trajExplore {
+			order := make([]int, len(results))
+			for i := range order {
+				order[i] = i
+			}
+			sort.Slice(order, func(a, b int) bool { return results[order[a]].q > results[order[b]].q })
+			K := *trajTopK
+			if K > len(order) {
+				K = len(order)
+			}
+			walkIdx = order[rng.Intn(K)]
+		}
+
 		// apply winner action
-		bestCand := cands[bestIdx]
+		bestCand := cands[walkIdx]
 		if bestCand.isR1 {
 			for i, c := range dealt {
 				state.PlaceCard(c, bestCand.r1Place[i])
@@ -611,6 +724,10 @@ func main() {
 		os.Exit(0)
 	}()
 
+	if *seedStates != "" {
+		n := loadRealSeeds(*seedStates)
+		log.Printf("[gen] seed-states: 载入 %d 个真人板 (来自 %s)", n, *seedStates)
+	}
 	doneGames := atomic.Int64{}
 	totalSamples := atomic.Int64{}
 	rngSeed := time.Now().UnixNano()
@@ -621,8 +738,21 @@ func main() {
 		progressEvery = 1
 	}
 
+	seededCount := 0
 	for gameIdx := 0; gameIdx < *numGames; gameIdx++ {
-		samples := genOneGame(gameIdx, rng, &cfg)
+		// 2026-07-04 sp41: 种子家族 — 此概率下从结构约束内随机化的中局开局 (治深组合数据荒区).
+		var seed *seedSpec
+		if *seedStatesFrac > 0 && rng.Float64() < *seedStatesFrac {
+			seed = pickRealSeed(rng)
+			if seed != nil {
+				seededCount++
+			}
+		}
+		if seed == nil && *seedFamilyFrac > 0 && rng.Float64() < *seedFamilyFrac {
+			seed = makeFamilySeed(rng)
+			seededCount++
+		}
+		samples := genOneGame(gameIdx, rng, &cfg, seed)
 		for _, s := range samples {
 			if err := writers[s.Round].Write(s); err != nil {
 				log.Printf("write err: %v", err)
@@ -638,5 +768,5 @@ func main() {
 		}
 	}
 
-	log.Printf("[gen] done: %d games, %d samples in %.1f min", doneGames.Load(), totalSamples.Load(), time.Since(startT).Minutes())
+	log.Printf("[gen] done: %d games (seeded %d), %d samples in %.1f min", doneGames.Load(), seededCount, totalSamples.Load(), time.Since(startT).Minutes())
 }
