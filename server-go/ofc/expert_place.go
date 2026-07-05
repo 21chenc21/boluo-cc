@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"sort"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -198,8 +199,21 @@ func (er *ExpertRollout) ExpertPlace5(state *GameState, cards []Card) {
 				pick = er.Rng.Intn(k)
 			}
 			// 2026-07-05: serve 薄边轻搜索 (只在确定性 top-1 模式介入, 不干扰 topk-sample)
-			if ServeSearchMargin > 0 && pick == 0 && len(candidates) >= 2 &&
-				candidates[0].score-candidates[1].score < ServeSearchMargin && tryAcquireSearchSlot() {
+			trig := false
+			if ServeSearchMargin > 0 && pick == 0 && len(candidates) >= 2 {
+				atomic.AddInt64(&ServeSearchDecCount, 1)
+				if candidates[0].score-candidates[1].score < ServeSearchMargin {
+					for i := 1; i < len(candidates) && i < ServeSearchTopK; i++ {
+						if candidates[0].score-candidates[i].score < ServeSearchMargin &&
+							serveSearchConsequential(candidates[0].gs, candidates[i].gs) {
+							atomic.AddInt64(&ServeSearchTrigCount, 1)
+							trig = true
+							break
+						}
+					}
+				}
+			}
+			if !ServeSearchDryRun && trig && tryAcquireSearchSlot() {
 				var sts []*GameState
 				for i := 0; i < len(candidates) && i < ServeSearchTopK; i++ {
 					if candidates[0].score-candidates[i].score < ServeSearchMargin {
@@ -775,8 +789,21 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 				pick = er.Rng.Intn(k)
 			}
 			// 2026-07-05: serve 薄边轻搜索 (同 R1)
-			if ServeSearchMargin > 0 && pick == 0 && len(uniq) >= 2 &&
-				uniq[0].teScore-uniq[1].teScore < ServeSearchMargin && tryAcquireSearchSlot() {
+			trigN := false
+			if ServeSearchMargin > 0 && pick == 0 && len(uniq) >= 2 {
+				atomic.AddInt64(&ServeSearchDecCount, 1)
+				if uniq[0].teScore-uniq[1].teScore < ServeSearchMargin {
+					for i := 1; i < len(uniq) && i < ServeSearchTopK; i++ {
+						if uniq[0].teScore-uniq[i].teScore < ServeSearchMargin &&
+							serveSearchConsequential(uniq[0].gs, uniq[i].gs) {
+							atomic.AddInt64(&ServeSearchTrigCount, 1)
+							trigN = true
+							break
+						}
+					}
+				}
+			}
+			if !ServeSearchDryRun && trigN && tryAcquireSearchSlot() {
 				var sts []*GameState
 				for i := 0; i < len(uniq) && i < ServeSearchTopK; i++ {
 					if uniq[0].teScore-uniq[i].teScore < ServeSearchMargin {
@@ -1010,6 +1037,31 @@ func serveSearchCapForRound(round int) int {
 // ServeSearchWait — 抢不到坑位时最多排队等这么久 (2026-07-05 用户"其他触发者不就摆错吗"):
 // 薄边手宁可多等 ~0.8s 也要搜 — 排队不烧CPU, 只有超时才降级纯NN. 0=立即降级.
 var ServeSearchWait = 800 * time.Millisecond
+
+// ServeSearchDryRun/计数器 — 触发率测量: 只数不搜 (2026-07-05 用户"怕把把都要搜索").
+var (
+	ServeSearchDryRun    bool
+	ServeSearchDecCount  int64 // 决策总数 (margin>0 时)
+	ServeSearchTrigCount int64 // 触发数
+)
+
+// serveSearchConsequential — 触发第二判据 (2026-07-05 用户"怕把把都搜"实锤: 纯分差触发率52%!).
+// 薄边里大量"真平局"(花色互换等)搜了白搜 — 只有 top-2 在 foul风险/范EV 上真分歧才值得搜.
+func serveSearchConsequential(a, b *GameState) bool {
+	fa, fb := BuildFeaturesV3(a), BuildFeaturesV3(b)
+	df := fa[89] - fb[89] // pFoulFinal
+	if df < 0 {
+		df = -df
+	}
+	if df > 0.15 {
+		return true
+	}
+	de := fa[168] - fb[168] // FE 范EV
+	if de < 0 {
+		de = -de
+	}
+	return de > 0.08
+}
 
 // tryAcquireSearchSlot — 先非阻塞抢, 抢不到排队至多 ServeSearchWait. 超时 → 调用方退回纯NN.
 func tryAcquireSearchSlot() bool {
