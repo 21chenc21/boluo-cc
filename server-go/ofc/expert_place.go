@@ -184,6 +184,18 @@ func (er *ExpertRollout) ExpertPlace5(state *GameState, cards []Card) {
 
 	// === MctsDisabled: 跳过 rollout, 直接 prerank top-1 (纯MLP模式) ===
 	if MctsDisabled || er.Cfg.PureMLP {
+		// 2026-07-06 sp46: 保险丝#2 — 必foul过滤 (同 Rn)
+		if KeepFiltersPureNN && len(candidates) > 1 {
+			kept := candidates[:0]
+			for i := range candidates {
+				if FoulImminentPenalty(candidates[i].gs) < 20 {
+					kept = append(kept, candidates[i])
+				}
+			}
+			if len(kept) > 0 {
+				candidates = kept
+			}
+		}
 		if len(candidates) > 0 {
 			pick := 0
 			// 2026-05-23: per-request er.Cfg.TopKSampleR1 优先, fallback global MctsTopKSample (bench-cases CLI 用)
@@ -793,7 +805,20 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 	// === MctsDisabled: R2-R5 跳过 rollout, 直接 prerank top-1 (纯MLP模式) ===
 	// 2026-05-23: MctsTopKSampleRN 控制 R2-R5 sample (默认 0 = top-1 deterministic 保 endgame).
 	if MctsDisabled || er.Cfg.PureMLP {
-		// 2026-07-05: 保险丝 — R5 支配过滤 (label盲区 tie-break, #90 555vs333)
+		// 2026-07-06 sp46: 保险丝#2 — 必foul过滤 (FoulImminentPenalty 只检100%必然case, 零误伤).
+		// 治"自信地必爆"(std45类 中SF>底max): royalty军团骗过NN时, 数学直接除名. 全候选必foul则不滤.
+		if KeepFiltersPureNN && len(uniq) > 1 {
+			kept := uniq[:0]
+			for i := range uniq {
+				if FoulImminentPenalty(uniq[i].gs) < 20 {
+					kept = append(kept, uniq[i])
+				}
+			}
+			if len(kept) > 0 {
+				uniq = kept
+			}
+		}
+		// 2026-07-05: 保险丝#1 — R5 支配过滤 (label盲区 tie-break, #90 555vs333)
 		if KeepFiltersPureNN && state.Round == 5 && len(uniq) > 1 {
 			sts := make([]*GameState, len(uniq))
 			for i := range uniq {
