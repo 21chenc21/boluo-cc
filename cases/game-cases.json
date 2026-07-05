@@ -1219,6 +1219,32 @@
     "bottom": [
      "Xj0"
     ]
+   },
+   {
+    "top": [
+     "Ac",
+     "Xj0"
+    ],
+    "middle": [
+     "Ah",
+     "As"
+    ],
+    "bottom": [
+     "Xj1"
+    ]
+   },
+   {
+    "top": [
+     "Ac",
+     "Xj1"
+    ],
+    "middle": [
+     "Ah",
+     "As"
+    ],
+    "bottom": [
+     "Xj0"
+    ]
    }
   ],
   "wrongs": [
@@ -2163,6 +2189,15 @@
    {
     "top": [
      "9s"
+    ],
+    "middle": [
+     "4c"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "Jd"
     ],
     "middle": [
      "4c"
@@ -3604,6 +3639,19 @@
      "Qs",
      "5s"
     ]
+   },
+   {
+    "top": [
+     "Ac"
+    ],
+    "middle": [
+     "5s",
+     "2c"
+    ],
+    "bottom": [
+     "Qs",
+     "Xj0"
+    ]
    }
   ]
  },
@@ -4406,6 +4454,15 @@
      "5d"
     ],
     "bottom": []
+   },
+   {
+    "top": [
+     "8h"
+    ],
+    "middle": [
+     "5d"
+    ],
+    "bottom": []
    }
   ],
   "note": "RnMidPlacedOverBotPlacedPenalty: 本轮放中道最大牌>放底道最大牌→底<中罚. AI原把8h埋中(中6-7-8顺)+5d进底→底死<中. 修后8h→底. 底有花/顺/对豁免. 用户'放底道的牌大于中道扣分'. 2026-06-17"
@@ -4539,6 +4596,15 @@
     ],
     "middle": [
      "Ts"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "Ts"
+    ],
+    "middle": [
+     "5d"
     ],
     "bottom": []
    }
@@ -4988,7 +5054,8 @@
     ]
    }
   ],
-  "note": "DeadLowKickerFanTop软罚修复: 顶AA锁+底999时, 低牌2h该进底凑99922葫芦, 拍2h上顶填死罚2.5→翻正选9h+2h→底. 守护: 底必trips+(实战72底[Tc]单张不罚, 低牌让位5c花draw)+低对顶留弱不罚+高kicker不罚. 模拟seed99局30. 2026-06-18"
+  "note": "DeadLowKickerFanTop软罚修复: 顶AA锁+底999时, 低牌2h该进底凑99922葫芦, 拍2h上顶填死罚2.5→翻正选9h+2h→底. 守护: 底必trips+(实战72底[Tc]单张不罚, 低牌让位5c花draw)+低对顶留弱不罚+高kicker不罚. 模拟seed99局30. 2026-06-18",
+  "warn": true
  },
  {
   "name": "实战 94 [R1]: 大对TT优先放底道TTK (R1BigPairOnBot+2)",
