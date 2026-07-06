@@ -996,6 +996,14 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 				var means []float64
 				// 2026-07-06 #22: fanfloor 恢复全预算 — v3免费卷线 fan~72% 方差大, 半预算在 2SE 门槛闪烁
 				pick, n, means = er.serveMarginSearchKDiv(sts, state.Round, 1)
+				// 教义带 (#16, 2026-07-07): 挑战者=承诺型保底范(100%范锁定) 且 NN线优势<4 → 取保底线.
+				// 账本盲区(范率/re-fan延续)由教义定价; 免费卷型(概率范)不适用.
+				if fanFuseN && pick == 0 && len(sts) > 1 && len(means) > 1 {
+					// 仅当 NN 线自己不是承诺保底时才反转举证 (#73 教训: 两线同顶同范价值, 教义无差别)
+					if fanFloorCommitCertain(sts[1]) && !fanFloorCommitCertain(sts[0]) && means[0]-means[1] < 4.0 {
+						pick = 1
+					}
+				}
 				releaseSearchSlot()
 				tag := "KEEP"
 				if pick != 0 {
@@ -1012,6 +1020,9 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 				}
 				if ceilN {
 					tag += "-fanceil"
+				}
+				if fanFuseN && pick != 0 && len(sts) > 1 && fanFloorCommitCertain(sts[pick]) && means[pick]-means[0] < ServeSearchHysteresis {
+					tag += "-doctrine"
 				}
 				pick = stIdx[pick]
 				line := fmt.Sprintf("[serve-search] R%d %s n=%d means=%.2f NN=%s → 选=%s",
@@ -1472,6 +1483,47 @@ func fanCeilingLocked(gs *GameState, r int) bool {
 		}
 	}
 	return true
+}
+
+// fanFloorCommitCertain — 仅承诺型保底范 (鬼承诺配大牌后 foul 链≈0 = 100%范数学锁定).
+// 教义带(#16, 2026-07-07 用户"只要可达就必须治")专用: 这类线的范率/延续价值是账本已知盲区
+// (扁平bonus不价re-fan/范率, #19/#63判例), 举证责任反转 — NN线须好4分以上才保留.
+func fanFloorCommitCertain(gs *GameState) bool {
+	bigRank := -1
+	jokerN := 0
+	for _, c := range gs.Top {
+		if c.IsJoker() {
+			jokerN++
+		} else if int(c.Rank()) > bigRank && c.Rank() >= RankQ {
+			bigRank = int(c.Rank())
+		}
+	}
+	if jokerN == 0 || bigRank < 0 {
+		return false
+	}
+	g2 := gs.Clone()
+	var suitUsed [4]bool
+	for _, c := range gs.Top {
+		if !c.IsJoker() && int(c.Rank()) == bigRank {
+			suitUsed[c.Suit()] = true
+		}
+	}
+	top2 := make([]Card, 0, len(gs.Top))
+	for _, c := range gs.Top {
+		if c.IsJoker() {
+			for st := uint8(0); st < 4; st++ {
+				if !suitUsed[st] {
+					top2 = append(top2, MakeCard(uint8(bigRank), st))
+					suitUsed[st] = true
+					break
+				}
+			}
+		} else {
+			top2 = append(top2, c)
+		}
+	}
+	g2.Top = top2
+	return BuildFeaturesV3(g2)[89] < 0.05
 }
 
 // serveFoulFuseHasSafe — 保险丝#3 第二判据: 是否存在安全替代线 (f89<0.3).
