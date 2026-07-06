@@ -216,7 +216,7 @@ func (er *ExpertRollout) ExpertPlace5(state *GameState, cards []Card) {
 			fanFuse := false
 			if ServeSearchMargin > 0 && ServeSearchR1 && pick == 0 && len(candidates) >= 2 {
 				atomic.AddInt64(&ServeSearchDecCount, 1)
-				if candidates[0].score-candidates[1].score < ServeSearchMargin {
+				if ServeSearchThinMargin && candidates[0].score-candidates[1].score < ServeSearchMargin {
 					for i := 1; i < len(candidates) && i < ServeSearchTopK; i++ {
 						if candidates[0].score-candidates[i].score < ServeSearchMargin &&
 							serveSearchConsequential(candidates[0].gs, candidates[i].gs) {
@@ -904,7 +904,7 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 			fanFuseN := false
 			if ServeSearchMargin > 0 && pick == 0 && len(uniq) >= 2 {
 				atomic.AddInt64(&ServeSearchDecCount, 1)
-				if uniq[0].teScore-uniq[1].teScore < ServeSearchMargin {
+				if ServeSearchThinMargin && uniq[0].teScore-uniq[1].teScore < ServeSearchMargin {
 					for i := 1; i < len(uniq) && i < ServeSearchTopK; i++ {
 						if uniq[0].teScore-uniq[i].teScore < ServeSearchMargin &&
 							serveSearchConsequential(uniq[0].gs, uniq[i].gs) {
@@ -1218,6 +1218,12 @@ func serveSearchCapForRound(round int) int {
 // 薄边手宁可多等 ~0.8s 也要搜 — 排队不烧CPU, 只有超时才降级纯NN. 0=立即降级.
 var ServeSearchWait = 800 * time.Millisecond
 
+// ServeSearchThinMargin — 薄边路径(纯分差+后果判据触发)是否参与搜索 (2026-07-06 默认关).
+// 退役理由: 它为 std63 而生, 现 NN 原生学会; 剩余触发全是品味题 — rollout 账本(foul6/KK30)
+// 与范率优先教义有原则分歧 (60语境 1000-sim 账本也认头KK+2.0, 教义要底KK等AA), 加样本无解.
+// override 权收归保险丝#3(绝路)/#4(保送) — 数学题, 账本与教义无分歧.
+var ServeSearchThinMargin = false
+
 // ServeSearchR1 — R1 是否参与搜索 (2026-07-06 用户拍板: 默认关).
 // R1 rollout 深且噪大 (40 sims SE≈2.8), #59 实锤: NN 选对被 fanfloor 噪声翻错 (means 45.73 vs 39.92).
 // R1 决策空间小 + 1000-sim 沙盘铁律本就说 R1 裁决要大样本, serve 预算给不起 → 交给 NN.
@@ -1494,7 +1500,11 @@ func (er *ExpertRollout) serveMarginSearchKDiv(states []*GameState, round, capDi
 	if capN < ServeSearchBatch {
 		capN = ServeSearchBatch
 	}
-	for cnt[0] < capN {
+	// 灰区加时 (2026-07-06 #16 教训): 挑战者对 top-1 的优势落在 [滞回, 2SE) = 有信号没辨清 —
+	// 与其放弃, 加倍预算把 SE 压下来 (16 的 gap 7.9 在 40-sim SE4.5 下不显著, 80-sim 即显著).
+	// 只有灰区付双倍, 铁案(>2SE)照旧早停, 噪声(<滞回)照旧放弃.
+	maxN := capN
+	for cnt[0] < maxN {
 		runBatch(ServeSearchBatch)
 		// leader vs runner-up 判停
 		best, second := 0, -1
@@ -1516,19 +1526,41 @@ func (er *ExpertRollout) serveMarginSearchKDiv(states []*GameState, round, capDi
 				break
 			}
 		}
+		if best != 0 && maxN == capN {
+			mb := sum[best] / float64(cnt[best])
+			m0 := sum[0] / float64(cnt[0])
+			vb := sumsq[best]/float64(cnt[best]) - mb*mb
+			v0 := sumsq[0]/float64(cnt[0]) - m0*m0
+			seD := math.Sqrt(vb/float64(cnt[best]) + v0/float64(cnt[0]))
+			if gap := mb - m0; gap > ServeSearchHysteresis && gap < 2*seD {
+				maxN = capN * 2 // 灰区: 加时一倍辨清
+			}
+		}
 	}
 	// 2026-07-05 (std14 教训): 滞回带 — NN top-1 是34万样本的先验, 挑战者须显著更好才换手.
-	// 2026-07-06 加严 1.5→4.0 (#63 实锤): 40-sim SE≈2.8, 1.5 挡不住噪声; 且搜索的 shaped reward
-	// (foul6/KK30) 在 KK 追范类上系统性反对老师(范率优先) — gap 2.9~3.7 的翻案全是这两类.
-	// 4.0 = 只认压倒性证据; 保险丝#3/#4 的真救援 gap 20~47 不受影响.
+	// 2026-07-06 加严 1.5→4.0 (#63 实锤) 再叠显著性门槛 (#60/#63 对照实验):
+	// rollout 确带 usedCards (60/63 语境 1000-sim 均值差 -2.0 vs +5.2, deck-aware ✓),
+	// 但 40-sim 下均值差的 SE≈4 — 真实差距 2~5 分的品味题在噪声底之下, "裁决"=掷硬币.
+	// 换手须 gap > max(固定滞回, 2×SE_diff): 搜索不知道时保持 NN, 只有统计显著的大灾才出手.
 	best := 0
 	for i := 1; i < len(states); i++ {
 		if sum[i]/float64(cnt[i]) > sum[best]/float64(cnt[best]) {
 			best = i
 		}
 	}
-	if best != 0 && sum[best]/float64(cnt[best])-sum[0]/float64(cnt[0]) < ServeSearchHysteresis {
-		best = 0
+	if best != 0 {
+		mb := sum[best] / float64(cnt[best])
+		m0 := sum[0] / float64(cnt[0])
+		vb := sumsq[best]/float64(cnt[best]) - mb*mb
+		v0 := sumsq[0]/float64(cnt[0]) - m0*m0
+		seDiff := math.Sqrt(vb/float64(cnt[best]) + v0/float64(cnt[0]))
+		thr := ServeSearchHysteresis
+		if 2*seDiff > thr {
+			thr = 2 * seDiff
+		}
+		if mb-m0 < thr {
+			best = 0
+		}
 	}
 	means := make([]float64, K)
 	for i := 0; i < K; i++ {
