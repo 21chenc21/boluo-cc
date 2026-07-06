@@ -1611,7 +1611,7 @@
   ]
  },
  {
-  "name": "实战 19 [R4]: 鬼顶[X]+双三条板, 发[X Ts 3c] → top凑333三条(re-fan) 不是AA对",
+  "name": "实战 19 [R4]: 鬼顶[X]+双三条板, 发[X Ts 3c] → top凑333三条(re-fan) 不是AA对 | 2026-07-06 用户+数据双裁: 留双鬼+Ts底(quads)亦预期 — 对齐账本下双双100%范0foul, B线纯赚royalty+14.8(153.7 vs 165.1)",
   "round": 4,
   "jokerCount": 2,
   "pureMLP": true,
@@ -1645,6 +1645,15 @@
     ],
     "middle": [],
     "bottom": []
+   },
+   {
+    "top": [
+     "Xj1"
+    ],
+    "middle": [],
+    "bottom": [
+     "Ts"
+    ]
    }
   ],
   "wrongs": [
