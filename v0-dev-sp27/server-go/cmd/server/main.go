@@ -855,6 +855,12 @@ func main() {
 		ofc.HardRulesDisabled = true
 		log.Print("[server] DISABLE_HARD_RULES set; bypass all hard rule filters")
 	}
+	// 2026-07-07 (#102 部署排查): server 一直缺这个 env — prod 软规则从没关过.
+	// sp46 体系 = 纯NN+保险丝, 软规则是 sp26 校准的遗产, 对新NN是噪声 (case102 名字即案底: 规则conn误杀拆分).
+	if envStr("DISABLE_SOFT_RULES", "") != "" {
+		ofc.SoftRulesDisabled = true
+		log.Print("[server] DISABLE_SOFT_RULES set; 关全部软 bonus/penalty (纯 value head prerank)")
+	}
 	if pb := envStr("POLICY_BOOST", ""); pb != "" {
 		v, _ := strconv.ParseFloat(pb, 32)
 		ofc.PolicyBoost = float32(v)
