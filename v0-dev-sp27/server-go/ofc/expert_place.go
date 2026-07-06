@@ -899,6 +899,7 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 			foulFuseN := false
 			fanFuseN := false
 			jokerTripsN := false
+			ceilN := false
 			if ServeSearchMargin > 0 && pick == 0 && len(uniq) >= 2 {
 				atomic.AddInt64(&ServeSearchDecCount, 1)
 				if ServeSearchThinMargin && uniq[0].teScore-uniq[1].teScore < ServeSearchMargin {
@@ -937,11 +938,30 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 					atomic.AddInt64(&ServeSearchTripsTrigCount, 1)
 					trigN, jokerTripsN = true, true
 				}
+				// 保险丝#6: 范天花板 — top-1 没锁大对上顶而候选能锁且上位rank死绝 (#63)
+				if !trigN && ServeSearchFanFuse && topLockedPairRank(uniq[0].gs) < 0 {
+					for i := 1; i < len(uniq) && i < ServeSearchTopK*2; i++ {
+						if r := topLockedPairRank(uniq[i].gs); r >= 0 && fanCeilingLocked(uniq[i].gs, r) {
+							atomic.AddInt64(&ServeSearchCeilTrigCount, 1)
+							trigN, ceilN = true, true
+							break
+						}
+					}
+				}
 			}
 			if !ServeSearchDryRun && trigN && tryAcquireSearchSlot() {
 				var sts []*GameState
 				var stIdx []int // sts → uniq 索引映射 (fuse 集非前缀)
-				if jokerTripsN {
+				if ceilN {
+					sts = append(sts, uniq[0].gs)
+					stIdx = append(stIdx, 0)
+					for i := 1; i < len(uniq) && len(sts) < ServeSearchTopK+1; i++ {
+						if r := topLockedPairRank(uniq[i].gs); r >= 0 && fanCeilingLocked(uniq[i].gs, r) {
+							sts = append(sts, uniq[i].gs)
+							stIdx = append(stIdx, i)
+						}
+					}
+				} else if jokerTripsN {
 					for i := 0; i < len(uniq) && i < ServeSearchTopK+1; i++ {
 						sts = append(sts, uniq[i].gs)
 						stIdx = append(stIdx, i)
@@ -989,6 +1009,9 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 				}
 				if jokerTripsN {
 					tag += "-jokertrips"
+				}
+				if ceilN {
+					tag += "-fanceil"
 				}
 				pick = stIdx[pick]
 				line := fmt.Sprintf("[serve-search] R%d %s n=%d means=%.2f NN=%s → 选=%s",
@@ -1411,6 +1434,44 @@ func jokerTripsTopLock(gs *GameState) bool {
 		return false
 	}
 	return Evaluate3Joker(gs.Top).Type == TypeThreeOfAKind
+}
+
+// ServeSearchCeilTrigCount — 保险丝#6 范天花板 (2026-07-07, #63): top-1 没锁大对上顶,
+// 而场上存在"锁对P≥Q于顶"的候选, 且 P 之上所有 rank 已死绝(等待无 rank 上行) → 搜一次.
+// 触发=纯甲板数学(rankRem), 裁决=账本 — 63 对照实验账本教义同向(+5.2), 无 #19 型冲突.
+// 注: 不看鬼(双鬼理论可AA), 鬼路径由搜索的 rollout 自然定价.
+var ServeSearchCeilTrigCount int64
+
+// topLockedPairRank — 候选顶上已锁的天然大对 rank (≥Q); 无则 -1.
+func topLockedPairRank(gs *GameState) int {
+	var rc [13]int
+	for _, c := range gs.Top {
+		if !c.IsJoker() {
+			rc[c.Rank()]++
+		}
+	}
+	for r := 12; r >= int(RankQ); r-- {
+		if rc[r] >= 2 {
+			return r
+		}
+	}
+	return -1
+}
+
+// fanCeilingLocked — rank r 之上的所有 rank 是否死绝 (等待无上行).
+func fanCeilingLocked(gs *GameState, r int) bool {
+	var seen [13]int
+	for id := range gs.UsedCards {
+		if c, ok := ParseCard(id); ok && !c.IsJoker() {
+			seen[c.Rank()]++
+		}
+	}
+	for hr := r + 1; hr <= 12; hr++ {
+		if seen[hr] < 4 {
+			return false
+		}
+	}
+	return true
 }
 
 // serveFoulFuseHasSafe — 保险丝#3 第二判据: 是否存在安全替代线 (f89<0.3).
