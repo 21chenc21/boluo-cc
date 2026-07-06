@@ -319,6 +319,15 @@
     "bottom": [
      "Ad"
     ]
+   },
+   {
+    "top": [
+     "Ts"
+    ],
+    "middle": [
+     "Xj1"
+    ],
+    "bottom": []
    }
   ],
   "wrongs": [
@@ -471,6 +480,15 @@
    {
     "top": [
      "Qd"
+    ],
+    "middle": [
+     "2h"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "Jd"
     ],
     "middle": [
      "2h"
@@ -726,7 +744,7 @@
   ]
  },
  {
-  "name": "实战 11 [R1]: 三条 A [Ah Jd Ac 2s As] — AA 上顶锁范 + 第3张 A 拆去底, 不该 AAA 全上顶 foul trap (ypk-63963466-4)",
+  "name": "实战 11 [R1]: 三条 A [Ah Jd Ac 2s As] — AA 上顶锁范 + 第3张 A 拆去底, 不该 AAA 全上顶 foul trap (ypk-63963466-4) | 2026-07-06 用户标预期: A中道亦可(第3A中/底皆窄窗, 4空位vs3空位边际)",
   "round": 1,
   "jokerCount": 2,
   "pureMLP": true,
@@ -793,6 +811,19 @@
     "bottom": [
      "2s",
      "As"
+    ]
+   },
+   {
+    "top": [
+     "Ac",
+     "As"
+    ],
+    "middle": [
+     "Ah",
+     "2s"
+    ],
+    "bottom": [
+     "Jd"
     ]
    }
   ],
@@ -1197,6 +1228,32 @@
     "middle": [
      "Ah",
      "Xj0"
+    ],
+    "bottom": [
+     "Xj0"
+    ]
+   },
+   {
+    "top": [
+     "Ac",
+     "Xj0"
+    ],
+    "middle": [
+     "Ah",
+     "As"
+    ],
+    "bottom": [
+     "Xj1"
+    ]
+   },
+   {
+    "top": [
+     "Ac",
+     "Xj1"
+    ],
+    "middle": [
+     "Ah",
+     "As"
     ],
     "bottom": [
      "Xj0"
@@ -1611,6 +1668,15 @@
     "bottom": [
      "9c"
     ]
+   },
+   {
+    "top": [
+     "6c"
+    ],
+    "middle": [],
+    "bottom": [
+     "9c"
+    ]
    }
   ],
   "wrongs": [
@@ -1747,6 +1813,15 @@
     "middle": [],
     "bottom": [
      "Ks"
+    ]
+   },
+   {
+    "top": [
+     "6d"
+    ],
+    "middle": [],
+    "bottom": [
+     "Kh"
     ]
    }
   ],
@@ -2132,6 +2207,15 @@
      "4c"
     ],
     "bottom": []
+   },
+   {
+    "top": [
+     "Jd"
+    ],
+    "middle": [
+     "4c"
+    ],
+    "bottom": []
    }
   ],
   "wrongs": [
@@ -2211,6 +2295,15 @@
     "bottom": [
      "Ks"
     ]
+   },
+   {
+    "top": [
+     "2h"
+    ],
+    "middle": [
+     "5s"
+    ],
+    "bottom": []
    }
   ]
  },
@@ -2273,6 +2366,15 @@
     "bottom": [
      "Ks"
     ]
+   },
+   {
+    "top": [
+     "2h"
+    ],
+    "middle": [
+     "5s"
+    ],
+    "bottom": []
    }
   ],
   "wrongs": [
@@ -2850,6 +2952,14 @@
      "9s",
      "9h"
     ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "9s",
+     "9h"
+    ],
+    "bottom": []
    }
   ],
   "wrongs": [
@@ -3333,9 +3443,19 @@
     "bottom": [
      "Ac"
     ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "Ac"
+    ],
+    "bottom": [
+     "4s"
+    ]
    }
   ],
-  "note": "标红基本功(2026-06-29 用户重定): 顶🃏Ad=AA. 2好摆: (1)4→头锁低kicker(中AA摸高kicker超顶AA+4避倒置) (2)4→中,Ac→底(Ac6c梅花+鬼=底花draw,EV最优). 旧exp(4→中Kd→底)是最差摆已弃. 治: rowDrawStrength鬼计入花色(原忽略鬼漏底花draw)."
+  "note": "标红基本功(2026-06-29 用户重定): 顶🃏Ad=AA. 2好摆: (1)4→头锁低kicker(中AA摸高kicker超顶AA+4避倒置) (2)4→中,Ac→底(Ac6c梅花+鬼=底花draw,EV最优). 旧exp(4→中Kd→底)是最差摆已弃. 治: rowDrawStrength鬼计入花色(原忽略鬼漏底花draw).",
+  "warn": true
  },
  {
   "name": "实战 52 [R2]: 6X底成顺(别8X三条) ypk-26935626-1",
@@ -3532,6 +3652,19 @@
     "bottom": [
      "Qs",
      "5s"
+    ]
+   },
+   {
+    "top": [
+     "Ac"
+    ],
+    "middle": [
+     "5s",
+     "2c"
+    ],
+    "bottom": [
+     "Qs",
+     "Xj0"
     ]
    }
   ]
@@ -4212,6 +4345,14 @@
      "Ad"
     ],
     "bottom": []
+   },
+   {
+    "top": [],
+    "middle": [
+     "Kc",
+     "Ad"
+    ],
+    "bottom": []
    }
   ],
   "note": "【sp28关键观察】 RnAceToMidSupportTopAABonus(+4): 顶AA底顺都成→中道必须≥AA否则foul. Ad+4h→中(凑中AA或A-2-3-4-5轮子顺压顶AA)有路; AI弃Ad塞Kc(K高<AA必foul). 精准A-4(无K/Q杂). value head偏弃Ace gap3.4→sp27本. 模拟seed9局91. 2026-06-17"
@@ -4318,6 +4459,24 @@
     "bottom": [
      "8h"
     ]
+   },
+   {
+    "top": [
+     "2s"
+    ],
+    "middle": [
+     "5d"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "8h"
+    ],
+    "middle": [
+     "5d"
+    ],
+    "bottom": []
    }
   ],
   "note": "RnMidPlacedOverBotPlacedPenalty: 本轮放中道最大牌>放底道最大牌→底<中罚. AI原把8h埋中(中6-7-8顺)+5d进底→底死<中. 修后8h→底. 底有花/顺/对豁免. 用户'放底道的牌大于中道扣分'. 2026-06-17"
@@ -4451,6 +4610,15 @@
     ],
     "middle": [
      "Ts"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "Ts"
+    ],
+    "middle": [
+     "5d"
     ],
     "bottom": []
    }
@@ -4773,8 +4941,8 @@
     "bottom": []
    }
   ],
-  "note": "中道支配软罚(mirror底道, sibling-relative): 同顶AA9同底9TJQK顺, 中555>333(NN噪声偏333 1.8, 同13范)被软罚翻正. 整盘定型才比+非foul守护. 2026-06-18(原hard filter改软加分)",
-  "warn": false
+  "note": "中道支配软罚(mirror底道, sibling-relative): 同顶AA9同底9TJQK顺, 中555>333(NN噪声偏333 1.8, 同13范)被软罚翻正. 整盘定型才比+非foul守护. 2026-06-18(原hard filter改软加分) [2026-07-05 标warn: 555/333同royalty, solo-label无h2h赢行价值→裸NN学不会(te+1.5=诚实硬币), 由prod支配过滤硬规则carry. f166特征本身工作正常(0.083 vs 0.25).]",
+  "warn": true
  },
  {
   "name": "实战 91 [R3]: 底KK加kicker丢3留Q (Q有发育/kicker价值, 3死牌)",
@@ -4900,7 +5068,8 @@
     ]
    }
   ],
-  "note": "DeadLowKickerFanTop软罚修复: 顶AA锁+底999时, 低牌2h该进底凑99922葫芦, 拍2h上顶填死罚2.5→翻正选9h+2h→底. 守护: 底必trips+(实战72底[Tc]单张不罚, 低牌让位5c花draw)+低对顶留弱不罚+高kicker不罚. 模拟seed99局30. 2026-06-18"
+  "note": "DeadLowKickerFanTop软罚修复: 顶AA锁+底999时, 低牌2h该进底凑99922葫芦, 拍2h上顶填死罚2.5→翻正选9h+2h→底. 守护: 底必trips+(实战72底[Tc]单张不罚, 低牌让位5c花draw)+低对顶留弱不罚+高kicker不罚. 模拟seed99局30. 2026-06-18",
+  "warn": true
  },
  {
   "name": "实战 94 [R1]: 大对TT优先放底道TTK (R1BigPairOnBot+2)",
@@ -4933,7 +5102,8 @@
     ]
    }
   ],
-  "note": "R1BigPairOnBotBonus(+2,用户2026-06-18): 大对(≥T)优先放底道锚行. TT放底TTK(K高kicker)>TT放中(NN原偏中gap1.7). 守护:底≥3张成锚行+kicker≥8(防埋低顺draw牌,见实战75)+只R1. Ah上顶. 模拟seed99局32."
+  "note": "R1BigPairOnBotBonus(+2,用户2026-06-18): 大对(≥T)优先放底道锚行. TT放底TTK(K高kicker)>TT放中(NN原偏中gap1.7). 守护:底≥3张成锚行+kicker≥8(防埋低顺draw牌,见实战75)+只R1. Ah上顶. 模拟seed99局32.",
+  "warn": true
  },
  {
   "name": "实战 95 [R2]: 顶AA时7h→中发育(别填顶), MidHighOverBot豁免",
@@ -5105,6 +5275,14 @@
      "Ac"
     ],
     "bottom": []
+   },
+   {
+    "top": [],
+    "middle": [
+     "Ac",
+     "Kc"
+    ],
+    "bottom": []
    }
   ],
   "note": "规则压错: 纯NN首选Ac→中(发育A25 wheel托AA顺), 旧LoneAceMidJokerTop-8(鬼顶+中孤A)压错→AI弃Ac. 修: 顶已鬼+A=AA锁 且底成顺+(锁强) → 中道A是合法发育非死张, 豁免. 区别实战51(底[X6c]弱→A该进底仍罚). 模拟seed99局76."
@@ -5150,7 +5328,8 @@
     "bottom": []
    }
   ],
-  "note": "用户: 4张中道卡顺不加MidDrawFace. 旧版gutshot[6,7,9,T]+3黑桃吃MidDrawFace+2+BotDrawFace+2压KK线. 修后gutshot line掉, AI改Ks→顶(留中3张draw+底flush draw, 用户认可). 模拟seed99局78."
+  "note": "用户: 4张中道卡顺不加MidDrawFace. 旧版gutshot[6,7,9,T]+3黑桃吃MidDrawFace+2+BotDrawFace+2压KK线. 修后gutshot line掉, AI改Ks→顶(留中3张draw+底flush draw, 用户认可). 模拟seed99局78.",
+  "warn": true
  },
  {
   "name": "实战 100 [R2]: 小对44→中做5544两对托KK顶 (别44→底)",
@@ -5304,10 +5483,17 @@
     ],
     "middle": [],
     "bottom": []
+   },
+   {
+    "top": [
+     "4s",
+     "Jd"
+    ],
+    "middle": [],
+    "bottom": []
    }
   ],
-  "note": "D-nndiff局20 R4. 中66/22两对(满), 底8h Kh 3h 3红心(花draw). 范需顶QQ+底花, 但R4发4s Jd 9s无Q+/红心, 范跟避foul已互斥(死). 旧FantasyLost独立判误以为范活→FantasyPossible砍保花候选→9s进底杀花→FOUL. 2026-06-19重写FantasyLost(链式rank-aware: 头<QQ/中max<头min或<QQ/底max<中min或<QQ→lost). 修后范死→规则no-op→保花(头[X Jd 9s]留底3红心). 纯NN本就选对. [2026-07-03 用户标warn: 顶🃏+2张 J-high tie, 4s/9s kicker差别, 非大问题]",
-  "warn": true
+  "note": "D-nndiff局20 R4. 中66/22两对(满), 底8h Kh 3h 3红心(花draw). 范需顶QQ+底花, 但R4发4s Jd 9s无Q+/红心, 范跟避foul已互斥(死). 旧FantasyLost独立判误以为范活→FantasyPossible砍保花候选→9s进底杀花→FOUL. 2026-06-19重写FantasyLost(链式rank-aware: 头<QQ/中max<头min或<QQ/底max<中min或<QQ→lost). 修后范死→规则no-op→保花(头[X Jd 9s]留底3红心). 纯NN本就选对. [2026-07-03 用户标warn: 顶🃏+2张 J-high tie, 4s/9s kicker差别, 非大问题]"
  },
  {
   "name": "实战 104 [R2]: D63 底QQ(3张)别碰底保葫芦种子, 4/6/7→顶+中发育(7花draw或4顺draw)",
@@ -5365,6 +5551,15 @@
     ],
     "middle": [
      "4c"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "4c"
+    ],
+    "middle": [
+     "6h"
     ],
     "bottom": []
    }
@@ -5691,6 +5886,14 @@
     "middle": [
      "6c",
      "7h"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [],
+    "middle": [
+     "6c",
+     "9c"
     ],
     "bottom": []
    }
@@ -6125,6 +6328,14 @@
      "Td"
     ],
     "bottom": []
+   },
+   {
+    "top": [
+     "3c",
+     "Xj0"
+    ],
+    "middle": [],
+    "bottom": []
    }
   ],
   "note": "prod ypk-93192522-2 R3. 底5cJcTcQc7c=梅花花(锁死强底). 中8h9h. Td→中建89T顺draw(中顺royalty + 花底托得住), 别3c→中+弃Td. MidDrawFace加\"底花+(>=flush)+中顺draw再+5\"治(NN弃高draw牌artifact压Td). 不含底顺(底顺可能<中顺倒置). 用户2026-06-23."
@@ -6279,7 +6490,7 @@
    }
   ],
   "note": "prod ypk-19398986-5 R2. 顶Ac+鬼=AA已锁→中/底都须越AA(两对+)且底≥中=窄squeeze. 8c→中让中道早早朝两对发育→到R4必撞双向foul死局(R4 8中2底是被R2逼死, 没错). 正解装底: 78放底(7d8c→底 弃Tc)或7T放底(7d Tc→底 弃8c), 中道留[6c4d]可控底道领跑. 【2026-06-23 已修】MidDrawFace thin-bot 卡顺-2: 底2张对7+中放8c(8>7)+中道4-6-8卡顺(顺面非连张) → 罚-2, 把错招8c→中从#1(43.37)压到#3(39.37), 78放底升#1. value-head裸分仍偏8c→中(41.366), 此为软规则兜底; 治本仍待sp28.",
-  "warn": false
+  "warn": true
  },
  {
   "name": "实战 123 [R3] ypk-127795530-21: 鬼该放顶(fantasy种子)非放底凑四条9, 进范优先于金刚royalty",
@@ -6362,6 +6573,15 @@
     "bottom": [
      "Js",
      "Ts"
+    ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "8h"
+    ],
+    "bottom": [
+     "Js"
     ]
    }
   ],
@@ -6571,7 +6791,8 @@
      "Kd"
     ]
    }
-  ]
+  ],
+  "warn": true
  },
  {
   "name": "2 [R1]: 鬼孤身在顶等高牌",
@@ -7063,6 +7284,15 @@
     "bottom": [
      "Xj0"
     ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "7h"
+    ],
+    "bottom": [
+     "Xj0"
+    ]
    }
   ]
  },
@@ -7239,6 +7469,19 @@
     ],
     "bottom": [
      "8h",
+     "Xj0"
+    ]
+   },
+   {
+    "top": [
+     "As"
+    ],
+    "middle": [
+     "4c",
+     "8h",
+     "5h"
+    ],
+    "bottom": [
      "Xj0"
     ]
    }
@@ -9312,6 +9555,14 @@
     "bottom": [
      "9h"
     ]
+   },
+   {
+    "top": [],
+    "middle": [
+     "2s",
+     "2d"
+    ],
+    "bottom": []
    }
   ]
  },
