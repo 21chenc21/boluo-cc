@@ -9,7 +9,7 @@ E=$(cat tools/CHAMPION)
 OUT="fam-${CASE}-${FAM%.json}"
 SEEDARG=(-seed-family-only "$FAM" -seed-family-frac 0.5)
 [[ "$FAM" == *.json ]] && SEEDARG=(-seed-states "$FAM" -seed-states-frac 0.6)
-( cd server-go && go build -o ../server-go-bin/gen-rollout-dataset ./cmd/gen-rollout-dataset )
+( cd server-go && go build -o ../server-go-bin/gen-rollout-dataset ./cmd/gen-rollout-dataset ) || { echo "❌ BUILD FAIL (看上面编译错误)"; exit 1; }
 grep -aq "seed-family-only" server-go-bin/gen-rollout-dataset || { echo "❌ 弹药验证失败"; exit 1; }
 echo "gen → $OUT (教师=$E)"
 DISABLE_HARD_RULES=1 DISABLE_SOFT_RULES=1 ./server-go-bin/gen-rollout-dataset \
