@@ -65,6 +65,7 @@ var (
 
 	// 2026-07-04 sp41: 种子家族 gen (种家族不种case, 见 seed_families.go)
 	seedFamilyFrac = flag.Float64("seed-family-frac", 0, "此比例的局从种子家族中局开局 (0=关). 家族: lockBottom/jokerTopSeed/foulBait/r1micro")
+	seedFamilyOnly = flag.String("seed-family-only", "", "只产该家族的种子局 (单家族A/B质检用, 2026-07-07 铁律: 家族上线前单独验). 可选: lockBottom/jokerTopSeed/foulBait/r1micro/fanConflict/drawTrap/overfill/deadAce")
 	seedStates     = flag.String("seed-states", "", "真人板 JSON (solve_log 提取), 与家族种子并行的真实状态源")
 	seedStatesFrac = flag.Float64("seed-states-frac", 0, "此比例的局从真人板开局 (0=关)")
 )
@@ -749,7 +750,11 @@ func main() {
 			}
 		}
 		if seed == nil && *seedFamilyFrac > 0 && rng.Float64() < *seedFamilyFrac {
-			seed = makeFamilySeed(rng)
+			if *seedFamilyOnly != "" {
+				seed = makeNamedFamilySeed(rng, *seedFamilyOnly)
+			} else {
+				seed = makeFamilySeed(rng)
+			}
 			seededCount++
 		}
 		samples := genOneGame(gameIdx, rng, &cfg, seed)

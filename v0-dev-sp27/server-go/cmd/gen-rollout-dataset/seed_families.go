@@ -503,6 +503,30 @@ func makeFamilySeed(rng *rand.Rand) *seedSpec {
 	}
 }
 
+// makeNamedFamilySeed — 指定家族生产 (单家族 A/B 质检).
+func makeNamedFamilySeed(rng *rand.Rand, name string) *seedSpec {
+	switch name {
+	case "lockBottom":
+		return seedLockBottom(rng)
+	case "jokerTopSeed":
+		return seedJokerTopSeed(rng)
+	case "foulBait":
+		return seedFoulBait(rng)
+	case "r1micro":
+		return seedR1Micro(rng)
+	case "fanConflict":
+		return seedFanConflict(rng)
+	case "drawTrap":
+		return seedDrawTrap(rng)
+	case "overfill":
+		return seedOverfill(rng)
+	case "deadAce":
+		return seedDeadAce(rng)
+	default:
+		panic("未知种子家族: " + name)
+	}
+}
+
 // seedCards — 种子占用的全部牌 (从 deck 剔除用)
 func (s *seedSpec) seedCards() []ofc.Card {
 	var out []ofc.Card
