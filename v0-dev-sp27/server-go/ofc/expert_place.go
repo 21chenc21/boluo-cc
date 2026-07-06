@@ -1249,20 +1249,49 @@ var (
 	ServeSearchFanTrigCount int64
 )
 
-// fanFloorCandidate — 保底范粗筛: 顶含鬼 + 顶有天然 Q/K/A (鬼配它 ≥QQ 范底) + foul 链看不到风险.
+// fanFloorCandidate — 保底范判定: 顶含鬼 + 顶有天然 Q/K/A, 且**鬼承诺配大牌(范形态, 不许降级)后
+// foul 仍不可能**. 2026-07-06 v2 (#16 实锤): 粗筛版把 16A(顶🃏QcAc, 鬼一牌两用不可兼得: 当A追范
+// 24%foul / 降级保命没范)也放行 → top-1 自己"像"保底范, 保险丝不触发. 承诺检查分得开:
+// 16B 承诺 QQ 后中道 AA 恒≥ → f89=0 ✓; 16A 承诺 AA 后中道无A必须两对 → f89 高 ✗.
 func fanFloorCandidate(gs *GameState) bool {
-	hasJoker, hasBig := false, false
+	bigRank := -1
+	jokerN := 0
 	for _, c := range gs.Top {
 		if c.IsJoker() {
-			hasJoker = true
-		} else if c.Rank() >= RankQ {
-			hasBig = true
+			jokerN++
+		} else if int(c.Rank()) > bigRank && c.Rank() >= RankQ {
+			bigRank = int(c.Rank())
 		}
 	}
-	if !hasJoker || !hasBig {
+	if jokerN == 0 || bigRank < 0 {
 		return false
 	}
-	return BuildFeaturesV3(gs)[89] < 0.05
+	// 承诺范形态: 鬼 → 大牌rank 的替身牌 (花色取顶内未用的, 仅供eval, 不动UsedCards)
+	g2 := gs.Clone()
+	var suitUsed [4]bool
+	for _, c := range gs.Top {
+		if !c.IsJoker() && int(c.Rank()) == bigRank {
+			suitUsed[c.Suit()] = true
+		}
+	}
+	top2 := make([]Card, 0, len(gs.Top))
+	for _, c := range gs.Top {
+		if c.IsJoker() {
+			sub := Card(0)
+			for st := uint8(0); st < 4; st++ {
+				if !suitUsed[st] {
+					sub = MakeCard(uint8(bigRank), st)
+					suitUsed[st] = true
+					break
+				}
+			}
+			top2 = append(top2, sub)
+		} else {
+			top2 = append(top2, c)
+		}
+	}
+	g2.Top = top2
+	return BuildFeaturesV3(g2)[89] < 0.05
 }
 
 // serveFanFuseStates — 保险丝#4 对比集: top-1 + 排名最高的保底范候选 (≤topK).

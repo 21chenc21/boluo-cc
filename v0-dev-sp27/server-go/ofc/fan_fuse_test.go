@@ -67,6 +67,10 @@ func TestFanFloorCandidate(t *testing.T) {
 	if !fanFloorCandidate(b) {
 		t.Errorf("16B 保底线应命中 fanFloor (f89=%.3f)", BuildFeaturesV3(b)[89])
 	}
+	// v2 (2026-07-06): 16A 鬼一牌两用不可兼得 (承诺AA后中道无A必两对) → 必须被拒
+	if fanFloorCandidate(a) {
+		t.Errorf("16A 假保底(承诺范后24%%foul)不该命中 fanFloor")
+	}
 	if fanFloorCandidate(c) {
 		t.Errorf("无鬼顶不该命中 fanFloor")
 	}
