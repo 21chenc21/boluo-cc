@@ -50,6 +50,8 @@ func TestServeSearchTriggerRate(t *testing.T) {
 			100*float64(ServeSearchTrigCount)/float64(ServeSearchDecCount),
 			ServeSearchFoulTrigCount,
 			100*float64(ServeSearchFoulTrigCount)/float64(ServeSearchDecCount),
-			9*float64(ServeSearchTrigCount+ServeSearchFoulTrigCount)/float64(ServeSearchDecCount))
+			9*float64(ServeSearchTrigCount+ServeSearchFoulTrigCount+ServeSearchFanTrigCount)/float64(ServeSearchDecCount))
+		t.Logf("  fanfloor触发 %d (%.2f%%)", ServeSearchFanTrigCount,
+			100*float64(ServeSearchFanTrigCount)/float64(ServeSearchDecCount))
 	}
 }

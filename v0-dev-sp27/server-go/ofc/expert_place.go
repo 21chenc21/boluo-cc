@@ -213,6 +213,7 @@ func (er *ExpertRollout) ExpertPlace5(state *GameState, cards []Card) {
 			// 2026-07-05: serve 薄边轻搜索 (只在确定性 top-1 模式介入, 不干扰 topk-sample)
 			trig := false
 			foulFuse := false
+			fanFuse := false
 			if ServeSearchMargin > 0 && pick == 0 && len(candidates) >= 2 {
 				atomic.AddInt64(&ServeSearchDecCount, 1)
 				if candidates[0].score-candidates[1].score < ServeSearchMargin {
@@ -236,16 +237,30 @@ func (er *ExpertRollout) ExpertPlace5(state *GameState, cards []Card) {
 						trig, foulFuse = true, true
 					}
 				}
+				// 保险丝#4: 存在保底范候选而 top-1 不是 → 小跑裁决 (#16/#124)
+				if !trig && ServeSearchFanFuse && !fanFloorCandidate(candidates[0].gs) {
+					for i := 1; i < len(candidates); i++ {
+						if fanFloorCandidate(candidates[i].gs) {
+							atomic.AddInt64(&ServeSearchFanTrigCount, 1)
+							trig, fanFuse = true, true
+							break
+						}
+					}
+				}
 			}
 			if !ServeSearchDryRun && trig && tryAcquireSearchSlot() {
 				var sts []*GameState
 				var stIdx []int // sts → candidates 索引映射 (fuse 集非前缀)
-				if foulFuse {
+				if foulFuse || fanFuse {
 					all := make([]*GameState, len(candidates))
 					for i := range candidates {
 						all[i] = candidates[i].gs
 					}
-					sts = serveFoulFuseStates(all, ServeSearchTopK)
+					if foulFuse {
+						sts = serveFoulFuseStates(all, ServeSearchTopK)
+					} else {
+						sts = serveFanFuseStates(all, ServeSearchTopK)
+					}
 					for _, st := range sts {
 						for i := range candidates {
 							if candidates[i].gs == st {
@@ -272,6 +287,9 @@ func (er *ExpertRollout) ExpertPlace5(state *GameState, cards []Card) {
 				}
 				if foulFuse {
 					tag += "-foulfuse"
+				}
+				if fanFuse {
+					tag += "-fanfloor"
 				}
 				pick = stIdx[pick]
 				line := fmt.Sprintf("[serve-search] R1 %s n=%d means=%.2f NN=%s → 选=%s",
@@ -879,6 +897,7 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 			// 2026-07-05: serve 薄边轻搜索 (同 R1)
 			trigN := false
 			foulFuseN := false
+			fanFuseN := false
 			if ServeSearchMargin > 0 && pick == 0 && len(uniq) >= 2 {
 				atomic.AddInt64(&ServeSearchDecCount, 1)
 				if uniq[0].teScore-uniq[1].teScore < ServeSearchMargin {
@@ -902,16 +921,30 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 						trigN, foulFuseN = true, true
 					}
 				}
+				// 保险丝#4: 存在保底范候选而 top-1 不是 → 小跑裁决 (#16/#124)
+				if !trigN && ServeSearchFanFuse && !fanFloorCandidate(uniq[0].gs) {
+					for i := 1; i < len(uniq); i++ {
+						if fanFloorCandidate(uniq[i].gs) {
+							atomic.AddInt64(&ServeSearchFanTrigCount, 1)
+							trigN, fanFuseN = true, true
+							break
+						}
+					}
+				}
 			}
 			if !ServeSearchDryRun && trigN && tryAcquireSearchSlot() {
 				var sts []*GameState
 				var stIdx []int // sts → uniq 索引映射 (fuse 集非前缀)
-				if foulFuseN {
+				if foulFuseN || fanFuseN {
 					all := make([]*GameState, len(uniq))
 					for i := range uniq {
 						all[i] = uniq[i].gs
 					}
-					sts = serveFoulFuseStates(all, ServeSearchTopK)
+					if foulFuseN {
+						sts = serveFoulFuseStates(all, ServeSearchTopK)
+					} else {
+						sts = serveFanFuseStates(all, ServeSearchTopK)
+					}
 					for _, st := range sts {
 						for i := range uniq {
 							if uniq[i].gs == st {
@@ -938,6 +971,9 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 				}
 				if foulFuseN {
 					tag += "-foulfuse"
+				}
+				if fanFuseN {
+					tag += "-fanfloor"
 				}
 				pick = stIdx[pick]
 				line := fmt.Sprintf("[serve-search] R%d %s n=%d means=%.2f NN=%s → 选=%s",
@@ -1188,6 +1224,41 @@ var (
 	ServeSearchFoulFuse      float32 = 0.7
 	ServeSearchFoulTrigCount int64
 )
+
+// ServeSearchFanFuse — 保险丝#4 保底范 (2026-07-06 用户拍板): 场上存在"保底范"候选而 NN top-1
+// 不是 → 小跑搜索裁决. #16/#124 实锤: 保底线 100%范/0%foul (mean 45/89) 被 NN 排后 (te gap +18.7).
+// 探测是粗筛(顶有鬼+天然大牌≥Q + f89≈0), 600-sim 实测 fan% 当裁判 — 保底线 mean 碾压, 搜索必翻.
+var (
+	ServeSearchFanFuse      = true
+	ServeSearchFanTrigCount int64
+)
+
+// fanFloorCandidate — 保底范粗筛: 顶含鬼 + 顶有天然 Q/K/A (鬼配它 ≥QQ 范底) + foul 链看不到风险.
+func fanFloorCandidate(gs *GameState) bool {
+	hasJoker, hasBig := false, false
+	for _, c := range gs.Top {
+		if c.IsJoker() {
+			hasJoker = true
+		} else if c.Rank() >= RankQ {
+			hasBig = true
+		}
+	}
+	if !hasJoker || !hasBig {
+		return false
+	}
+	return BuildFeaturesV3(gs)[89] < 0.05
+}
+
+// serveFanFuseStates — 保险丝#4 对比集: top-1 + 排名最高的保底范候选 (≤topK).
+func serveFanFuseStates(states []*GameState, topK int) []*GameState {
+	out := []*GameState{states[0]}
+	for i := 1; i < len(states) && len(out) < topK+1; i++ {
+		if fanFloorCandidate(states[i]) {
+			out = append(out, states[i])
+		}
+	}
+	return out
+}
 
 // serveFoulFuseHasSafe — 保险丝#3 第二判据: 是否存在安全替代线 (f89<0.3).
 // 被迫foul场 (全候选都危) 不触发 — 搜了白搜还烧预算; fuse 的本意是"有安路不走选了绝路".
