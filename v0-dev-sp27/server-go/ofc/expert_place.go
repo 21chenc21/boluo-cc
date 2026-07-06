@@ -1297,7 +1297,31 @@ func fanFloorCandidate(gs *GameState) bool {
 		}
 	}
 	g2.Top = top2
-	return BuildFeaturesV3(g2)[89] < 0.05
+	if BuildFeaturesV3(g2)[89] < 0.05 {
+		return true // 承诺保底 (16B型): 现在锁范也恒安全
+	}
+	// v3 (2026-07-06 #22): 条件承诺 — 顶留空位时真实玩法是"中道成了才让鬼配大牌, 不成降级保命".
+	// 降级逃生铁的条件: 中道已有天然成对(对子恒压任何高牌顶) 且 原状态 foul 链≈0.
+	// 16A 反例: 降级后顶 A-Q 高 vs 中 A92 无对 → kicker 战会输(真 24% foul), 中道无对 → 拒.
+	if 3-len(gs.Top) >= 1 {
+		var midRc [13]int
+		for _, c := range gs.Middle {
+			if !c.IsJoker() {
+				midRc[c.Rank()]++
+			}
+		}
+		midPair := false
+		for _, n := range midRc {
+			if n >= 2 {
+				midPair = true
+				break
+			}
+		}
+		if midPair && BuildFeaturesV3(gs)[89] < 0.05 {
+			return true // 免费卷 (22B型): 降级恒活 + 范大概率
+		}
+	}
+	return false
 }
 
 // serveFanFuseStates — 保险丝#4 对比集: top-1 + 排名最高的保底范候选 (≤topK).

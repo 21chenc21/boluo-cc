@@ -86,3 +86,15 @@ func TestFanFloorCandidate(t *testing.T) {
 		t.Errorf("对比集应含保底线 b, 得 %d 条", len(out))
 	}
 }
+
+// v3 条件承诺 (#22): 22B(顶🃏Ks留位+中77对+f89=0)=免费卷该命中; 22A(顶满KKK)该拒
+func TestFanFloorV3Case22(t *testing.T) {
+	b := buildGS(t, 3, []string{"Xj0", "Ks"}, []string{"2d", "7s", "7d"}, []string{"Kc", "Kd", "Xj1", "Kh"}, "6d")
+	a := buildGS(t, 3, []string{"Xj0", "Ks", "Kh"}, []string{"2d", "7s", "7d"}, []string{"Kc", "Kd", "Xj1"}, "6d")
+	if !fanFloorCandidate(b) {
+		t.Errorf("22B 免费卷该命中 (f89=%.3f)", BuildFeaturesV3(b)[89])
+	}
+	if fanFloorCandidate(a) {
+		t.Errorf("22A (真foul 27%%) 不该命中")
+	}
+}
