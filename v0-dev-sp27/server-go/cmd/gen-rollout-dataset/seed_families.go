@@ -125,6 +125,17 @@ func seedLockBottom(rng *rand.Rand) *seedSpec {
 	dealtRank := pickRank(rng, 9, 12, topRank, botRank) // J~A, 避开已用
 
 	s := &seedSpec{family: "lockBottom"}
+	if rng.Intn(4) == 0 {
+		// 100型 (2026-07-06): 高牌顶 + 中已有对 + 发小对 — 小对进中做两对托高顶(exp) vs 小对下底(倒置雷).
+		s.startRound = 2
+		s.top = []ofc.Card{p.take(pickRank(rng, 10, 12))} // Q~A 孤张顶
+		mr := pickRank(rng, 2, 5)                         // 中对 4~7
+		s.mid = append(p.takeN(mr, 2), p.takeLow(0, 3, mr))
+		s.bot = []ofc.Card{p.takeLow(3, 6, mr)}
+		sp := pickRank(rng, 0, 3, mr) // 小对 2~5
+		s.dealt = append(p.takeN(sp, 2), p.takeLow(5, 8, mr, sp))
+		return s
+	}
 	s.top = p.takeN(topRank, 2)
 	s.bot = append(p.takeN(botRank, 2), p.takeLow(0, 5, botRank))
 	if rng.Intn(2) == 0 {
@@ -268,7 +279,9 @@ func seedR1Micro(rng *rand.Rand) *seedSpec {
 func seedFanConflict(rng *rand.Rand) *seedSpec {
 	p := newCardPool(rng)
 	s := &seedSpec{family: "fanConflict", startRound: 4}
-	if rng.Intn(2) == 0 {
+	// 2026-07-06 二批: 42型 30% / 46型 40%(加密, iter-3仍未裸翻) / 16型 30%(新)
+	roll := rng.Intn(10)
+	if roll < 3 {
 		// 42型: 顶大对P + 底三条B(<P) + 发P第3张 — 顶成 trips P > 底 trips B = 必foul绝路,
 		// 安路 = 大牌上头锁 P 对范 / 鬼中. 张力: trips范140 的诱惑 vs f89≈0.9.
 		P := pickRank(rng, 9, 12)  // J~A
@@ -283,7 +296,7 @@ func seedFanConflict(rng *rand.Rand) *seedSpec {
 		} else {
 			s.dealt = []ofc.Card{p.take(P), safe, p.takeLow(0, 6, P, B)}
 		}
-	} else {
+	} else if roll < 7 {
 		// 46型: 顶[🃏+低牌x] + 底强三条 + 发 x 配对张 — 锁 xxx 顶(窄范4.5%) vs 留鬼自由行(宽范21.7%).
 		// 非 foul 张力 (鬼可降级恒安全), 教"鬼顶 free-roll 价值".
 		x := pickRank(rng, 0, 3) // 2~5
@@ -295,6 +308,51 @@ func seedFanConflict(rng *rand.Rand) *seedSpec {
 		c := pickRank(rng, 2, 8, x, B, a, b)
 		s.mid = []ofc.Card{p.take(a), p.take(b), p.take(c)}
 		s.dealt = []ofc.Card{p.take(x), p.take(pickRank(rng, 2, 8, x, B)), p.takeLow(0, 6, x, B)}
+	} else {
+		// 16型 (2026-07-06 新): 顶[🃏+大牌Q~A] + 发三张同rank大牌(trip-A类) — 第三张同权牌的去向.
+		// exp: 双A进中(保底范: 弃第三张后场上无牌能超中AA, 顶鬼配Q恒范恒安全) / AI旧病: A头+A中拆散.
+		s.startRound = 3
+		big := pickRank(rng, 10, 12) // Q~A 顶搭子
+		s.top = []ofc.Card{p.joker(0), p.take(big)}
+		ta := pickRank(rng, 10, 12, big) // trip rank (≠顶搭子)
+		// 中 2 张杂 + 底 3 张强(对子/三条面)
+		s.mid = []ofc.Card{p.takeLow(0, 6, ta, big), p.takeLow(0, 6, ta, big)}
+		br := pickRank(rng, 6, 9, ta, big)
+		s.bot = p.takeN(br, 3)
+		s.dealt = p.takeN(ta, 3)
+	}
+	return s
+}
+
+// ============ F8: 过度填充/废鬼 (#22 家族, 2026-07-06) ============
+// 结构: 底 [RR🃏](鬼当第3张R, 高价值) + 发 [R R x] — 双R全下底则鬼沦为quads kicker(废),
+// exp: 一张R即凑quads(鬼=第4R), 另一张R是白赚材料(头/中). 教"行内鬼的边际价值守恒".
+func seedOverfill(rng *rand.Rand) *seedSpec {
+	p := newCardPool(rng)
+	s := &seedSpec{family: "overfill", startRound: 3}
+	R := pickRank(rng, 9, 12) // J~A
+	s.top = []ofc.Card{p.joker(0)}
+	mr := pickRank(rng, 0, 5, R)
+	s.mid = append(p.takeN(mr, 2), p.takeLow(0, 6, R, mr))
+	s.bot = append(p.takeN(R, 2), p.joker(1))
+	s.dealt = append(p.takeN(R, 2), p.takeLow(0, 6, R, mr))
+	return s
+}
+
+// ============ F9: 死A梯度重端 (std63 家族, 2026-07-06) ============
+// 结构: 顶大牌孤张 + 发 KK + extraUsed 塞 3~4 张死A — A绝版则 KK 就是顶的天花板, 该锁头进范.
+// 只种重端(3~4死A, 账本与老师同向+5.2); 轻端(1~2死A)不种 — 账本轻微反对老师(头KK+2.0),
+// 反向标签会砸 organic 的"KK默认下底"先验. 原料 f64(A剩余)一直在, 教交互不加特征 (用户拍板).
+func seedDeadAce(rng *rand.Rand) *seedSpec {
+	p := newCardPool(rng)
+	s := &seedSpec{family: "deadAce", startRound: 2}
+	s.top = []ofc.Card{p.take(pickRank(rng, 9, 10))} // J/Q 孤张
+	s.mid = []ofc.Card{p.takeLow(3, 5), p.takeLow(3, 5)}
+	s.bot = []ofc.Card{p.takeLow(0, 2), p.takeLow(6, 8)}
+	s.dealt = append(p.takeN(11, 2), p.takeLow(0, 6, 11)) // KK + 杂
+	nDead := 3 + rng.Intn(2)                              // 3~4 张死A
+	for i := 0; i < nDead; i++ {
+		s.extraUsed = append(s.extraUsed, p.take(12))
 	}
 	return s
 }
@@ -422,22 +480,26 @@ func pickRealSeed(rng *rand.Rand) *seedSpec {
 	return realSeeds[rng.Intn(len(realSeeds))]
 }
 
-// makeFamilySeed — 按权重选一个家族 (2026-07-06 五硬茬全覆盖:
-// 42/46→fanConflict, 75/102→r1micro(75型/102型), std47→drawTrap; 老家族降剂量维持记忆)
+// makeFamilySeed — 按权重选一个家族 (2026-07-06 二批: 剩余钉子全覆盖 —
+// 46加密+16型→fanConflict, 22→overfill, 100→lockBottom/100型, 63重端→deadAce)
 func makeFamilySeed(rng *rand.Rand) *seedSpec {
-	switch r := rng.Intn(12); {
-	case r < 2:
-		return seedLockBottom(rng) // 2/12 (23/24 已解, 维持)
-	case r < 4:
-		return seedJokerTopSeed(rng) // 2/12 (110/120 已解, 维持)
-	case r < 6:
-		return seedFoulBait(rng) // 2/12
-	case r < 9:
-		return seedR1Micro(rng) // 3/12 (94/75/std1/102 四变体)
-	case r < 11:
-		return seedFanConflict(rng) // 2/12 (42/46)
+	switch r := rng.Intn(16); {
+	case r < 3:
+		return seedLockBottom(rng) // 3/16 (23/24维持 + 100型新)
+	case r < 5:
+		return seedJokerTopSeed(rng) // 2/16 (110/120 已解, 维持)
+	case r < 7:
+		return seedFoulBait(rng) // 2/16
+	case r < 10:
+		return seedR1Micro(rng) // 3/16 (94/75/std1/102 四变体)
+	case r < 13:
+		return seedFanConflict(rng) // 3/16 (42型/46型加密/16型)
+	case r < 14:
+		return seedDrawTrap(rng) // 1/16 (std47)
+	case r < 15:
+		return seedOverfill(rng) // 1/16 (22)
 	default:
-		return seedDrawTrap(rng) // 1/12 (std47)
+		return seedDeadAce(rng) // 1/16 (63重端)
 	}
 }
 

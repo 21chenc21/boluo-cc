@@ -12,6 +12,9 @@ func TestSeedFanConflict(t *testing.T) {
 	n42, n46 := 0, 0
 	for i := 0; i < 500; i++ {
 		s := seedFanConflict(rand.New(rand.NewSource(int64(i))))
+		if s.startRound == 3 {
+			continue // 16型 (R3, 由 TestSeedBatch2 校验)
+		}
 		if s.startRound != 4 {
 			t.Fatalf("#%d startRound=%d", i, s.startRound)
 		}
@@ -118,5 +121,75 @@ func TestSeedDrawTrapAndBroadway(t *testing.T) {
 	}
 	if n102 < 300 {
 		t.Fatalf("102型 占比过低: %d/2000", n102)
+	}
+}
+
+// 二批构型校验: 16型/22型/100型/63型
+func TestSeedBatch2(t *testing.T) {
+	n16 := 0
+	for i := 0; i < 600; i++ {
+		s := seedFanConflict(rand.New(rand.NewSource(int64(i))))
+		if s.startRound == 3 { // 16型
+			n16++
+			if len(s.top) != 2 || len(s.dealt) != 3 {
+				t.Fatalf("16型 #%d 张数错", i)
+			}
+			r0 := s.dealt[0].Rank()
+			for _, c := range s.dealt {
+				if c.Rank() != r0 {
+					t.Fatalf("16型 #%d 发牌非同rank三张", i)
+				}
+			}
+		}
+	}
+	if n16 < 100 {
+		t.Fatalf("16型占比过低: %d/600", n16)
+	}
+	for i := 0; i < 300; i++ {
+		s := seedOverfill(rand.New(rand.NewSource(int64(i))))
+		if len(s.top) != 1 || len(s.mid) != 3 || len(s.bot) != 3 || len(s.dealt) != 3 {
+			t.Fatalf("22型 #%d 张数错", i)
+		}
+		if s.dealt[0].Rank() != s.bot[0].Rank() {
+			t.Fatalf("22型 #%d 发牌不配底R", i)
+		}
+		seen := map[string]bool{}
+		for _, c := range s.seedCards() {
+			if seen[c.ID()] {
+				t.Fatalf("22型 #%d 重牌", i)
+			}
+			seen[c.ID()] = true
+		}
+	}
+	for i := 0; i < 300; i++ {
+		s := seedDeadAce(rand.New(rand.NewSource(int64(i))))
+		if len(s.extraUsed) < 3 {
+			t.Fatalf("63型 #%d 死A不足", i)
+		}
+		for _, c := range s.extraUsed {
+			if c.Rank() != 12 {
+				t.Fatalf("63型 #%d extraUsed 非A", i)
+			}
+		}
+		if len(s.top)+len(s.mid)+len(s.bot) != 5 || len(s.dealt) != 3 {
+			t.Fatalf("63型 #%d R2张数错", i)
+		}
+	}
+	// 100型 (lockBottom 内 1/4)
+	n100 := 0
+	for i := 0; i < 800; i++ {
+		s := seedLockBottom(rand.New(rand.NewSource(int64(i))))
+		if len(s.top) == 1 { // 100型标志: 孤张顶
+			n100++
+			if len(s.mid) != 3 || len(s.bot) != 1 || len(s.dealt) != 3 {
+				t.Fatalf("100型 #%d 张数错", i)
+			}
+			if s.dealt[0].Rank() != s.dealt[1].Rank() {
+				t.Fatalf("100型 #%d 发牌前两张非对", i)
+			}
+		}
+	}
+	if n100 < 120 {
+		t.Fatalf("100型占比过低: %d/800", n100)
 	}
 }
