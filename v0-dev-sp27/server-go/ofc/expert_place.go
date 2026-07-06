@@ -932,8 +932,8 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 						}
 					}
 				}
-				// 保险丝#5: 顶三条含鬼(高杠杆承诺) → 必搜 (#46)
-				if !trigN && ServeSearchFanFuse && jokerTripsTopLock(uniq[0].gs) {
+				// 保险丝#5: 顶三条含鬼(高杠杆承诺)且非确定范 → 必搜 (#46; #19 确定范免搜)
+				if !trigN && ServeSearchFanFuse && jokerTripsTopLock(uniq[0].gs) && !jokerTripsCertain(uniq[0].gs) {
 					atomic.AddInt64(&ServeSearchTripsTrigCount, 1)
 					trigN, jokerTripsN = true, true
 				}
@@ -1347,6 +1347,55 @@ func serveFanFuseStates(states []*GameState, topK int) []*GameState {
 // 在它视野外. 鬼三条顶 = 高杠杆承诺(鬼被锁死), 值得一次二次验证; 对比集=NN前K名(替代线形态多样).
 var ServeSearchTripsTrigCount int64
 
+// jokerTripsCertain — 鬼三条顶是否"确定范": 承诺三条形态(鬼→trips rank替身)后 foul 链≈0
+// = 中底已托死, 范数学锁定. 2026-07-06 #19 (用户裁): 确定范不容账本翻案 (范率优先教义) —
+// 19 锁333(中888成/底TTT成, 100%范) 被#5按EV翻成留双鬼(91%范+higher EV) = 错.
+// 46A 反例: 锁222 中88托不住 → 承诺后 f89 高 → 范不确定 → 该搜.
+func jokerTripsCertain(gs *GameState) bool {
+	var rankCnt [13]int
+	jokerN := 0
+	for _, c := range gs.Top {
+		if c.IsJoker() {
+			jokerN++
+		} else {
+			rankCnt[c.Rank()]++
+		}
+	}
+	tripsRank := -1
+	for r := 12; r >= 0; r-- {
+		if rankCnt[r] >= 1 {
+			tripsRank = r
+			break
+		}
+	}
+	if tripsRank < 0 {
+		return false // 全鬼顶, 交给搜索
+	}
+	g2 := gs.Clone()
+	var suitUsed [4]bool
+	for _, c := range gs.Top {
+		if !c.IsJoker() && int(c.Rank()) == tripsRank {
+			suitUsed[c.Suit()] = true
+		}
+	}
+	top2 := make([]Card, 0, 3)
+	for _, c := range gs.Top {
+		if c.IsJoker() {
+			for st := uint8(0); st < 4; st++ {
+				if !suitUsed[st] {
+					top2 = append(top2, MakeCard(uint8(tripsRank), st))
+					suitUsed[st] = true
+					break
+				}
+			}
+		} else {
+			top2 = append(top2, c)
+		}
+	}
+	g2.Top = top2
+	return BuildFeaturesV3(g2)[89] < 0.05
+}
+
 // jokerTripsTopLock — 顶满 + 含鬼 + 鬼打满成三条.
 func jokerTripsTopLock(gs *GameState) bool {
 	if len(gs.Top) != 3 {
@@ -1586,7 +1635,9 @@ func (er *ExpertRollout) serveMarginSearchKDiv(states []*GameState, round, capDi
 			v0 := sumsq[0]/float64(cnt[0]) - m0*m0
 			seD := math.Sqrt(vb/float64(cnt[best]) + v0/float64(cnt[0]))
 			if gap := mb - m0; gap > ServeSearchHysteresis && gap < 2*seD {
-				maxN = capN * 2 // 灰区: 加时一倍辨清
+				// 2026-07-06 账本对齐后: 范bonus方差↑(0~140摆动) + 真gap缩(16: 17→7.3),
+				// 辨清 gap≈7 需 n≈225. 加时上限 2×→4× — 到显著即早停, 只有真灰区付满.
+				maxN = capN * 4
 			}
 		}
 	}

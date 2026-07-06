@@ -11,14 +11,16 @@ import (
 //   - AA pair:      AAFanBonus    (默认 200)
 //   - KK pair:      KKFanBonus    (默认 100)
 //   - QQ pair:      QQFanBonus    (默认 50)
+//
 // Foul 扣分: FoulCost (默认 6; 注: 游戏计分 ScoreHand.Score=-20 是真实对局分, 不进 silver-label)
 //
 // 这些 knob 直接编码到 silver-label 里 (mcScore = Royalties + fanBonus 或 -FoulCost),
 // 训练时调高某类 → MLP 学到偏好. 不是 rollout policy bias, 是用户价值函数声明.
 //
 // Epsilon — rollout policy ε-greedy 探索率 (训练用, 推理建议 0).
-//   每 step ε 概率 random pick action (而非 max-MLP), 让训练分布不被 MLP 当前认知锁死.
-//   推荐 0.1 (10%); 0=纯 greedy.
+//
+//	每 step ε 概率 random pick action (而非 max-MLP), 让训练分布不被 MLP 当前认知锁死.
+//	推荐 0.1 (10%); 0=纯 greedy.
 type RolloutConfig struct {
 	R1Mult        float32
 	FoulCost      float32 // foul 扣分 (默认 6, 真实 head-to-head -6 net loss 对齐)
@@ -44,12 +46,15 @@ type RolloutConfig struct {
 // DefaultRolloutConfig — 推理 / 老 ckpt 加载默认.
 // 2026-05-15 重校 — calibration via pineapple-ofc/v7_fan/fantasy-calibrate.js
 var DefaultRolloutConfig = RolloutConfig{
-	R1Mult:        1.0,
-	FoulCost:      6,
-	QQFanBonus:    20,
-	KKFanBonus:    40,
-	AAFanBonus:    80,
-	TripsFanBonus: 90,
+	R1Mult:   1.0,
+	FoulCost: 6,
+	// 2026-07-06 (#19 用户抓): 对齐 gen 标签口径 (sp40+ 配方 qq10/kk30/aa100/trips140) —
+	// 旧默认 20/40/80/90 是早期 calibration, serve 搜索用它翻 NN 的案 = 两本账打架
+	// (锁333确定范被少算50分). NN 按 gen 账本训练, 裁判必须用同一本.
+	QQFanBonus:    10,
+	KKFanBonus:    30,
+	AAFanBonus:    100,
+	TripsFanBonus: 140,
 	Epsilon:       0, // 推理 0 = 纯 greedy; 训练 CLI 可调 0.1
 	// 2026-06-28 (#110/#118): 顶trips范种子期权价值 8 (≈ P(成trips范)*fanBonus 保守估). gen 从 Default 继承.
 	TopTripsSeedBonus: 8,
@@ -94,6 +99,10 @@ type ExpertRollout struct {
 	// 让 stage3 能拿到 isFan / isFoul flag, 不只 royalty 数值.
 	// 不并发安全 — 单 goroutine 串行 stage3 use.
 	LastResult RolloutResult
+
+	// SearchAudit — serve 薄边搜索审计 (2026-07-05 排锅用): 每次搜索(KEEP/OVERRIDE)追加一行.
+	// server 每请求挂一个 slice → 随 response 落 solve_log. nil=关.
+	SearchAudit *[]string
 }
 
 // RolloutResult — 单次 rollout 的详细结果 (Path X)
@@ -147,7 +156,15 @@ func (er *ExpertRollout) QuickRollout(state *GameState, currentRound int) float3
 	var seedBonus float32
 	if er.Cfg.TopTripsSeedBonus != 0 {
 		rankRem, suitRem, jokerRem := computeDeckRemaining(state)
-		seedBonus = topTripsSeedScore(state, rankRem, suitRem, jokerRem) * er.Cfg.TopTripsSeedBonus
+		raw := topTripsSeedScore(state, rankRem, suitRem, jokerRem)
+		switch {
+		case raw > 0:
+			// 2026-07-04 sp40 (用户): 正种子概率加权 — 平价 +8 → topFanProb×2×bonus.
+			//   premium 鬼配QQ种子 (P≈0.5) 维持旧 +8 量级; 2% 烂trips种子 → +0.3, 不再虚胖冲稀桶 label.
+			seedBonus = topFanProb(state, rankRem, suitRem, jokerRem) * 2 * er.Cfg.TopTripsSeedBonus
+		case raw < 0:
+			seedBonus = -er.Cfg.TopTripsSeedBonus // 必倒置罚不变
+		}
 	}
 	// 2026-06-29 (#104): 底葫芦种子 + 中draw 期权价值. 同样从落子后盘面算, 注入非foul终局.
 	if er.Cfg.DrawSeedBonus != 0 {
@@ -302,4 +319,3 @@ func (er *ExpertRollout) QuickRolloutDetailed(state *GameState, currentRound int
 	r := er.LastResult
 	return r.RawRoyalty, r.IsFantasy, r.IsFoul
 }
-

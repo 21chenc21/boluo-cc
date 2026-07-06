@@ -126,3 +126,15 @@ func TestJokerTripsFuseCase46(t *testing.T) {
 		t.Errorf("保险丝#5 没拦住锁222顶 (真范4.5%% vs 留鬼21.7%%)")
 	}
 }
+
+// #19 确定范免死金牌: 锁333(中888/底TTT托死)=certain, 46A 锁222(中88托不住)=uncertain
+func TestJokerTripsCertain(t *testing.T) {
+	c19 := buildGS(t, 4, []string{"Xj0", "Xj1", "3c"}, []string{"8c", "8d", "7h", "8h"}, []string{"Td", "Jd", "Tc", "Th"}, "")
+	c46 := buildGS(t, 4, []string{"Xj0", "2c", "2s"}, []string{"4s", "8c", "Th", "8s"}, []string{"7h", "7d", "7c", "Qc"}, "6c")
+	if !jokerTripsCertain(c19) {
+		t.Errorf("19 锁333 中888成底TTT成 = 确定范, 该免搜")
+	}
+	if jokerTripsCertain(c46) {
+		t.Errorf("46A 锁222 中88托不住 = 不确定, 该搜")
+	}
+}
