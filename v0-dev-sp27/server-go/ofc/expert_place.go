@@ -279,11 +279,7 @@ func (er *ExpertRollout) ExpertPlace5(state *GameState, cards []Card) {
 				}
 				var n int
 				var means []float64
-				capDiv := 1
-				if fanFuse {
-					capDiv = 2
-				}
-				pick, n, means = er.serveMarginSearchKDiv(sts, 1, capDiv)
+				pick, n, means = er.serveMarginSearchKDiv(sts, 1, 1)
 				releaseSearchSlot()
 				tag := "KEEP"
 				if pick != 0 {
@@ -902,6 +898,7 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 			trigN := false
 			foulFuseN := false
 			fanFuseN := false
+			jokerTripsN := false
 			if ServeSearchMargin > 0 && pick == 0 && len(uniq) >= 2 {
 				atomic.AddInt64(&ServeSearchDecCount, 1)
 				if ServeSearchThinMargin && uniq[0].teScore-uniq[1].teScore < ServeSearchMargin {
@@ -935,11 +932,21 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 						}
 					}
 				}
+				// 保险丝#5: 顶三条含鬼(高杠杆承诺) → 必搜 (#46)
+				if !trigN && ServeSearchFanFuse && jokerTripsTopLock(uniq[0].gs) {
+					atomic.AddInt64(&ServeSearchTripsTrigCount, 1)
+					trigN, jokerTripsN = true, true
+				}
 			}
 			if !ServeSearchDryRun && trigN && tryAcquireSearchSlot() {
 				var sts []*GameState
 				var stIdx []int // sts → uniq 索引映射 (fuse 集非前缀)
-				if foulFuseN || fanFuseN {
+				if jokerTripsN {
+					for i := 0; i < len(uniq) && i < ServeSearchTopK+1; i++ {
+						sts = append(sts, uniq[i].gs)
+						stIdx = append(stIdx, i)
+					}
+				} else if foulFuseN || fanFuseN {
 					all := make([]*GameState, len(uniq))
 					for i := range uniq {
 						all[i] = uniq[i].gs
@@ -967,11 +974,8 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 				}
 				var n int
 				var means []float64
-				capDiv := 1
-				if fanFuseN {
-					capDiv = 2
-				}
-				pick, n, means = er.serveMarginSearchKDiv(sts, state.Round, capDiv)
+				// 2026-07-06 #22: fanfloor 恢复全预算 — v3免费卷线 fan~72% 方差大, 半预算在 2SE 门槛闪烁
+				pick, n, means = er.serveMarginSearchKDiv(sts, state.Round, 1)
 				releaseSearchSlot()
 				tag := "KEEP"
 				if pick != 0 {
@@ -982,6 +986,9 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 				}
 				if fanFuseN {
 					tag += "-fanfloor"
+				}
+				if jokerTripsN {
+					tag += "-jokertrips"
 				}
 				pick = stIdx[pick]
 				line := fmt.Sprintf("[serve-search] R%d %s n=%d means=%.2f NN=%s → 选=%s",
@@ -1333,6 +1340,28 @@ func serveFanFuseStates(states []*GameState, topK int) []*GameState {
 		}
 	}
 	return out
+}
+
+// ServeSearchTripsTrigCount — 保险丝#5 (2026-07-06 用户拍板): 顶上放三条且含鬼 → 必搜.
+// #46 型: 锁 🃏22=222 追窄范(4.5%) vs 留鬼自由行(21.7%) — #4 只认 ≥Q 对子范, 三条范(任意rank)
+// 在它视野外. 鬼三条顶 = 高杠杆承诺(鬼被锁死), 值得一次二次验证; 对比集=NN前K名(替代线形态多样).
+var ServeSearchTripsTrigCount int64
+
+// jokerTripsTopLock — 顶满 + 含鬼 + 鬼打满成三条.
+func jokerTripsTopLock(gs *GameState) bool {
+	if len(gs.Top) != 3 {
+		return false
+	}
+	hasJoker := false
+	for _, c := range gs.Top {
+		if c.IsJoker() {
+			hasJoker = true
+		}
+	}
+	if !hasJoker {
+		return false
+	}
+	return Evaluate3Joker(gs.Top).Type == TypeThreeOfAKind
 }
 
 // serveFoulFuseHasSafe — 保险丝#3 第二判据: 是否存在安全替代线 (f89<0.3).

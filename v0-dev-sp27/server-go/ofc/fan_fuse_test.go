@@ -98,3 +98,31 @@ func TestFanFloorV3Case22(t *testing.T) {
 		t.Errorf("22A (真foul 27%%) 不该命中")
 	}
 }
+
+// 保险丝#5 (#46): 顶三条含鬼 → 必搜. iter-3 在 46 上选 2s顶锁222, #5 该翻到 exp.
+// 跑法: OFC_FUSE5_CKPT=<在46上选错的ckpt> go test ./ofc -run TestJokerTripsFuseCase46 -v
+func TestJokerTripsFuseCase46(t *testing.T) {
+	ckpt := os.Getenv("OFC_FUSE5_CKPT")
+	if ckpt == "" {
+		t.Skip("需 OFC_FUSE5_CKPT")
+	}
+	if err := LoadWeightsFromFile(ckpt); err != nil {
+		t.Fatalf("load: %v", err)
+	}
+	oldMargin := ServeSearchMargin
+	ServeSearchMargin = 2.5
+	defer func() { ServeSearchMargin = oldMargin }()
+	gs := buildGS(t, 4, []string{"Xj0", "2c"}, []string{"4s", "8c", "Th"}, []string{"7h", "7d", "7c", "Qc"}, "")
+	dealt := mkCards(t, "2s", "8s", "6c")
+	var audit []string
+	cfg := DefaultRolloutConfig
+	cfg.PureMLP = true // 保险丝住在 pureMLP 路径 (prod 形态)
+	er := &ExpertRollout{Rng: rand.New(rand.NewSource(46)), Cfg: cfg}
+	er.SearchAudit = &audit
+	er.ExpertPlace3(gs, dealt)
+	t.Logf("摆法: 头%v 中%v 底%v", gs.Top, gs.Middle, gs.Bottom)
+	t.Logf("audit: %v", audit)
+	if len(gs.Top) == 3 {
+		t.Errorf("保险丝#5 没拦住锁222顶 (真范4.5%% vs 留鬼21.7%%)")
+	}
+}
