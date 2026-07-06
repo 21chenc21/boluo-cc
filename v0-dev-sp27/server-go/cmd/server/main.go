@@ -12,18 +12,20 @@
 //   - GET  /             静态文件 (v7_fan/*.html, *.js, *.css)
 //
 // 启动 flag:
-//   -addr       :8001       (TCP)
-//   -unix       /path/sock  (Unix socket, 覆盖 -addr)
-//   -static     ../         (前端静态文件根; 默认相对 binary 位置)
-//   -db         games.db    (sqlite 文件路径)
+//
+//	-addr       :8001       (TCP)
+//	-unix       /path/sock  (Unix socket, 覆盖 -addr)
+//	-static     ../         (前端静态文件根; 默认相对 binary 位置)
+//	-db         games.db    (sqlite 文件路径)
 //
 // 环境变量:
-//   SOLVE_CACHE_SIZE  Go 进程内 LRU 容量 (默认 2000, 0 关闭)
-//   DEFAULT_LEVEL     low / medium / high (默认 medium)
-//   HIGH_MULT MEDIUM_MULT LOW_MULT  覆盖各档 r1Mult
-//   SOLVE_LOG         off / sample / on (默认 off)
-//   SOLVE_LOG_RATE    sample 模式采样率 (默认 0.1)
-//   SOLVE_LOG_RETAIN  保留最近 N 条 (默认 50000)
+//
+//	SOLVE_CACHE_SIZE  Go 进程内 LRU 容量 (默认 2000, 0 关闭)
+//	DEFAULT_LEVEL     low / medium / high (默认 medium)
+//	HIGH_MULT MEDIUM_MULT LOW_MULT  覆盖各档 r1Mult
+//	SOLVE_LOG         off / sample / on (默认 off)
+//	SOLVE_LOG_RATE    sample 模式采样率 (默认 0.1)
+//	SOLVE_LOG_RETAIN  保留最近 N 条 (默认 50000)
 package main
 
 import (
@@ -218,10 +220,12 @@ type apiSolveResponse struct {
 	Discards  []string            `json:"discards"`
 	ElapsedMs int64               `json:"elapsedMs"`
 	TotalMs   int64               `json:"totalMs"`
-	Level     string              `json:"level"`             // pureMLP=true 时返 "pureMLP", 否则 low/medium/high/custom
-	R1Mult    float32             `json:"r1Mult,omitempty"`  // pureMLP=true 时省略 (MCTS 缩放参数不生效)
-	TopK      int                 `json:"topK,omitempty"`    // 2026-05-31: 回显 AI 难度 (1=最强 / 2-3=sample)
+	Level     string              `json:"level"`            // pureMLP=true 时返 "pureMLP", 否则 low/medium/high/custom
+	R1Mult    float32             `json:"r1Mult,omitempty"` // pureMLP=true 时省略 (MCTS 缩放参数不生效)
+	TopK      int                 `json:"topK,omitempty"`   // 2026-05-31: 回显 AI 难度 (1=最强 / 2-3=sample)
 	Cached    bool                `json:"cached"`
+	// 2026-07-05: serve 薄边搜索审计 — 排锅 (搜索的锅还是NN的锅). 空=本手没触发搜索.
+	SearchAudit []string `json:"searchAudit,omitempty"`
 }
 
 type rawSolveResponse struct {
@@ -235,10 +239,11 @@ type rawSolveResponse struct {
 
 // solveCore — 共用 solve 逻辑. 输入已经规范化的字段, 返回 layout / discards / elapsed / cached / err.
 type solveOut struct {
-	Layout    map[string][]string
-	Discards  []string
-	ElapsedMs int64
-	Cached    bool
+	Layout      map[string][]string
+	Discards    []string
+	SearchAudit []string // 2026-07-05: serve 薄边搜索审计 (KEEP/OVERRIDE), 随 solve_log 落库排锅
+	ElapsedMs   int64
+	Cached      bool
 }
 
 func solveCore(
@@ -351,6 +356,7 @@ func solveCore(
 	}
 
 	// === normal mode ===
+	var searchAudit []string // 2026-07-05: serve 搜索审计 (per-request)
 	// Deterministic mode: always create fresh RNG (don't put back, force pool.New() each call)
 	var rng *mrand.Rand
 	if rngSeedBase != 0 {
@@ -377,6 +383,7 @@ func solveCore(
 		ofc.ApplyMCTSAction(state, dealt, action)
 	} else {
 		er := &ofc.ExpertRollout{Rng: rng, Cfg: cfg}
+		er.SearchAudit = &searchAudit // 2026-07-05: 每请求收集搜索审计
 		if round == 1 || len(dealt) == 5 {
 			er.ExpertPlace5(state, dealt)
 		} else {
@@ -415,7 +422,7 @@ func solveCore(
 	elapsed := time.Since(t0).Milliseconds()
 	totalSolved.Add(1)
 	totalMs.Add(elapsed)
-	return &solveOut{Layout: layout, Discards: discards, ElapsedMs: elapsed}, nil
+	return &solveOut{Layout: layout, Discards: discards, SearchAudit: searchAudit, ElapsedMs: elapsed}, nil
 }
 
 func handleSolveRaw(w http.ResponseWriter, r *http.Request) {
@@ -521,13 +528,14 @@ func handleAPISolve(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := apiSolveResponse{
-		Layout:    out.Layout,
-		Discards:  out.Discards,
-		ElapsedMs: out.ElapsedMs,
-		TotalMs:   time.Since(tStart).Milliseconds(),
-		Level:     levelLabel,
-		TopK:      req.TopK, // 0=default(top-1), 2/3=R1 sample
-		Cached:    out.Cached,
+		Layout:      out.Layout,
+		Discards:    out.Discards,
+		ElapsedMs:   out.ElapsedMs,
+		TotalMs:     time.Since(tStart).Milliseconds(),
+		Level:       levelLabel,
+		TopK:        req.TopK, // 0=default(top-1), 2/3=R1 sample
+		Cached:      out.Cached,
+		SearchAudit: out.SearchAudit,
 	}
 	// 仅 MCTS path 时返 r1Mult (pureMLP 时占位无意义, 省略)
 	if !cfg.PureMLP {
@@ -851,6 +859,36 @@ func main() {
 		v, _ := strconv.ParseFloat(pb, 32)
 		ofc.PolicyBoost = float32(v)
 		log.Printf("[server] POLICY_BOOST=%.2f (head3 policy logit bias in prerank)", v)
+	}
+	if envStr("OFC_KEEP_FILTERS", "") != "" {
+		ofc.KeepFiltersPureNN = true
+	}
+	if v := envStr("OFC_SERVE_SEARCH", ""); v != "" {
+		var m float64
+		fmt.Sscanf(v, "%f", &m)
+		ofc.ServeSearchMargin = float32(m)
+		ofc.ServeSearchLog = func(line string) { log.Print(line) } // 审计: 每次搜索 KEEP/OVERRIDE 落 server 日志
+		log.Printf("[server] OFC_SERVE_SEARCH=%.2f: 薄边轻搜索 ON (cap %d, 审计日志 ON)", m, ofc.ServeSearchCap)
+	}
+	// 2026-07-07 (prod 升 8核): 搜索算力旋钮 — workers 建议 核数-2, cap 同比放大 (sims翻倍/SE÷√2, 墙钟不变).
+	// 8核推荐: OFC_SEARCH_WORKERS=6 OFC_SEARCH_CAP=240 (灰区加时封顶 4×cap).
+	if v := envStr("OFC_SEARCH_WORKERS", ""); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n >= 1 {
+			ofc.ServeSearchWorkers = n
+			log.Printf("[server] OFC_SEARCH_WORKERS=%d", n)
+		}
+	}
+	if v := envStr("OFC_SEARCH_CAP", ""); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n >= ofc.ServeSearchBatch {
+			ofc.ServeSearchCap = n
+			log.Printf("[server] OFC_SEARCH_CAP=%d (R2=cap/3 R3=cap/2 R4+=cap, 灰区加时至4×)", n)
+		}
+	}
+	if v := envStr("OFC_SEARCH_SLOTS", ""); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n >= 1 {
+			ofc.SetServeSearchSlots(n)
+			log.Printf("[server] OFC_SEARCH_SLOTS=%d (并发搜索槽位)", n)
+		}
 	}
 	if envStr("DISABLE_MCTS", "") != "" {
 		ofc.MctsDisabled = true
