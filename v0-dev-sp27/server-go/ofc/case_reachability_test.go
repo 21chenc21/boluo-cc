@@ -60,7 +60,7 @@ func TestCaseReachability(t *testing.T) {
 
 	// ===== R2 案 (板 = R1 手, 直接测) =====
 	r2cases := []struct {
-		name string
+		name          string
 		top, mid, bot []string
 	}{
 		{"23", []string{"Ac", "As"}, []string{}, []string{"Qh", "Qc", "6h"}},
@@ -125,6 +125,122 @@ func TestCaseReachability(t *testing.T) {
 		}
 		rec(0, 0)
 		t.Logf("案16(R3): %d/%d 条重建路径可达 (E 会不会自己摆进 头[鬼Qc] 中[9s2h] 底[TTT])", reach16, tried16)
+	}
+
+	// ===== 105 (R4, 9 placed): 头[AsAc] 中[5h5c4h] 底[🃏QdKhJs] =====
+	reach105 := 0
+	tried105 := 0
+	{
+		top, mid, bot := parse([]string{"As", "Ac"}), parse([]string{"5h", "5c", "4h"}), parse([]string{"Xj0", "Qd", "Kh", "Js"})
+		all := append(append(append([]Card{}, top...), mid...), bot...)
+		want := rowOf(top, mid, bot)
+		junk1 := parse([]string{"2d"})[0]
+		junk2 := parse([]string{"3c"})[0]
+		n := len(all)
+		var i5 [5]int
+		var rec5 func(start, k int)
+		rec5 = func(start, k int) {
+			if k == 5 {
+				in1 := map[int]bool{}
+				for _, i := range i5 {
+					in1[i] = true
+				}
+				var r1 []Card
+				var rest []Card
+				for i := 0; i < n; i++ {
+					if in1[i] {
+						r1 = append(r1, all[i])
+					} else {
+						rest = append(rest, all[i])
+					}
+				}
+				for a := 0; a < 4; a++ {
+					for b := a + 1; b < 4; b++ {
+						tried105++
+						gs := &GameState{NumJokers: 2, Round: 1, UsedCards: map[string]bool{}}
+						er := newER()
+						er.ExpertPlace5(gs, r1)
+						if !matchRows(gs, want) {
+							continue
+						}
+						gs.Round = 2
+						er.ExpertPlace3(gs, []Card{rest[a], rest[b], junk1})
+						if !matchRows(gs, want) {
+							continue
+						}
+						var r3 []Card
+						for i := 0; i < 4; i++ {
+							if i != a && i != b {
+								r3 = append(r3, rest[i])
+							}
+						}
+						gs.Round = 3
+						er.ExpertPlace3(gs, []Card{r3[0], r3[1], junk2})
+						if matchRows(gs, want) && len(gs.Top)+len(gs.Middle)+len(gs.Bottom) == 9 {
+							reach105++
+						}
+					}
+				}
+				return
+			}
+			for i := start; i < n; i++ {
+				i5[k] = i
+				rec5(i+1, k+1)
+			}
+		}
+		rec5(0, 0)
+		t.Logf("案105(R4): %d/%d 条重建路径可达", reach105, tried105)
+	}
+
+	// ===== 22 (R3, 7 placed): 头[🃏] 中[2d7s7d] 底[KcKd🃏] =====
+	reach22 := 0
+	tried22 := 0
+	{
+		top, mid, bot := parse([]string{"Xj0"}), parse([]string{"2d", "7s", "7d"}), parse([]string{"Kc", "Kd", "Xj1"})
+		all := append(append(append([]Card{}, top...), mid...), bot...)
+		want := rowOf(top, mid, bot)
+		junks := parse([]string{"3c", "4d", "5s"})
+		n := len(all)
+		var idx [5]int
+		var rec func(start, k int)
+		rec = func(start, k int) {
+			if k == 5 {
+				inR1 := map[int]bool{}
+				for _, i := range idx {
+					inR1[i] = true
+				}
+				var r1 []Card
+				var r2 []Card
+				for i := 0; i < n; i++ {
+					if inR1[i] {
+						r1 = append(r1, all[i])
+					} else {
+						r2 = append(r2, all[i])
+					}
+				}
+				for _, junk := range junks {
+					tried22++
+					gs := &GameState{NumJokers: 2, Round: 1, UsedCards: map[string]bool{}}
+					er := newER()
+					er.ExpertPlace5(gs, r1)
+					if !matchRows(gs, want) {
+						continue
+					}
+					gs.Round = 2
+					er.ExpertPlace3(gs, []Card{r2[0], r2[1], junk})
+					if matchRows(gs, want) && len(gs.Top)+len(gs.Middle)+len(gs.Bottom) == 7 {
+						reach22++
+					}
+				}
+				return
+			}
+			for i := start; i < n; i++ {
+				idx[k] = i
+				rec(i+1, k+1)
+			}
+		}
+		rec(0, 0)
+		t.Logf("案22(R3): %d/%d 条重建路径可达", reach22, tried22)
 	}
 
 	// ===== 110 (R4, 9 placed): 枚举 R1 C(9,5) × R2 C(4,2), 垫牌×2 =====
