@@ -5517,7 +5517,7 @@
   "note": "D.csv局78 R1. 纯NN(te21.6全场最高)首选 Kd单顶/89中/ThQh底, 用户判对. 规则ON被 conn连张拆分罚-10 →QK塞中(te16.0). conn对此拆法误杀. 纯NN应过, 规则ON当前 FAIL."
  },
  {
-  "name": "实战 103 [R4]: D20 范已死(中两对/底花draw互斥), 保花 头[X Jd 9s] 别9s进底杀花",
+  "name": "实战 103 [R4]: D20 范已死(中两对/底花draw互斥), 保花 头[X Jd 9s] 别9s进底杀花 | 2026-07-06 用户降级警告",
   "round": 4,
   "jokerCount": 2,
   "pureMLP": true,
@@ -5561,7 +5561,8 @@
     "bottom": []
    }
   ],
-  "note": "D-nndiff局20 R4. 中66/22两对(满), 底8h Kh 3h 3红心(花draw). 范需顶QQ+底花, 但R4发4s Jd 9s无Q+/红心, 范跟避foul已互斥(死). 旧FantasyLost独立判误以为范活→FantasyPossible砍保花候选→9s进底杀花→FOUL. 2026-06-19重写FantasyLost(链式rank-aware: 头<QQ/中max<头min或<QQ/底max<中min或<QQ→lost). 修后范死→规则no-op→保花(头[X Jd 9s]留底3红心). 纯NN本就选对. [2026-07-03 用户标warn: 顶🃏+2张 J-high tie, 4s/9s kicker差别, 非大问题]"
+  "note": "D-nndiff局20 R4. 中66/22两对(满), 底8h Kh 3h 3红心(花draw). 范需顶QQ+底花, 但R4发4s Jd 9s无Q+/红心, 范跟避foul已互斥(死). 旧FantasyLost独立判误以为范活→FantasyPossible砍保花候选→9s进底杀花→FOUL. 2026-06-19重写FantasyLost(链式rank-aware: 头<QQ/中max<头min或<QQ/底max<中min或<QQ→lost). 修后范死→规则no-op→保花(头[X Jd 9s]留底3红心). 纯NN本就选对. [2026-07-03 用户标warn: 顶🃏+2张 J-high tie, 4s/9s kicker差别, 非大问题]",
+  "warn": true
  },
  {
   "name": "实战 104 [R2]: D63 底QQ(3张)别碰底保葫芦种子, 4/6/7→顶+中发育(7花draw或4顺draw)",
