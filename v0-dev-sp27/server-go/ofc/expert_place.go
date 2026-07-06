@@ -259,7 +259,7 @@ func (er *ExpertRollout) ExpertPlace5(state *GameState, cards []Card) {
 					if foulFuse {
 						sts = serveFoulFuseStates(all, ServeSearchTopK)
 					} else {
-						sts = serveFanFuseStates(all, ServeSearchTopK)
+						sts = serveFanFuseStates(all, 1) // 保底线方差≈0, 1条+半预算足够
 					}
 					for _, st := range sts {
 						for i := range candidates {
@@ -279,7 +279,11 @@ func (er *ExpertRollout) ExpertPlace5(state *GameState, cards []Card) {
 				}
 				var n int
 				var means []float64
-				pick, n, means = er.serveMarginSearchK(sts, 1)
+				capDiv := 1
+				if fanFuse {
+					capDiv = 2
+				}
+				pick, n, means = er.serveMarginSearchKDiv(sts, 1, capDiv)
 				releaseSearchSlot()
 				tag := "KEEP"
 				if pick != 0 {
@@ -943,7 +947,7 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 					if foulFuseN {
 						sts = serveFoulFuseStates(all, ServeSearchTopK)
 					} else {
-						sts = serveFanFuseStates(all, ServeSearchTopK)
+						sts = serveFanFuseStates(all, 1) // 保底线方差≈0, 1条+半预算足够
 					}
 					for _, st := range sts {
 						for i := range uniq {
@@ -963,7 +967,11 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 				}
 				var n int
 				var means []float64
-				pick, n, means = er.serveMarginSearchK(sts, state.Round)
+				capDiv := 1
+				if fanFuseN {
+					capDiv = 2
+				}
+				pick, n, means = er.serveMarginSearchKDiv(sts, state.Round, capDiv)
 				releaseSearchSlot()
 				tag := "KEEP"
 				if pick != 0 {
@@ -1390,6 +1398,11 @@ var ServeSearchLog func(line string)
 // serveMarginSearchK — K 个 post-state 并行加摸 (worker=NumCPU, 每 worker 独立 ExpertRollout/Rng);
 // 每批后若 leader 领先第二名 > 2·SE合 提前停 (真平局烧满也没损失). 返回赢家下标+统计.
 func (er *ExpertRollout) serveMarginSearchK(states []*GameState, round int) (int, int, []float64) {
+	return er.serveMarginSearchKDiv(states, round, 1)
+}
+
+// serveMarginSearchKDiv — capDiv>1 缩减 sims 预算 (保险丝#4: 保底线方差≈0, 半预算足够裁决).
+func (er *ExpertRollout) serveMarginSearchKDiv(states []*GameState, round, capDiv int) (int, int, []float64) {
 	K := len(states)
 	W := runtime.NumCPU()
 	if W > ServeSearchWorkers {
@@ -1440,7 +1453,10 @@ func (er *ExpertRollout) serveMarginSearchK(states []*GameState, round int) (int
 		wg.Wait()
 	}
 
-	capN := serveSearchCapForRound(round)
+	capN := serveSearchCapForRound(round) / capDiv
+	if capN < ServeSearchBatch {
+		capN = ServeSearchBatch
+	}
 	for cnt[0] < capN {
 		runBatch(ServeSearchBatch)
 		// leader vs runner-up 判停
