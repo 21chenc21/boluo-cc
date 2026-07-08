@@ -9,7 +9,7 @@ DISABLE_MCTS=1 DISABLE_HARD_RULES=1 DISABLE_SOFT_RULES=1 ./server-go-bin/bench-c
 echo "裸:  $(grep 结果 "$T/naked.txt" | grep -oE '[0-9]+失败') → $(grep '^✗' "$T/naked.txt" | sed 's/:.*//' | tr '\n' ' ')"
 for r in 1 2; do
   DISABLE_MCTS=1 DISABLE_HARD_RULES=1 DISABLE_SOFT_RULES=1 \
-  OFC_KEEP_FILTERS=1 OFC_SERVE_SEARCH=2.5 OFC_SEARCH_WORKERS=6 OFC_SEARCH_CAP=240 \
+  OFC_KEEP_FILTERS=1 OFC_SERVE_SEARCH=2.5 OFC_SEARCH_WORKERS=6 OFC_SEARCH_CAP=240 OFC_SEARCH_SLOTS=8 \
   ./server-go-bin/bench-cases -ckpt "$CK" -workers 1 > "$T/full$r.txt" 2>&1
   echo "栈$r: $(grep 结果 "$T/full$r.txt" | grep -oE '[0-9]+失败') → $(grep '^✗' "$T/full$r.txt" | sed 's/:.*//' | tr '\n' ' ')"
 done

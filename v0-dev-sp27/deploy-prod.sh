@@ -14,8 +14,9 @@ PD=boluo-cc/ofc-dev-v3
 LOCALBIN=/home/chguang/boluo-cc/ofc-dev-v3/server-go-bin/ofc-dev-v3
 SSH="ssh -i $KEY -o StrictHostKeyChecking=no"
 SCP="scp -i $KEY -o StrictHostKeyChecking=no"
-# 已知基线败单 (E + 全栈, 全部已定性: 化石/刀刃/活靶排队). 新增败案才报警.
-BASELINE_OK="实战 16|实战 23|实战 67|实战 73|实战 104|实战 105|实战 110|63 \[R2\]"
+# 已知基线败单 (d3 + 全栈修复后: 仅剩双化石; 110 已标warn). 新增败案才报警.
+# 实战 16 = online_testcase.py 精确花色匹配假败 (AI摆法≡exp3花色孪生, bench花色自由判过). TODO: py侧花色自由.
+BASELINE_OK="实战 23|实战 104|实战 16"
 
 WEIGHTS_LOCAL="${1:-}"
 

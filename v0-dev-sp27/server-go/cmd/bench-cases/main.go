@@ -354,6 +354,11 @@ func main() {
 			ofc.ServeSearchCap = n
 		}
 	}
+	if v := os.Getenv("OFC_SEARCH_SLOTS"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n >= 1 {
+			ofc.SetServeSearchSlots(n)
+		}
+	}
 	if v := os.Getenv("OFC_SERVE_SEARCH"); v != "" {
 		var m float64
 		fmt.Sscanf(v, "%f", &m)

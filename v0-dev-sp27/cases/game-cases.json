@@ -5977,8 +5977,8 @@
     "bottom": []
    }
   ],
-  "note": "prod-review sp26. 底8888金刚锁, 中666trips. 6c+7h该都进中(满666), 顶留纯鬼=范种子(R5任何Q/K/A配鬼成范/凑trips). AI把7h占顶成77(<QQ非范)浪费鬼范, value-head高估立刻77对(纯NN gap21). 死牌Z组标AI=2(7h占顶+4c死kicker) vs 留鬼=0. 2026-06-22",
-  "warn": false
+  "note": "prod-review sp26. 底8888金刚锁, 中666trips. 6c+7h该都进中(满666), 顶留纯鬼=范种子(R5任何Q/K/A配鬼成范/凑trips). AI把7h占顶成77(<QQ非范)浪费鬼范, value-head高估立刻77对(纯NN gap21). 死牌Z组标AI=2(7h占顶+4c死kicker) vs 留鬼=0. 2026-06-22 | 2026-07-07 终审: 账本1000-sim实测两线仅差0.7(67.75 vs 68.46, foul均0)=品味平局; 家族弹+精准邻域弹两轮微调均不翻且固定蹭伤发育脚105/124/30 → 标warn接受.",
+  "warn": true
  },
  {
   "name": "实战 111 [R2]: 顶Ad+中44+底9Ks+发鬼5s4c, 鬼进底凑KK托中44(别4c进中成444 foul)",

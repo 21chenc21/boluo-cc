@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# hotfix-finetune.sh <fam粮dir> <case号> [epochs=3] — 太子成年微调 (playbook 二·七 步骤2)
+# hotfix-finetune.sh <fam粮dir> <case号> [epochs=3] [init_ckpt] — 太子成年微调 (playbook 二·七 步骤2)
+# 链式治疗: 第4参传上一发ckpt (如 v3-train-hf-fuse4d2/round-001-acc94.json), 省略=tools/CHAMPION
 set -euo pipefail
 cd "$(dirname "$0")/.."
 FAMDIR="${1:?用法: hotfix-finetune.sh <fam粮dir> <case号> [epochs]}"
 CASE="${2:?case号}"
 EPOCHS="${3:-3}"
-E=$(cat tools/CHAMPION)
+E="${4:-$(cat tools/CHAMPION)}"
 OUT="v3-train-hf-${CASE}"
 ( cd server-go && go build -o ../server-go-bin/train ./cmd/train )
 mkdir -p "$OUT"

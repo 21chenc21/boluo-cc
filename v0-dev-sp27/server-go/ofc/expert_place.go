@@ -995,12 +995,20 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 				var n int
 				var means []float64
 				// 2026-07-06 #22: fanfloor 恢复全预算 — v3免费卷线 fan~72% 方差大, 半预算在 2SE 门槛闪烁
-				pick, n, means = er.serveMarginSearchKDiv(sts, state.Round, 1)
+				// 2026-07-08 #63 二审: fanceil 降滞回 2.0 (唯一范路, 教义同向) — 灰区加时随 hyst 一起下探
+				hystN := ServeSearchHysteresis
+				if ceilN {
+					hystN = ServeSearchCeilHysteresis
+				}
+				pick, n, means = er.serveMarginSearchKDivH(sts, state.Round, 1, hystN)
 				// 教义带 (#16, 2026-07-07): 挑战者=承诺型保底范(100%范锁定) 且 NN线优势<4 → 取保底线.
 				// 账本盲区(范率/re-fan延续)由教义定价; 免费卷型(概率范)不适用.
 				if fanFuseN && pick == 0 && len(sts) > 1 && len(means) > 1 {
 					// 仅当 NN 线自己不是承诺保底时才反转举证 (#73 教训: 两线同顶同范价值, 教义无差别)
-					if fanFloorCommitCertain(sts[1]) && !fanFloorCommitCertain(sts[0]) && means[0]-means[1] < 4.0 {
+					// 2026-07-08 #73 二审: 同顶硬免死 — 顶完全相同则范差恒为零, f89 行间不对称
+					// 会让 commit-certain 误判 (Jc顺draw底 vs 9d对子底), 教义带无权翻案.
+					if fanFloorCommitCertain(sts[1]) && !fanFloorCommitCertain(sts[0]) &&
+						means[0]-means[1] < 4.0 && !sameTopRow(sts[0], sts[1]) {
 						pick = 1
 					}
 				}
@@ -1273,6 +1281,11 @@ var ServeSearchR1 = false
 // ServeSearchHysteresis — 换手门槛 (搜索均值差). 2026-07-06: 1.5→4.0, 见 serveMarginSearchKDiv 内注释.
 var ServeSearchHysteresis = 4.0
 
+// ServeSearchCeilHysteresis — #6 fanceil 专用换手门槛 (2026-07-08 #63 二审, 用户拍板 1+2).
+// 天花板锁死 = 唯一范路, 错过不再来; 账本教义同向(+5)但真差骑在通用滞回4.0上 —
+// 实战07-06本尊局差0.36险胜, bench差0.18告负 = 掷硬币. 降到2.0 + 灰区加时压SE, 显著性门槛(2SE)仍在.
+var ServeSearchCeilHysteresis = 2.0
+
 // ServeSearchDryRun/计数器 — 触发率测量: 只数不搜 (2026-07-05 用户"怕把把都要搜索").
 var (
 	ServeSearchDryRun    bool
@@ -1488,6 +1501,24 @@ func fanCeilingLocked(gs *GameState, r int) bool {
 // fanFloorCommitCertain — 仅承诺型保底范 (鬼承诺配大牌后 foul 链≈0 = 100%范数学锁定).
 // 教义带(#16, 2026-07-07 用户"只要可达就必须治")专用: 这类线的范率/延续价值是账本已知盲区
 // (扁平bonus不价re-fan/范率, #19/#63判例), 举证责任反转 — NN线须好4分以上才保留.
+// sameTopRow — 两候选顶行牌完全一致 (multiset). 同顶 = 范价值零差异, 教义带不适用 (#73 二审).
+func sameTopRow(a, b *GameState) bool {
+	if len(a.Top) != len(b.Top) {
+		return false
+	}
+	cnt := map[string]int{}
+	for _, c := range a.Top {
+		cnt[c.ID()]++
+	}
+	for _, c := range b.Top {
+		cnt[c.ID()]--
+		if cnt[c.ID()] < 0 {
+			return false
+		}
+	}
+	return true
+}
+
 func fanFloorCommitCertain(gs *GameState) bool {
 	bigRank := -1
 	jokerN := 0
@@ -1661,6 +1692,11 @@ func (er *ExpertRollout) serveMarginSearchK(states []*GameState, round int) (int
 
 // serveMarginSearchKDiv — capDiv>1 缩减 sims 预算 (保险丝#4: 保底线方差≈0, 半预算足够裁决).
 func (er *ExpertRollout) serveMarginSearchKDiv(states []*GameState, round, capDiv int) (int, int, []float64) {
+	return er.serveMarginSearchKDivH(states, round, capDiv, ServeSearchHysteresis)
+}
+
+// serveMarginSearchKDivH — 换手门槛可调版 (#6 fanceil 用 ServeSearchCeilHysteresis, 其余走默认).
+func (er *ExpertRollout) serveMarginSearchKDivH(states []*GameState, round, capDiv int, hyst float64) (int, int, []float64) {
 	K := len(states)
 	W := runtime.NumCPU()
 	if W > ServeSearchWorkers {
@@ -1747,7 +1783,7 @@ func (er *ExpertRollout) serveMarginSearchKDiv(states []*GameState, round, capDi
 			vb := sumsq[best]/float64(cnt[best]) - mb*mb
 			v0 := sumsq[0]/float64(cnt[0]) - m0*m0
 			seD := math.Sqrt(vb/float64(cnt[best]) + v0/float64(cnt[0]))
-			if gap := mb - m0; gap > ServeSearchHysteresis && gap < 2*seD {
+			if gap := mb - m0; gap > hyst && gap < 2*seD {
 				// 2026-07-06 账本对齐后: 范bonus方差↑(0~140摆动) + 真gap缩(16: 17→7.3),
 				// 辨清 gap≈7 需 n≈225. 加时上限 2×→4× — 到显著即早停, 只有真灰区付满.
 				maxN = capN * 4
@@ -1771,7 +1807,7 @@ func (er *ExpertRollout) serveMarginSearchKDiv(states []*GameState, round, capDi
 		vb := sumsq[best]/float64(cnt[best]) - mb*mb
 		v0 := sumsq[0]/float64(cnt[0]) - m0*m0
 		seDiff := math.Sqrt(vb/float64(cnt[best]) + v0/float64(cnt[0]))
-		thr := ServeSearchHysteresis
+		thr := hyst
 		if 2*seDiff > thr {
 			thr = 2 * seDiff
 		}
