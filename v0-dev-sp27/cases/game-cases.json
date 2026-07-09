@@ -1456,6 +1456,84 @@
      "Ac"
     ],
     "suitFree": true
+   },
+   {
+    "top": [],
+    "middle": [
+     "As",
+     "Ah"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [],
+    "middle": [
+     "As",
+     "Ac"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [],
+    "middle": [
+     "Ah",
+     "Ac"
+    ],
+    "bottom": []
+   },
+   {
+    "top": [
+     "As"
+    ],
+    "middle": [],
+    "bottom": [
+     "Ah"
+    ]
+   },
+   {
+    "top": [
+     "As"
+    ],
+    "middle": [],
+    "bottom": [
+     "Ac"
+    ]
+   },
+   {
+    "top": [
+     "Ah"
+    ],
+    "middle": [],
+    "bottom": [
+     "As"
+    ]
+   },
+   {
+    "top": [
+     "Ah"
+    ],
+    "middle": [],
+    "bottom": [
+     "Ac"
+    ]
+   },
+   {
+    "top": [
+     "Ac"
+    ],
+    "middle": [],
+    "bottom": [
+     "As"
+    ]
+   },
+   {
+    "top": [
+     "Ac"
+    ],
+    "middle": [],
+    "bottom": [
+     "Ah"
+    ]
    }
   ],
   "wrongs": [
@@ -1468,7 +1546,8 @@
     ],
     "bottom": []
    }
-  ]
+  ],
+  "note": " | 2026-07-09 花色变体预期补齐(线上py精确匹配假败修): AA进中3变体+A顶A底6变体."
  },
  {
   "name": "实战 17 [R3]: 鬼+K在顶[X Kc](已可进QQ范)+发3A — 不该再单A上顶, AA进中 (RnSingleJokerTopChaseA 守卫: 已锁不追)",
@@ -10823,5 +10902,58 @@
   ],
   "wrongs": [],
   "note": "2026-07-03 f69冗余漏验证靶(f90已覆盖QQ范, 建来训后验证NN真识别). 🃏配Qc=QQ范合法(≤中KK), As→底凑AAA三条. 别把As塞顶(joker-max=AA>KK假foul, 实际打QQ). 顶QQ范优先."
+ },
+ {
+  "name": "实战 128 [R1] 112981790-5: 低张别埋底 — 2d占最强行死口, 该进中 (1500sim终审: 中22.77>底20.13≈顶20.11; 500sim曾误判顶+5.7=R1噪声铁律again)",
+  "round": 1,
+  "jokerCount": 2,
+  "pureMLP": true,
+  "state": {
+   "top": [],
+   "middle": [],
+   "bottom": [],
+   "usedCards": [
+    "Th",
+    "3d",
+    "Td",
+    "Qd",
+    "Qh"
+   ]
+  },
+  "dealt": [
+   "7c",
+   "5d",
+   "Jh",
+   "2d",
+   "Ks"
+  ],
+  "expecteds": [
+   {
+    "top": [],
+    "middle": [
+     "7c",
+     "5d",
+     "2d"
+    ],
+    "bottom": [
+     "Ks",
+     "Jh"
+    ]
+   },
+   {
+    "top": [
+     "Ks"
+    ],
+    "middle": [
+     "5d",
+     "2d"
+    ],
+    "bottom": [
+     "7c",
+     "Jh"
+    ]
+   }
+  ],
+  "note": "prod 2026-07-09 (法外狂徒张山局). d3与E同错. gap+2.64长尾带边缘, 用户拍板治. 链式弹: fam-128-exact. | 2026-07-09 用户裁定: Ks上顶+2d中(d4找到的线)也是正解 — 核心课=2d别埋底, Ks顶/底皆可."
  }
 ]

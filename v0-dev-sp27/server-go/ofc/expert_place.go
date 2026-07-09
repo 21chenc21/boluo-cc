@@ -997,10 +997,12 @@ func (er *ExpertRollout) ExpertPlace3(state *GameState, cards []Card) {
 				// 2026-07-06 #22: fanfloor 恢复全预算 — v3免费卷线 fan~72% 方差大, 半预算在 2SE 门槛闪烁
 				// 2026-07-08 #63 二审: fanceil 降滞回 2.0 (唯一范路, 教义同向) — 灰区加时随 hyst 一起下探
 				hystN := ServeSearchHysteresis
+				otN := 4
 				if ceilN {
 					hystN = ServeSearchCeilHysteresis
+					otN = 8 // #63 三审: 真抖加样本
 				}
-				pick, n, means = er.serveMarginSearchKDivH(sts, state.Round, 1, hystN)
+				pick, n, means = er.serveMarginSearchKDivH(sts, state.Round, 1, hystN, otN)
 				// 教义带 (#16, 2026-07-07): 挑战者=承诺型保底范(100%范锁定) 且 NN线优势<4 → 取保底线.
 				// 账本盲区(范率/re-fan延续)由教义定价; 免费卷型(概率范)不适用.
 				if fanFuseN && pick == 0 && len(sts) > 1 && len(means) > 1 {
@@ -1692,11 +1694,13 @@ func (er *ExpertRollout) serveMarginSearchK(states []*GameState, round int) (int
 
 // serveMarginSearchKDiv — capDiv>1 缩减 sims 预算 (保险丝#4: 保底线方差≈0, 半预算足够裁决).
 func (er *ExpertRollout) serveMarginSearchKDiv(states []*GameState, round, capDiv int) (int, int, []float64) {
-	return er.serveMarginSearchKDivH(states, round, capDiv, ServeSearchHysteresis)
+	return er.serveMarginSearchKDivH(states, round, capDiv, ServeSearchHysteresis, 4)
 }
 
-// serveMarginSearchKDivH — 换手门槛可调版 (#6 fanceil 用 ServeSearchCeilHysteresis, 其余走默认).
-func (er *ExpertRollout) serveMarginSearchKDivH(states []*GameState, round, capDiv int, hyst float64) (int, int, []float64) {
+// serveMarginSearchKDivH — 换手门槛/灰区加时可调版 (#6 fanceil: 滞回2.0+加时8×, 其余走默认4×).
+// 2026-07-09 #63 三审(用户拍板"真抖加样本"): R2 cap80×4=320 下 2SE≈4.2 盖过真差~4 → 显著性关掷硬币;
+// 8×(n=640) 2SE≈3.0, 真差稳定显著. 只有 ceil 触发的万分位手付这 1-2s.
+func (er *ExpertRollout) serveMarginSearchKDivH(states []*GameState, round, capDiv int, hyst float64, overtimeMult int) (int, int, []float64) {
 	K := len(states)
 	W := runtime.NumCPU()
 	if W > ServeSearchWorkers {
@@ -1786,7 +1790,7 @@ func (er *ExpertRollout) serveMarginSearchKDivH(states []*GameState, round, capD
 			if gap := mb - m0; gap > hyst && gap < 2*seD {
 				// 2026-07-06 账本对齐后: 范bonus方差↑(0~140摆动) + 真gap缩(16: 17→7.3),
 				// 辨清 gap≈7 需 n≈225. 加时上限 2×→4× — 到显著即早停, 只有真灰区付满.
-				maxN = capN * 4
+				maxN = capN * overtimeMult
 			}
 		}
 	}
