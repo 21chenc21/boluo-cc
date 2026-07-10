@@ -248,10 +248,35 @@ func (er *ExpertRollout) ExpertPlace5(state *GameState, cards []Card) {
 					}
 				}
 			}
+			// 保险丝#7 pairmid (2026-07-10 用户spec, #129/#130 F11家族): R1 中道放对子且
+			// 对子rank > 其余3张(除鬼) = 倒挂债结构 (中道成手对压住待发育底). 独立于 ServeSearchR1
+			// 总开关 (R1 margin搜索仍禁, #59判例) — 结构触发 + rollout裁决, 130型实测平局会KEEP.
+			pairMidFuse := false
+			pairMidRank := -1
+			if ServeSearchMargin > 0 && ServeSearchPairMidFuse && !trig && pick == 0 && len(candidates) >= 2 {
+				if r := r1PairMidDominant(candidates[0].gs); r >= 0 {
+					for i := 1; i < len(candidates); i++ {
+						if !r1PairInMiddle(candidates[i].gs, r) {
+							atomic.AddInt64(&ServeSearchPairMidTrigCount, 1)
+							trig, pairMidFuse, pairMidRank = true, true, r
+							break
+						}
+					}
+				}
+			}
 			if !ServeSearchDryRun && trig && tryAcquireSearchSlot() {
 				var sts []*GameState
 				var stIdx []int // sts → candidates 索引映射 (fuse 集非前缀)
-				if foulFuse || fanFuse {
+				if pairMidFuse {
+					sts = append(sts, candidates[0].gs)
+					stIdx = append(stIdx, 0)
+					for i := 1; i < len(candidates) && len(sts) < 3; i++ {
+						if !r1PairInMiddle(candidates[i].gs, pairMidRank) {
+							sts = append(sts, candidates[i].gs)
+							stIdx = append(stIdx, i)
+						}
+					}
+				} else if foulFuse || fanFuse {
 					all := make([]*GameState, len(candidates))
 					for i := range candidates {
 						all[i] = candidates[i].gs
@@ -279,7 +304,11 @@ func (er *ExpertRollout) ExpertPlace5(state *GameState, cards []Card) {
 				}
 				var n int
 				var means []float64
-				pick, n, means = er.serveMarginSearchKDiv(sts, 1, 1)
+				otR1 := 4
+				if pairMidFuse {
+					otR1 = 8 // R1 rollout 方差大 (#59), pairmid 靠加时压 SE
+				}
+				pick, n, means = er.serveMarginSearchKDivH(sts, 1, 1, ServeSearchHysteresis, otR1)
 				releaseSearchSlot()
 				tag := "KEEP"
 				if pick != 0 {
@@ -290,6 +319,9 @@ func (er *ExpertRollout) ExpertPlace5(state *GameState, cards []Card) {
 				}
 				if fanFuse {
 					tag += "-fanfloor"
+				}
+				if pairMidFuse {
+					tag += "-pairmid"
 				}
 				pick = stIdx[pick]
 				line := fmt.Sprintf("[serve-search] R1 %s n=%d means=%.2f NN=%s → 选=%s",
@@ -1503,6 +1535,60 @@ func fanCeilingLocked(gs *GameState, r int) bool {
 // fanFloorCommitCertain — 仅承诺型保底范 (鬼承诺配大牌后 foul 链≈0 = 100%范数学锁定).
 // 教义带(#16, 2026-07-07 用户"只要可达就必须治")专用: 这类线的范率/延续价值是账本已知盲区
 // (扁平bonus不价re-fan/范率, #19/#63判例), 举证责任反转 — NN线须好4分以上才保留.
+// ServeSearchPairMidFuse — 保险丝#7 (2026-07-10 用户spec): R1 中道对子压秤 (对子>其余3张除鬼).
+// #129/#130 F11家族的栈层兜底: 死牌×对子行位轴的特征响应倒挂, NN裸摆会把封顶对留中垫烂底.
+// ⛔ 2026-07-10 默认关 (用户"保险丝也没作用?"定论): F11病在续局功力里, 自我rollout裁决循环失明
+// (serve环境量129仅+1.5 vs 深度听证+12) + R1搜索5~40s延迟. 代码保留, 测量层升级后再启用.
+var ServeSearchPairMidFuse = false
+var ServeSearchPairMidTrigCount int64
+
+// r1PairMidDominant — R1候选: 中道含天然对(rank r) 且 其余非鬼牌全 < r → 返回 r; 否则 -1.
+func r1PairMidDominant(gs *GameState) int {
+	var midRc [13]int
+	for _, c := range gs.Middle {
+		if !c.IsJoker() {
+			midRc[c.Rank()]++
+		}
+	}
+	pr := -1
+	for r := 12; r >= 0; r-- {
+		if midRc[r] >= 2 {
+			pr = r
+			break
+		}
+	}
+	if pr < 0 {
+		return -1
+	}
+	pairLeft := 2
+	for _, row := range [][]Card{gs.Top, gs.Middle, gs.Bottom} {
+		for _, c := range row {
+			if c.IsJoker() {
+				continue
+			}
+			if int(c.Rank()) == pr && pairLeft > 0 {
+				pairLeft--
+				continue
+			}
+			if int(c.Rank()) >= pr {
+				return -1
+			}
+		}
+	}
+	return pr
+}
+
+// r1PairInMiddle — rank r 的天然对是否在中道.
+func r1PairInMiddle(gs *GameState, r int) bool {
+	n := 0
+	for _, c := range gs.Middle {
+		if !c.IsJoker() && int(c.Rank()) == r {
+			n++
+		}
+	}
+	return n >= 2
+}
+
 // sameTopRow — 两候选顶行牌完全一致 (multiset). 同顶 = 范价值零差异, 教义带不适用 (#73 二审).
 func sameTopRow(a, b *GameState) bool {
 	if len(a.Top) != len(b.Top) {
