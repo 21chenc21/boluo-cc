@@ -896,6 +896,14 @@ func main() {
 			log.Printf("[server] OFC_SEARCH_SLOTS=%d (并发搜索槽位)", n)
 		}
 	}
+	// 2026-07-26 用户"15s预算内尽量翻案": 抢不到槽时排队等这么久(ms)再降级纯NN.
+	// SLOTS=1 串行下, 单搜索~2.5s, WAIT 放大到 ~10s 让后到搜索排队等全速而非降级放弃.
+	if v := envStr("OFC_SEARCH_WAIT_MS", ""); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n >= 0 {
+			ofc.ServeSearchWait = time.Duration(n) * time.Millisecond
+			log.Printf("[server] OFC_SEARCH_WAIT_MS=%d (抢槽排队上限)", n)
+		}
+	}
 	if envStr("DISABLE_MCTS", "") != "" {
 		ofc.MctsDisabled = true
 		log.Print("[server] DISABLE_MCTS set; ExpertPlace5/3 跳 rollout, 仅 prerank top-1 (纯MLP value head)")
