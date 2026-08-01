@@ -341,6 +341,11 @@ func main() {
 	if os.Getenv("OFC_DEBUG_TRACE") != "" {
 		ofc.MctsDebugTrace = true
 	}
+	if v := os.Getenv("OFC_SB_PENALTY"); v != "" {
+		var p float64
+		fmt.Sscanf(v, "%f", &p)
+		ofc.ServeSBPenalty = p
+	}
 	if os.Getenv("OFC_KEEP_FILTERS") != "" {
 		ofc.KeepFiltersPureNN = true
 	}

@@ -128,6 +128,11 @@ func main() {
 		}
 	}
 	// sp46 保险丝/搜索接线 (与 bench-cases/server 同款)
+	if v := os.Getenv("OFC_SB_PENALTY"); v != "" {
+		var p float64
+		fmt.Sscanf(v, "%f", &p)
+		ofc.ServeSBPenalty = p
+	}
 	if os.Getenv("OFC_KEEP_FILTERS") != "" {
 		ofc.KeepFiltersPureNN = true
 	}

@@ -866,6 +866,12 @@ func main() {
 		ofc.PolicyBoost = float32(v)
 		log.Printf("[server] POLICY_BOOST=%.2f (head3 policy logit bias in prerank)", v)
 	}
+	if v := envStr("OFC_SB_PENALTY", ""); v != "" {
+		var p float64
+		fmt.Sscanf(v, "%f", &p)
+		ofc.ServeSBPenalty = p
+		log.Printf("[server] OFC_SB_PENALTY=%.1f (131族行位软规则)", p)
+	}
 	if envStr("OFC_KEEP_FILTERS", "") != "" {
 		ofc.KeepFiltersPureNN = true
 	}

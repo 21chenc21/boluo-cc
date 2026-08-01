@@ -98,6 +98,80 @@ func SetFanBonusScale(qq, kk, aa, trips, foulCost *float64) {
 }
 
 // BuildFeaturesV3 — 主入口. 输入 post-placement state, 返回 131-d feature.
+// midStrandedBig — SB 软规则信号 (2026-07-31): 中道孤张大牌"搁浅" (纯规则, 不入特征向量).
+//   底未满 + 中道有孤张(非对成员)牌 rank > 底道最大牌 → 该大牌该沉底却留中(浪费底道发育).
+//   返回 = 最大搁浅牌 (rank+1)/13, 归一 [0,1]. 无搁浅=0. 131错线(K中)=0.92, 正线(KQ底)=0.
+//   排除: 中道构成对/顺(3连)潜力的牌不算搁浅 (成型结构留中合理).
+func midStrandedBig(gs *GameState) float32 {
+	if len(gs.Bottom) >= 5 {
+		return 0 // 底满, 无处挪
+	}
+	maxBot := -1
+	var botRc [13]int
+	for _, c := range gs.Bottom {
+		if !c.IsJoker() {
+			botRc[c.Rank()]++
+			if int(c.Rank()) > maxBot {
+				maxBot = int(c.Rank())
+			}
+		}
+	}
+	// 底道已成型(有对/三条) → 中道大牌是托底(如Qs托888)合理, 非搁浅 (#85 误伤修).
+	for _, n := range botRc {
+		if n >= 2 {
+			return 0
+		}
+	}
+	var midRc [13]int
+	for _, c := range gs.Middle {
+		if !c.IsJoker() {
+			midRc[c.Rank()]++
+		}
+	}
+	// 中道是否有 3+ 连张潜力 (成顺结构, 大牌留中合理) → 该行整体豁免
+	runMax := 0
+	run := 0
+	for r := 0; r < 13; r++ {
+		if midRc[r] > 0 {
+			run++
+			if run > runMax {
+				runMax = run
+			}
+		} else {
+			run = 0
+		}
+	}
+	if runMax >= 3 {
+		return 0 // 中道成顺潜力, 大牌是结构一部分, 不算搁浅
+	}
+	// 精细化 (2026-07-31 用户"不够精细影响其他"): 只在中道有对子时才算搁浅.
+	//   131病理=小对居中+大牌搁浅. 中道无对时大牌是发育材料(如中[K5s]), 留中合理, 豁免 (减foul误伤).
+	hasMidPair := false
+	for _, n := range midRc {
+		if n == 2 {
+			hasMidPair = true
+			break
+		}
+	}
+	if !hasMidPair {
+		return 0
+	}
+	maxStranded := -1
+	for _, c := range gs.Middle {
+		if c.IsJoker() {
+			continue
+		}
+		r := int(c.Rank())
+		if midRc[r] == 1 && r > maxBot && r > maxStranded { // 孤张(非对) + 比底最大还大
+			maxStranded = r
+		}
+	}
+	if maxStranded < 0 {
+		return 0
+	}
+	return float32(maxStranded+1) / 13.0
+}
+
 func BuildFeaturesV3(gs *GameState) []float32 {
 	if zeroUsedCardsAblation { // 实验: usedCards 只留 board (去 deck 感知). 见 usedcards_ablation.go
 		gs = gsBoardOnlyUsed(gs)

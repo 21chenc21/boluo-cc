@@ -162,6 +162,12 @@ func (er *ExpertRollout) ExpertPlace5(state *GameState, cards []Card) {
 		}
 	}
 
+	// SB软规则 (2026-07-31): R1中道搁浅大牌惩罚 (131族行位). midStrandedBig>0=大牌该沉底却留中→压低.
+	if ServeSBPenalty > 0 {
+		for i := range candidates {
+			candidates[i].score -= float32(ServeSBPenalty) * midStrandedBig(candidates[i].gs)
+		}
+	}
 	sort.SliceStable(candidates, func(i, j int) bool { return candidates[i].score > candidates[j].score })
 
 	if MctsDebugTrace {
@@ -1300,6 +1306,10 @@ func serveSearchCapForRound(round int) int {
 // ServeSearchWait — 抢不到坑位时最多排队等这么久 (2026-07-05 用户"其他触发者不就摆错吗"):
 // 薄边手宁可多等 ~0.8s 也要搜 — 排队不烧CPU, 只有超时才降级纯NN. 0=立即降级.
 var ServeSearchWait = 800 * time.Millisecond
+
+// ServeSBPenalty — SB软规则罚权 (2026-07-31): R1中道搁浅大牌惩罚强度. 0=关.
+// 131族(小对+双大牌K级次高该沉底)行位: score -= penalty × midStrandedBig. serve层规则, 免重训.
+var ServeSBPenalty = 0.0
 
 // ServeSearchThinMargin — 薄边路径(纯分差+后果判据触发)是否参与搜索 (2026-07-06 默认关).
 // 退役理由: 它为 std63 而生, 现 NN 原生学会; 剩余触发全是品味题 — rollout 账本(foul6/KK30)
