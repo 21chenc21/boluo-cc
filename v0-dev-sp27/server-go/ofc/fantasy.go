@@ -142,6 +142,18 @@ func FindReFanAnchors(dealt []Card) []FantasyAnchor {
 	// 致 AAA/QQQ/TTT anchor 用 2s 代替 joker, fantasy re-fan 全失败. 改成跟 bot-quads 同模式.
 	for _, r := range rankOrder {
 		cs := byRank[r]
+		// 2026-10-23 修: 4 张同点时原来只取 cs[:3], 哪 3 张花色上顶没枚举 →
+		// AAAA 时 As 被钉在顶, 漏掉 Ah Ac Ad 顶 + As 进中凑黑桃同花 (32 vs 36).
+		if len(cs) > 3 {
+			for _, idx := range [][]int{{0, 1, 2}, {0, 1, 3}, {0, 2, 3}, {1, 2, 3}} {
+				ach := FantasyAnchor{Type: "top-trips", Row: "top"}
+				for _, i := range idx {
+					ach.Cards = append(ach.Cards, cs[i])
+				}
+				anchors = append(anchors, ach)
+			}
+			continue
+		}
 		if len(cs)+J >= 3 {
 			realUsed := cs
 			if len(cs) >= 3 {
@@ -461,17 +473,22 @@ func enumTopMid(botCards, remaining []Card, discardCount int) *FantasyResult {
 		return nil
 	}
 	botEval := eval5Maybe(botCards)
+	botR := BottomRoyaltyFromEval(botEval)
+	// 2026-10-23 提速: 5-subset eval 按 mask 缓存 (原来每个 top 下重算 mid eval, 3 鬼局 ~5s).
+	// 剪枝上界 = 无 cap eval 的 royalty 和 (cap 只降级, royalty 单调) — 严格 < best 才跳, 结果不变.
+	midEvals := subsetEvals(remaining, 5)
 	var best *FantasyResult
 	for i := 0; i < N-2; i++ {
 		for j := i + 1; j < N-1; j++ {
 			for k := j + 1; k < N; k++ {
 				top := []Card{remaining[i], remaining[j], remaining[k]}
 				topEval := eval3Maybe(top)
-				_ = topEval
-				rest := make([]Card, 0, N-3)
+				topR := TopRoyaltyFromEval(topEval)
+				topMask := uint32(1)<<i | uint32(1)<<j | uint32(1)<<k
+				rest := make([]int, 0, N-3)
 				for x := 0; x < N; x++ {
 					if x != i && x != j && x != k {
-						rest = append(rest, remaining[x])
+						rest = append(rest, x)
 					}
 				}
 				M := len(rest)
@@ -480,14 +497,18 @@ func enumTopMid(botCards, remaining []Card, discardCount int) *FantasyResult {
 						for c := b + 1; c < M-2; c++ {
 							for d := c + 1; d < M-1; d++ {
 								for e := d + 1; e < M; e++ {
-									mid := []Card{rest[a], rest[b], rest[c], rest[d], rest[e]}
-									midEval := eval5Maybe(mid)
+									midMask := uint32(1)<<rest[a] | uint32(1)<<rest[b] | uint32(1)<<rest[c] | uint32(1)<<rest[d] | uint32(1)<<rest[e]
+									midEval := midEvals[midMask]
 									if midEval.Value > botEval.Value {
 										continue
 									}
 									if HandExceeds5(topEval, midEval) {
 										continue
 									}
+									if best != nil && topR+MiddleRoyaltyFromEval(midEval)+botR < best.Royalty {
+										continue
+									}
+									mid := []Card{remaining[rest[a]], remaining[rest[b]], remaining[rest[c]], remaining[rest[d]], remaining[rest[e]]}
 									sc := ScoreHand(top, mid, botCards)
 									if sc.Foul {
 										continue
@@ -496,9 +517,9 @@ func enumTopMid(botCards, remaining []Card, discardCount int) *FantasyResult {
 										continue
 									}
 									discards := make([]Card, 0, discardCount)
-									for x := 0; x < M; x++ {
-										if x != a && x != b && x != c && x != d && x != e {
-											discards = append(discards, rest[x])
+									for x := 0; x < N; x++ {
+										if (topMask|midMask)&(uint32(1)<<x) == 0 {
+											discards = append(discards, remaining[x])
 										}
 									}
 									cand := &FantasyResult{
@@ -517,6 +538,26 @@ func enumTopMid(botCards, remaining []Card, discardCount int) *FantasyResult {
 		}
 	}
 	return best
+}
+
+// subsetEvals — cards 的所有 k-subset (k=5) 按 index bitmask 缓存 eval5Maybe (无 cap)
+func subsetEvals(cards []Card, k int) map[uint32]HandValue {
+	out := make(map[uint32]HandValue)
+	sub := make([]Card, 0, k)
+	var gen func(start int, mask uint32)
+	gen = func(start int, mask uint32) {
+		if len(sub) == k {
+			out[mask] = eval5Maybe(sub)
+			return
+		}
+		for i := start; i < len(cards); i++ {
+			sub = append(sub, cards[i])
+			gen(i+1, mask|uint32(1)<<i)
+			sub = sub[:len(sub)-1]
+		}
+	}
+	gen(0, 0)
+	return out
 }
 
 // enumMidBot — 给定 top 3, 穷举 mid 5 + bot 5 + discards
@@ -770,13 +811,20 @@ func BuildLayoutFromAnchor(anchor FantasyAnchor, dealt []Card, discardCount int)
 	if anchor.Row == "top" {
 		// top-trips (3 张固定) → 由 BuildTopTripsLayout 接管 (含 method A + beam fallback)
 		// 简单 enumMidBot (含 reFan 剪枝) 也作为兜底, 但 BuildTopTripsLayout 优于
-		layout := BuildTopTripsLayout(anchor.Cards, dealt, discardCount)
-		if layout != nil {
-			return layout
+		// 2026-10-23 修: 原来 BuildTopTripsLayout 非 nil 就直接返回, 穷举的 enumMidBot 永远轮不到 →
+		// beam 给出次优(如 A鬼鬼 顶时 beam 只拿 10 分, 穷举 36). 两路都跑, 按 scTieBreak 取优.
+		var best *FantasyResult
+		if layout := BuildTopTripsLayout(anchor.Cards, dealt, discardCount); layout != nil {
+			sc := ScoreHand(layout.Top, layout.Middle, layout.Bottom)
+			if !sc.Foul {
+				best = &FantasyResult{Layout: *layout, Royalty: sc.Royalties, Sc: sc}
+			}
 		}
-		r := enumMidBot(anchor.Cards, remaining, discardCount)
-		if r != nil {
-			return &r.Layout
+		if r := enumMidBot(anchor.Cards, remaining, discardCount); r != nil && (best == nil || scTieBreak(r, best) > 0) {
+			best = r
+		}
+		if best != nil {
+			return &best.Layout
 		}
 		return nil
 	}
