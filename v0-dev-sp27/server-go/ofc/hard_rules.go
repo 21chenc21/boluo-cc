@@ -17,7 +17,17 @@ var SoftRulesDisabled = false
 
 // DisabledRules — 按名字单独关某条软规则 (ablation 审计用, env DISABLE_RULES=name1,name2).
 // add()/radd() 里查; 名字见 rnSoftScore 的 add("X",..) 和 ExpertPlace5 的 radd("X",..).
-var DisabledRules = map[string]bool{}
+// 2026-07-05 sp45 退役五连 (用户逐条裁定): R1 结构先验已被 NN 原生学会 (JJ/QQ+杂牌裸NN放底实测✓),
+// 残余救赎(#94型 0.43分刀尖)不值危害(R1BigPairOnBot 连 KK/AA 也往底推, 和范线对着干 — 前范时代化石;
+// R1JokerWithAOnTop 垃圾侧牌时被 MCTS 600sims 深摸否决, 见 122-R1 探源).
+// #94 型转种子家族 backlog (F5). 复活方法: env DISABLE_RULES 机制反向不支持, 删本条目即可.
+var DisabledRules = map[string]bool{
+	"ConnectorSplit":    true,
+	"R1TopNonAKX":       true,
+	"R1JokerWithAOnTop": true,
+	"R1FlushGroupOnBot": true,
+	"R1BigPairOnBot":    true,
+}
 
 // PolicyBoost — 把 head 3 (policy logit) 加权到 prerank score 中.
 // 0 = 不用 policy (默认), 30 = 强 bias. 通过 env POLICY_BOOST 设置.
@@ -351,15 +361,21 @@ func computeDeckRemaining(state *GameState) (rankRem [13]int, suitRem [4]int, jo
 	boardJokers := 0
 	for _, c := range state.Top {
 		seen[c.ID()] = true
-		if c.IsJoker() { boardJokers++ }
+		if c.IsJoker() {
+			boardJokers++
+		}
 	}
 	for _, c := range state.Middle {
 		seen[c.ID()] = true
-		if c.IsJoker() { boardJokers++ }
+		if c.IsJoker() {
+			boardJokers++
+		}
 	}
 	for _, c := range state.Bottom {
 		seen[c.ID()] = true
-		if c.IsJoker() { boardJokers++ }
+		if c.IsJoker() {
+			boardJokers++
+		}
 	}
 	for cid := range seen {
 		c, ok := ParseCard(cid)
@@ -367,7 +383,9 @@ func computeDeckRemaining(state *GameState) (rankRem [13]int, suitRem [4]int, jo
 			continue
 		}
 		if c.IsJoker() {
-			if cid == "X" && boardJokers >= 1 { continue } // 鬼双计fix: raw "X"是盘上鬼冗余
+			if cid == "X" && boardJokers >= 1 {
+				continue
+			} // 鬼双计fix: raw "X"是盘上鬼冗余
 			jokerRem--
 		} else {
 			rankRem[c.Rank()]--
@@ -541,6 +559,7 @@ func canTopReachPairQPlus(state *GameState) bool {
 //   - top 不能凑 pair Q+ / trips
 //   - mid_max ≤ 2-pair (无法 > 2-pair → 用户要求)
 //   - bot_max < mid_max (foul 必然)
+//
 // handCmp 编码: int(HandType)*16 + 主rank(0-12). rank-aware, 跨行可比. (Ht*/Type* 数值对齐)
 // madeHandCmp — row 当前成手的可比值 (floor/min).
 func madeHandCmp(row []Card) int {
@@ -573,10 +592,11 @@ func madeHandCmp(row []Card) int {
 }
 
 // midMadeFloorReal — 中道 foul-floor: 鬼是活的(可压低当kicker), 不该锁成三条+. 按真牌成手算.
-//   2026-06-23 (用户 ypk-141164874-8 R4): 中[2s 🃏 2h] 真牌=22对(floor), 旧 madeHandCmp 把鬼当2读成
-//   222三条 → 底JJ99(两对)误判 < 中(三条) → FantasyLost/fantasyOnlyViaFoul 判倒置过滤掉正确的 J→底.
-//   鬼实际可取 J/T 让中道两对(TT22/JJ22)≤底JJ99 不foul. floor 用真牌, 让上层 midFanNeed 升级逻辑接管.
-//   (全真牌行 → 等于 madeHandCmp 原值, 无变化; 只 partial 含鬼行受影响.)
+//
+//	2026-06-23 (用户 ypk-141164874-8 R4): 中[2s 🃏 2h] 真牌=22对(floor), 旧 madeHandCmp 把鬼当2读成
+//	222三条 → 底JJ99(两对)误判 < 中(三条) → FantasyLost/fantasyOnlyViaFoul 判倒置过滤掉正确的 J→底.
+//	鬼实际可取 J/T 让中道两对(TT22/JJ22)≤底JJ99 不foul. floor 用真牌, 让上层 midFanNeed 升级逻辑接管.
+//	(全真牌行 → 等于 madeHandCmp 原值, 无变化; 只 partial 含鬼行受影响.)
 func midMadeFloorReal(row []Card) int {
 	var real []Card
 	for _, c := range row {
@@ -591,7 +611,8 @@ func midMadeFloorReal(row []Card) int {
 }
 
 // maxAchievableCmp — row+slots 能达到的最高可比手值 (rank-aware, accurate).
-//   对/两对/三条/金刚 逐rank精算 (不用会高估两对的 maxAchievableHandType); 顺/花/葫芦+ 用 tier(rank=12估).
+//
+//	对/两对/三条/金刚 逐rank精算 (不用会高估两对的 maxAchievableHandType); 顺/花/葫芦+ 用 tier(rank=12估).
 func maxAchievableCmp(row []Card, slots int, rankRem [13]int, suitRem [4]int, jokerRem int) int {
 	var rc [13]int
 	j := 0
@@ -728,11 +749,12 @@ func midCanSinglePairAtLeast(state *GameState, rankFloor int) bool {
 }
 
 // fantasyOnlyViaFoul — post-state 的"范"是否只能靠 foul 成立 (假范, 无 foul-free 进范路径).
-//   遍历 QQ/KK/AA: 找一个 ① 顶能成 pair-r ② pair-r ≤ 中max ③ 底能撑住"中为达 ≥pair-r 需升的手牌" 的范级.
-//   一个都没有 → 范只能 foul → true.
-//   2026-06-19 (A6 R4): ①② — 顶[Ad 2s]唯一AA(28)>中max QQ(26) → 假范.
-//   2026-06-20 (game94 R3): ③ 中→底链 — 顶要QQ, 中88<QQ 必须升两对(中单对够不着Q), 底[9h Kh Qh 7s]剩1空只成一对KK(27)<两对(32) → 撑不住 = 假范. FantasyLost 逐行独立查会漏这个.
-//   用在 ExpertPlace3 的 pureNN 判定: R3-R5 全候选都 (FantasyLost || fantasyOnlyViaFoul) → 无进范可能 → 听NN.
+//
+//	遍历 QQ/KK/AA: 找一个 ① 顶能成 pair-r ② pair-r ≤ 中max ③ 底能撑住"中为达 ≥pair-r 需升的手牌" 的范级.
+//	一个都没有 → 范只能 foul → true.
+//	2026-06-19 (A6 R4): ①② — 顶[Ad 2s]唯一AA(28)>中max QQ(26) → 假范.
+//	2026-06-20 (game94 R3): ③ 中→底链 — 顶要QQ, 中88<QQ 必须升两对(中单对够不着Q), 底[9h Kh Qh 7s]剩1空只成一对KK(27)<两对(32) → 撑不住 = 假范. FantasyLost 逐行独立查会漏这个.
+//	用在 ExpertPlace3 的 pureNN 判定: R3-R5 全候选都 (FantasyLost || fantasyOnlyViaFoul) → 无进范可能 → 听NN.
 func fantasyOnlyViaFoul(state *GameState) bool {
 	rankRem, suitRem, jokerRem := computeDeckRemaining(state)
 	midMax := maxAchievableCmp(state.Middle, 5-len(state.Middle), rankRem, suitRem, jokerRem)
@@ -812,8 +834,9 @@ func rnRuleFantasyPossible(a *RoundNAction, cards []Card, state *GameState) bool
 
 // canFantasyTopFinal — top 是否还可能 fantasy (考虑现有牌 + 剩余空位的可达性).
 // 2026-06-17 bug fix: 原版 len<3 无脑 return true ("未满可补"), 漏判"已塞≥2张废牌+空位不足凑不出范".
-//   顶[7c 2h]+1空位永进不了范(配不出QQ+/凑不齐三条)却被放行 → 规则从不拦 R2-R3 把废牌埋顶杀范.
-//   改: 按"现有 maxCnt/鬼/≥Q单张 + 剩余空位"算三条范/对范可达性. 满3张退化回原(空位0)判定.
+//
+//	顶[7c 2h]+1空位永进不了范(配不出QQ+/凑不齐三条)却被放行 → 规则从不拦 R2-R3 把废牌埋顶杀范.
+//	改: 按"现有 maxCnt/鬼/≥Q单张 + 剩余空位"算三条范/对范可达性. 满3张退化回原(空位0)判定.
 func canFantasyTopFinal(topCards []Card) bool {
 	jokers := 0
 	var rankCnt [13]int
@@ -1266,7 +1289,8 @@ func R1SingleJokerNoAOnTopBonus(p Placement, cards []Card) float32 {
 // (替 r1RuleFlushGroup_OnBot; 去 TT+ 例外, 无条件加分)
 // splitsDealtTrips — dealt 含某rank 3张(三条) 却被 p 拆到不同行 → true. 用于"别为花组/同花奖拆三条".
 // 2026-06-18 (s99局10 R1): 发888+7s Qs(7s8sQs=3黑桃), prod为黑桃花奖(+8)把888拆了(88进中 8s进底).
-//   value-head 重重首选不拆(888三条底 te+pol 38.17 >> 拆的 30.20). 花奖拆三条是捡芝麻丢西瓜.
+//
+//	value-head 重重首选不拆(888三条底 te+pol 38.17 >> 拆的 30.20). 花奖拆三条是捡芝麻丢西瓜.
 func splitsDealtTrips(p Placement, cards []Card) bool {
 	var cnt [13]int
 	rows := map[int]map[Row]bool{}
@@ -1290,8 +1314,9 @@ func splitsDealtTrips(p Placement, cards []Card) bool {
 }
 
 // R1BottomDrawBonus — R1 底道有成型 3-card draw → +2. 鼓励把 draw 放最强行(底).
-//   治实战44: 567 该整组进底(顺draw)别拆. 覆盖 3条 + 3连张(5-window内3+张).
-//   3花已由 R1FlushGroupOnBot(+5)管, 不重复. gap 小时(44=0.34)+2 足够反转拆法.
+//
+//	治实战44: 567 该整组进底(顺draw)别拆. 覆盖 3条 + 3连张(5-window内3+张).
+//	3花已由 R1FlushGroupOnBot(+5)管, 不重复. gap 小时(44=0.34)+2 足够反转拆法.
 func R1BottomDrawBonus(p Placement, cards []Card) float32 {
 	if DisabledRules["R1BotDraw"] {
 		return 0
@@ -1336,8 +1361,9 @@ func R1BottomDrawBonus(p Placement, cards []Card) float32 {
 }
 
 // R1MidOverBotCardPenalty — R1 1-2-2 结构, 中道任一真牌 > 底道任一真牌 → +2.
-//   强制 4 张非顶牌里最高 2 张进底(底=最强行). 治实战54: 8 该进底凑(9,8), 不是 5 进底.
-//   比 RnMidPlacedOverBotPlaced(只比 maxMid vs maxBot)更严: 逐张比, 防"高牌偷进中".
+//
+//	强制 4 张非顶牌里最高 2 张进底(底=最强行). 治实战54: 8 该进底凑(9,8), 不是 5 进底.
+//	比 RnMidPlacedOverBotPlaced(只比 maxMid vs maxBot)更严: 逐张比, 防"高牌偷进中".
 func R1MidOverBotCardPenalty(p Placement, cards []Card) float32 {
 	if DisabledRules["R1MidOverBotCard"] {
 		return 0
@@ -1407,7 +1433,8 @@ func R1FlushGroupOnBotBonus(p Placement, cards []Card) float32 {
 }
 
 // R1BigPairOnBotBonus — R1 大对(≥T)放底道 +2 (用户 2026-06-18 局32). 底是最强行, 大对锚底稳行序 +
-//   留中道/顶道灵活. 小幅 prior, 只 tip 近平局(局32 TT→中 vs →底 gap1.7), 不压 fantasy/flush 强信号. 只 R1.
+//
+//	留中道/顶道灵活. 小幅 prior, 只 tip 近平局(局32 TT→中 vs →底 gap1.7), 不压 fantasy/flush 强信号. 只 R1.
 func R1BigPairOnBotBonus(p Placement, cards []Card) float32 {
 	var cnt [13]int
 	botN := 0
@@ -1442,8 +1469,9 @@ func R1BigPairOnBotBonus(p Placement, cards []Card) float32 {
 }
 
 // R1LoneKingOnTopPenalty — R1 顶道放孤 K(非成对/无鬼配)-2 (用户 2026-06-18: "KQ上头-2").
-//   K 上顶是弱范种子(配 KK 概率低), 进底/中当高张更值; 只 A 上顶才强(R1SingleAOnTopBonus).
-//   (Q 上顶已被 R1TopNonAKXPenalty 罚 +5, 故只补 K.) 顶 KK 成对 或 K+鬼(范) 不罚.
+//
+//	K 上顶是弱范种子(配 KK 概率低), 进底/中当高张更值; 只 A 上顶才强(R1SingleAOnTopBonus).
+//	(Q 上顶已被 R1TopNonAKXPenalty 罚 +5, 故只补 K.) 顶 KK 成对 或 K+鬼(范) 不罚.
 func R1LoneKingOnTopPenalty(p Placement, cards []Card) float32 {
 	cntTopK, hasJokerTop := 0, false
 	for i, c := range cards {
@@ -1491,8 +1519,10 @@ func botAtLeastTwoPair(row []Card) bool {
 }
 
 // "RnBotMakeTwoPairBonus" DELETED 2026-06-23 (用户): 底凑两对+/分级(金刚18/葫芦14/其它8) 过火 —
-//   对"鬼放底凑四条" over-reward, 压掉"鬼→顶 fantasy 种子"正解 (ypk-127795530-21 R3, gamecase 123).
-//   进范优先于金刚 royalty; 裸 NN 自纠. case97(底顺)已加 exp 接受删后摆法.
+//
+//	对"鬼放底凑四条" over-reward, 压掉"鬼→顶 fantasy 种子"正解 (ypk-127795530-21 R3, gamecase 123).
+//	进范优先于金刚 royalty; 裸 NN 自纠. case97(底顺)已加 exp 接受删后摆法.
+//
 // (下面 helpers highestRealPairRank/botMadeTier 保留 — RnMidExceedsBot/MidDrawFace 等其它规则在用.)
 // highestRealPairRank — row 里最高的"真对子"(cnt>=2) rank; 不把 joker 凑的对算进去
 // (joker 凑对/三条由外层 botAtLeastTwoPair 处理); 无真对返回 -1.
@@ -1651,11 +1681,14 @@ func RnMidHighCardOverBotPenalty(postState, preState *GameState) float32 {
 }
 
 // RnAceToTopSeedBonus — RN 本轮把单 A 放上"非范级顶"(<QQ) → +8 (seed AA 追范, 别弃/埋A).
-//   局56 R3 (s99): 顶[Qd], As该→顶做AQ(后续Ac来成AA范). 范特西率优先.
-//   守护: 顶pre非范级对(QQ+已锁不需seed) + 本轮真进单A到顶(非鬼).
+//
+//	局56 R3 (s99): 顶[Qd], As该→顶做AQ(后续Ac来成AA范). 范特西率优先.
+//	守护: 顶pre非范级对(QQ+已锁不需seed) + 本轮真进单A到顶(非鬼).
+//
 // R2BotPairMidDrawBonus — 用户规则 2026-06-19: R2 + 底有对/三条且==3张 + 中有3+同花draw或三连张 → +3.
-//   治 hand63 R2: 底QQ(3张) + 中3黑桃flush draw, value-head漏看同花弃了黑桃(低估保花2.23).
-//   底==3张 = 没往已成对的底道加死kicker(保持发育中道draw). flush 或 strict 3连(5-6-7式).
+//
+//	治 hand63 R2: 底QQ(3张) + 中3黑桃flush draw, value-head漏看同花弃了黑桃(低估保花2.23).
+//	底==3张 = 没往已成对的底道加死kicker(保持发育中道draw). flush 或 strict 3连(5-6-7式).
 func R2BotPairMidDrawBonus(postState, preState *GameState) float32 {
 	if DisabledRules["R2BotPairMidDraw"] || postState.Round != 2 {
 		return 0
@@ -1773,11 +1806,12 @@ func RnDeadLowKickerOnFanTopPenalty(postState, preState *GameState) float32 {
 }
 
 // RnR4TripsFantasyReachableBonus — 正向版 (用户 2026-06-22, 实战110/48; 取代旧 RnLowCardOnLockedTop 罚版):
-//   R4 + 中道恰=三条(rank M) + 底>中(盘锁死) 时, 若顶 placement 后**仍能成 ≤M 的合法 trips 范**
-//   (顶范种子没被占死) → +25. 奖"留鬼/留低种子保合法trips范" 而非罚"占死".
-//   留鬼(110: 顶[鬼]+空位能配≤6低对成 trips≤6) → +25;
-//   3d种(48: 顶[鬼3]能成333≤6 合法范) → +25;
-//   7h占顶(110: 顶[鬼7h]只能成777>6 倒置 foul) → 0 (输给留鬼25分).
+//
+//	R4 + 中道恰=三条(rank M) + 底>中(盘锁死) 时, 若顶 placement 后**仍能成 ≤M 的合法 trips 范**
+//	(顶范种子没被占死) → +25. 奖"留鬼/留低种子保合法trips范" 而非罚"占死".
+//	留鬼(110: 顶[鬼]+空位能配≤6低对成 trips≤6) → +25;
+//	3d种(48: 顶[鬼3]能成333≤6 合法范) → +25;
+//	7h占顶(110: 顶[鬼7h]只能成777>6 倒置 foul) → 0 (输给留鬼25分).
 func RnR4TripsFantasyReachableBonus(postState, preState *GameState) float32 {
 	// 2026-06-23 (用户): R4-only → 开 R3 (ypk-93192522-6 R3: 中666底888顶joker, 6h压顶堵XXX范种子).
 	//   R5 不开 (末轮无未来发育, joker trips种子无意义).
@@ -2124,7 +2158,8 @@ func RnHighCardWrongRowPenalty(postState, preState *GameState) float32 {
 
 // R1HighCardShouldBeBotKickerPenalty — R1: 底恰成一对 + 中道有松高牌 > 底kicker → 该高牌该当底对kicker, 罚1.
 // 2026-06-17 用户(局96 seed11 FOUL): 发KK+Q23, AI Q埋中(中Q-2)+3当底kicker(KK3); 应 Q进底当kicker(KKQ强)+23留中.
-//   高牌进底梯度的R1版. (RnHighCardWrongRow是RN且要"两行都死无对", 这里底有对故另写.) guard: 中道有对/花/顺draw就跳.
+//
+//	高牌进底梯度的R1版. (RnHighCardWrongRow是RN且要"两行都死无对", 这里底有对故另写.) guard: 中道有对/花/顺draw就跳.
 func R1HighCardShouldBeBotKickerPenalty(p Placement, cards []Card) float32 {
 	var mid, bot []Card
 	for i, c := range cards {
@@ -2201,8 +2236,9 @@ func R1HighCardShouldBeBotKickerPenalty(p Placement, cards []Card) float32 {
 // RnMidPairCompletesTwoPairBonus — 本轮往中道放的真牌配对中道已有单张, 把中道做成两对 → 奖.
 // 2026-06-17 用户明确要求 (实战14 ypk-111870282-14: 7s 配中道 7d 成 4477 两对).
 // ⚠️ 用户要这个**即便底道托不住** — 单人 solver 中道两对 royalty=0 + 底 gutshot ~26% 会 foul,
-//    用户按"对手局牌力"直觉优先中道两对, 故**不设 bot>mid guard**(区别于 RnMidMakeTwoPairBonus).
-//    安全网: 必 foul 的变体仍被 FoulImminentPenalty(-20) 压住, 本 +3 只在"有风险非必死"时翻.
+//
+//	用户按"对手局牌力"直觉优先中道两对, 故**不设 bot>mid guard**(区别于 RnMidMakeTwoPairBonus).
+//	安全网: 必 foul 的变体仍被 FoulImminentPenalty(-20) 压住, 本 +3 只在"有风险非必死"时翻.
 func RnMidPairCompletesTwoPairBonus(postState, preState *GameState) float32 {
 	if botAtLeastTwoPair(preState.Middle) {
 		return 0 // 中道本来就 ≥两对, 非本轮新做
@@ -2306,10 +2342,13 @@ func RnMidDrawFaceBonus(postState *GameState) float32 {
 
 // RnMidDrawFaceGated — 中道draw面奖, 但本轮把"能配中道对子的真牌"放到了中道以外(顶/底), 留中道弱draw → 不奖.
 // 2026-06-18 (seed99局25 R4): 中[7d 8d 5c], 8h能配8d成88(中道能成的最大对), prod却8h→顶留中道5-7-8弱顺draw吃+2.
-//   value-head本要8h→中做88(base更高). 这gate去掉"放弃成对、追弱draw"的MidDrawFace+2.
+//
+//	value-head本要8h→中做88(base更高). 这gate去掉"放弃成对、追弱draw"的MidDrawFace+2.
+//
 // RnMidTwoPairBotDrawBonus — 中道已成两对+(定型) + 底道还能成花/顺(没被低牌填死) → +2.
-//   2026-06-20 (用户, 实战72): 中[7766]两对锁定时, 别把低牌都塞底道杀掉底花draw —
-//   底[Tc 5c]留3空可成梅花花 vs 底[Tc 5c 4h]填死(2空只剩4花). 奖"保住底花/顺draw"的摆法.
+//
+//	2026-06-20 (用户, 实战72): 中[7766]两对锁定时, 别把低牌都塞底道杀掉底花draw —
+//	底[Tc 5c]留3空可成梅花花 vs 底[Tc 5c 4h]填死(2空只剩4花). 奖"保住底花/顺draw"的摆法.
 func RnMidTwoPairBotDrawBonus(postState *GameState) float32 {
 	if DisabledRules["MidTwoPairBotDraw"] {
 		return 0
@@ -2456,7 +2495,8 @@ func maxAddedRealRank(post, pre []Card) (maxR, n int) {
 
 // RnMidPlacedOverBotPlacedPenalty — R1-R4: 本轮"放中道的最大牌 > 放底道的最大牌" → 大牌放中了 → 底<中 → 罚2.
 // 2026-06-17 用户(局80 R2): 放中道8h > 放底道5d → 该把大牌放底. 底道有花/顺draw 或对/成手 → 豁免.
-//   跟 局96 R1HighCardShouldBeBotKicker(底成对管kicker)互补; 跟 RnHighCardWrongRow(要求两行都死)区别: 这条只看底豁免, 不管中有无draw.
+//
+//	跟 局96 R1HighCardShouldBeBotKicker(底成对管kicker)互补; 跟 RnHighCardWrongRow(要求两行都死)区别: 这条只看底豁免, 不管中有无draw.
 func RnMidPlacedOverBotPlacedPenalty(postState, preState *GameState) float32 {
 	if postState.Round < 1 || postState.Round > 4 {
 		return 0
@@ -2784,7 +2824,8 @@ func RnTopTripsOvercommitPenalty(postState, preState *GameState) float32 {
 // ① 底"鬼弱"(含鬼+无真对, 如51的X6c)时 K/Q 进顶/中 → 罚12 (该进底配鬼成高对); 底已真对(实战6 JJ)不罚.
 // ② 本轮往底加 A → 罚5 (AA锁时别浪费A进底).
 // cardHasBotValue — C 进底道是否有价值: 凑花 / 凑对 / 凑顺 (底含鬼当 wild). 用户准则: 有价值就该进底.
-//   同花: 底同色真张 + C + 鬼 ≥3.  配对: C rank 已在底.  顺: 底真ranks + C 某5-rank窗口(含C) ≥3张(含鬼).
+//
+//	同花: 底同色真张 + C + 鬼 ≥3.  配对: C rank 已在底.  顺: 底真ranks + C 某5-rank窗口(含C) ≥3张(含鬼).
 func cardHasBotValue(c Card, bottom []Card) bool {
 	botJoker := 0
 	var suit [4]int
@@ -2835,7 +2876,8 @@ func cardHasBotValue(c Card, bottom []Card) bool {
 
 // RnMidKickerShouldBotFlushPenalty — 2026-06-17 实战1 (sp26 value-head弱, 太子原生留花).
 // 用户思路: 中道恰成三条(死kicker场景) + 本轮往中塞的非鬼牌 C, 若 C 对底道有价值
-//   (底靠它能成花/成顺) → 罚3 (C 在中是死kicker浪费, 该进底). ⚠️ stopgap, 重训让 value head 自学估draw.
+//
+//	(底靠它能成花/成顺) → 罚3 (C 在中是死kicker浪费, 该进底). ⚠️ stopgap, 重训让 value head 自学估draw.
 func RnMidKickerShouldBotFlushPenalty(action *RoundNAction, postState, preState *GameState) float32 {
 	if len(preState.Bottom) >= 5 {
 		return 0 // 底满, C 无处放
@@ -2975,8 +3017,9 @@ func RnJokerHighSeedOnTopBonus(action *RoundNAction, postState *GameState) float
 }
 
 // RnAceToMidSupportTopAABonus — 顶成AA + 本轮Ace→中道 + 中道无≥T高牌杂(保轮子/低位向) + 中道还没成对
-//   → +4. 2026-06-17 局91: 顶AA成+底顺成, 中道必须≥AA否则foul; Ad该进中(凑中AA 或 A-4轮子顺 A2345 压顶AA),
-//   别弃Ace塞Kc(K高压不过AA必foul). value head 偏弃Ace(gap3.4), 奖翻过. 精准命中A-4(无K/Q杂), 不奖A-K.
+//
+//	→ +4. 2026-06-17 局91: 顶AA成+底顺成, 中道必须≥AA否则foul; Ad该进中(凑中AA 或 A-4轮子顺 A2345 压顶AA),
+//	别弃Ace塞Kc(K高压不过AA必foul). value head 偏弃Ace(gap3.4), 奖翻过. 精准命中A-4(无K/Q杂), 不奖A-K.
 func RnAceToMidSupportTopAABonus(action *RoundNAction, postState *GameState) float32 {
 	topAces, topJokers := 0, 0
 	for _, c := range postState.Top {
@@ -3618,7 +3661,8 @@ func isFourConsecutive(cs []Card) bool {
 // 2026-05-20 sp15: 跳过 lower rank<Rank6 + 罚值减 (8→5/3→2/5→3) — case 15 R1 误罚 3-4 split
 // midPairedRanks — 中道哪些真牌 rank 算"成对": ≥2 同rank真牌, 或 1真牌+鬼(鬼配最高真牌).
 // 2026-06-22 (用户): 中道成对(含鬼 joker+A=AA)是合理布局, 非被拆散的散连张 → 不算"中>底"威胁,
-//   CSP / MidPlacedOverBot 对该 rank 豁免不罚 (底可发育追上). 治 4条A手 R1 等.
+//
+//	CSP / MidPlacedOverBot 对该 rank 豁免不罚 (底可发育追上). 治 4条A手 R1 等.
 func midPairedRanks(midCards []Card) map[int]bool {
 	cnt := make(map[int]int)
 	jokers := 0

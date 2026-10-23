@@ -54,22 +54,14 @@ func TestSp25_PartialTopJokerLocked(t *testing.T) {
 	}
 }
 
-// 2026-06-14 成手行序: 新 O 组 dim147-149 (追加法), 抓"强成手压上层"倒置.
+// 2026-06-14 成手行序 O 组 dim147-149; 2026-07-04 sp39 砍(固化清零, #23/#24 partial 冤罚假信号).
+// 老断言(partial 罚)正是砍因 — 反转为"恒 0"断言, 防有人无意复活.
 func TestSp25_MadeRowOrder(t *testing.T) {
-	fm := make([]float32, 3) // O 组: [0]=中-顶 [1]=底-中 [2]=最紧 margin
-	// 倒置: 中 KK 对 > 底 44 对 (同 type=Pair, fillFoulMargin type-only margin=0 看不见; O 组 rank-aware 应 <0)
+	fm := []float32{9, 9, 9}
 	fillMadeRowOrder(fm, st(nil, []string{"Kc", "Kd"}, []string{"4c", "4s", "2s"}))
-	if fm[1] >= 0 {
-		t.Fatalf("中KK>底44 倒置, 底-中应<0, got %v", fm[1])
-	}
-	// 正常: 底 KK > 中 44 → 应 >0
-	fillMadeRowOrder(fm, st(nil, []string{"4c", "4s"}, []string{"Kc", "Kd", "2s"}))
-	if fm[1] <= 0 {
-		t.Fatalf("底KK>中44 正常, 底-中应>0, got %v", fm[1])
-	}
-	// partial 局也有信号: 中 QQ 对 vs 底 散张 → 底-中 应 <0 (fillFoulMargin partial 无信号)
-	fillMadeRowOrder(fm, st(nil, []string{"Qc", "Qd"}, []string{"7c", "8d"}))
-	if fm[1] >= 0 {
-		t.Fatalf("partial 中QQ对>底散张, 底-中应<0, got %v", fm[1])
+	for i, v := range fm {
+		if v != 0 {
+			t.Fatalf("O组已砍(sp39), fm[%d] 应恒=0, got %v", i, v)
+		}
 	}
 }

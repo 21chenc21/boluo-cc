@@ -42,7 +42,7 @@ func TestFeatureV3_Dim130_AlwaysZero_DiscardJoker(t *testing.T) {
 }
 
 func TestFeatureV3_Dim129_Preserved(t *testing.T) {
-	// dim129 (弃牌 rank 连续值) 不该被清零 (只固化 dim130)
+	// 2026-07-04 sp42: dim129 也固化清零 (dim130 连续版兄弟, 因果反置). 断言反转为恒0, 防复活.
 	gs := NewGameState(2)
 	gs.Round = 4
 	for _, s := range []string{"8h", "9h", "3h", "7h", "2h"} {
@@ -54,7 +54,7 @@ func TestFeatureV3_Dim129_Preserved(t *testing.T) {
 	gs.Top = append(gs.Top, mustParse("Jd"))
 	gs.SetDiscard(mustParse("Qd")) // rank Q → dim129 = 10/12 ≈ 0.833
 	f := BuildFeaturesV3(gs)
-	if f[129] == 0 {
-		t.Fatalf("dim129 (弃牌 rank) 不应被清零, got 0")
+	if f[129] != 0 {
+		t.Fatalf("dim129 (弃牌 rank) sp42 已固化清零, 应恒=0, got %v", f[129])
 	}
 }

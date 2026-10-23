@@ -43,6 +43,9 @@ func TestConnectorSplit_TripsInBottom_NoHierarchyPenalty(t *testing.T) {
 
 // case 26 守护: 底"低对"(count==2) + 中高单 仍是真 foul 险, 必须保留罚.
 func TestConnectorSplit_LowPairInBottom_StillPenalized(t *testing.T) {
+	// 2026-07-05 sp45: ConnectorSplit 已退役(DisabledRules 固化) — 本测试守护函数内部逻辑, 局部复活.
+	DisabledRules["ConnectorSplit"] = false
+	defer func() { DisabledRules["ConnectorSplit"] = true }()
 	// Kh 中, 33 底(低对) + 2 张闲: 中 K > 底 3 → 仍罚 (foul 险, K 可成对压过 33).
 	cards := parseHand("Kh", "3d", "3c", "7s", "8s")
 	p := Placement{RowMiddle, RowBottom, RowBottom, RowTop, RowTop} // Kh中 3d3c底(对) 7s8s顶
@@ -66,6 +69,9 @@ func TestConnectorSplit_DominatedLowSingle_NoHierarchy(t *testing.T) {
 
 // 守护: 中道高单牌 > 底道最强张 → 仍罚 (中道可能整体压过底道, std21).
 func TestConnectorSplit_MidToppsBottom_StillPenalized(t *testing.T) {
+	// 2026-07-05 sp45: ConnectorSplit 已退役(DisabledRules 固化) — 本测试守护函数内部逻辑, 局部复活.
+	DisabledRules["ConnectorSplit"] = false
+	defer func() { DisabledRules["ConnectorSplit"] = true }()
 	cards := parseHand("4d", "9h", "6c", "7d", "As") // As 顶占位
 	p := Placement{RowMiddle, RowMiddle, RowBottom, RowBottom, RowTop} // 4d9h中 6c7d底 As顶
 	pen := ConnectorSplitPenalty(p, cards)

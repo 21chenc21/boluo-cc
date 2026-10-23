@@ -75,3 +75,19 @@ func topTripsSeedScore(gs *GameState, rankRem [13]int, suitRem [4]int, jokerRem 
 func fillTopTripsSeed(f []float32, gs *GameState, rankRem [13]int, suitRem [4]int, jokerRem int) {
 	f[0] = topTripsSeedScore(gs, rankRem, suitRem, jokerRem)
 }
+
+// topFanProb — P(顶最终进范) = union(顶QQ/KK/AA exact 对, 合法 trips). [0,1].
+// 2026-07-04 sp40 (用户): label 侧 seedBonus 概率加权用 — 平价 ±8 让 2% 烂trips种子和 40% 鬼配QQ种子
+// 同价, 冲稀桶内 label (f160=1 组均值仅 9.14). f160 特征本体保持离散合法性 flag, 不动.
+func topFanProb(gs *GameState, rankRem [13]int, suitRem [4]int, jokerRem int) float32 {
+	deckTotal := jokerRem
+	for _, v := range rankRem {
+		deckTotal += v
+	}
+	topSlots := 3 - len(gs.Top)
+	pQ := pTopFinalPairExact(gs, RankQ, rankRem, jokerRem, deckTotal, topSlots)
+	pK := pTopFinalPairExact(gs, RankK, rankRem, jokerRem, deckTotal, topSlots)
+	pA := pTopFinalPairExact(gs, RankA, rankRem, jokerRem, deckTotal, topSlots)
+	pT := pTopTrips(gs, rankRem, suitRem, jokerRem, deckTotal, topSlots)
+	return clampF(1-(1-pQ)*(1-pK)*(1-pA)*(1-pT), 0, 1)
+}
